@@ -2,7 +2,9 @@
 Follica REST API Endpoints.
 
 Routes:
-- POST /api/v1/analyze : Dual-pipeline inference (Image + Questionnaire Context)
+- POST /api/v1/analyze : Comprehensive dual-pipeline inference (Image + Multi-Factor Clinical Context)
+- POST /api/v1/quality-check : Standalone image pre-validation (Blur, Exposure, Dimensions, EXIF)
+- POST /api/v1/progress/compare : Longitudinal progress tracker (Homography alignment + SSIM + Delta)
 - POST /api/v1/consent : Consent and data retention contract
 - POST /api/v1/report/pdf : Generic clinical 1-page PDF export
 - GET  /api/v1/system/status : System warmup and cold-start polling hook
@@ -10,7 +12,7 @@ Routes:
 """
 
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Optional, List
 from fastapi import APIRouter, File, UploadFile, Form, HTTPException, Response
 
 from app.core.config import settings
@@ -24,11 +26,11 @@ from app.models.schemas import (
     ProgressComparisonResponse
 )
 from app.services.classifier_service import classifier_service
-
 from app.services.cv_pipeline import cv_pipeline
 from app.services.triage_engine import triage_engine
 from app.services.pdf_service import pdf_service
 from app.services.quality_gate import quality_gate
+from app.services.registration import registration_service
 
 router = APIRouter()
 
@@ -50,14 +52,21 @@ async def get_system_status():
     )
 
 
-@router.post("/quality/check", tags=["Image Quality"])
-async def check_image_quality(
-    image: UploadFile = File(..., description="Scalp photo for pre-inference quality validation")
-):
+@router.get("/domains", tags=["DermaIQ Modular Architecture"])
+async def list_registered_domains():
     """
-    Pre-inference image validation endpoint.
-    Tests focus sharpness (Laplacian variance) and illumination (luminance distribution)
-    before initiating heavier dual-pipeline evaluation.
+    Returns registered modular clinical domains supported by the Follica/DermaIQ engine.
+    """
+    from app.core.domains import DERMA_IQ_DOMAINS
+    return {"domains": list(DERMA_IQ_DOMAINS.values())}
+
+
+@router.post("/quality/check", tags=["Image Quality Gate"])
+@router.post("/quality-check", tags=["Image Quality Gate"])
+async def check_image_quality(image: UploadFile = File(...)):
+    """
+    Fast pre-validation endpoint for client apps to verify image blur, exposure,
+    and EXIF metadata before initiating heavier dual-pipeline evaluation.
     """
     try:
         contents = await image.read()
@@ -111,28 +120,46 @@ async def record_user_consent(request: ConsentRequest):
 @router.post("/analyze", response_model=AnalysisResponse, tags=["Scalp Analysis"])
 async def analyze_scalp(
     image: UploadFile = File(..., description="Scalp photo (JPEG/PNG/WebP)"),
-    scan_angle: str = Form(default="unspecified", description="Target angle: crown_vertex, frontal_hairline, left_temple, right_temple, parting_line"),
-    sensation: str = Form(default="painless", description="Reported sensation: itching, burning, painful, painless, mixed"),
-    water_environment: str = Form(default="normal", description="Water supply: hard_borewell, treated_tap, recent_relocation, normal"),
-    stress_level: str = Form(default="moderate"),
-    recent_exam_work_stress: bool = Form(default=False),
-    shedding_pattern: str = Form(default="gradual_chronic", description="sudden_acute vs gradual_chronic"),
-    duration_weeks: int = Form(default=2),
-    family_history_hair_loss: bool = Form(default=False),
-    symptom_notes: Optional[str] = Form(default=None),
+    # Demographics & Concern Zone
+    age_group: str = Form(default="18_25"),
+    biological_sex: str = Form(default="male"),
+    primary_concern_zone: str = Form(default="crown_vertex"),
+    scan_angle: str = Form(default="crown_vertex"),
+    # Sensation & Trichodynia
+    sensation: str = Form(default="painless"),
     itching: bool = Form(default=False),
     burning_or_pain: bool = Form(default=False),
-    hard_water_exposure: bool = Form(default=False)
+    scalp_pain_trichodynia: bool = Form(default=False),
+    # Environmental & Habits
+    water_environment: str = Form(default="normal"),
+    hard_water_exposure: bool = Form(default=False),
+    pollution_exposure: str = Form(default="high_campus_dust"),
+    daily_helmet_wearer: bool = Form(default=False),
+    washing_frequency: str = Form(default="2_3_per_week"),
+    chemical_heat_styling: bool = Form(default=False),
+    # Nutrition, Sleep & Genetics
+    diet_pattern: str = Form(default="balanced_protein"),
+    sleep_quality: str = Form(default="good_7_8h"),
+    stress_level: str = Form(default="moderate"),
+    recent_exam_work_stress: bool = Form(default=False),
+    family_history_hair_loss: bool = Form(default=False),
+    deficiency_flags: Optional[str] = Form(default=None),
+    # Follicular Dynamics & Duration
+    hair_pull_test: str = Form(default="negative_under_3"),
+    flake_type: str = Form(default="none"),
+    shedding_pattern: str = Form(default="gradual_chronic"),
+    duration_weeks: int = Form(default=2),
+    symptom_notes: Optional[str] = Form(default=None)
 ):
     """
-    Dual-Pipeline Scalp Assessment:
-    0. Pre-inference quality gate validates blur, exposure, and dimensions.
+    Comprehensive Dual-Pipeline Scalp Assessment:
+    0. Pre-inference quality gate validates blur, exposure, EXIF, and dimensions.
     1. Deep Learning Classifier predicts condition pattern and confidence score.
     2. Classical Computer Vision extracts 4 discrete sub-scores (0-25 each).
-    3. Server-side confidence gate reroutes low-confidence (<0.65) cases to Level 2.
-    4. Applies non-diagnostic terminology and appends the universal disclaimer.
+    3. Multi-Factor Correlation Engine derives lifestyle/physiological risk drivers.
+    4. Server-side confidence gate reroutes low-confidence (<0.65) cases to Level 2.
+    5. Applies non-diagnostic terminology and appends the universal disclaimer.
     """
-    # Read image bytes
     try:
         contents = await image.read()
         if len(contents) == 0:
@@ -143,7 +170,6 @@ async def analyze_scalp(
         raise HTTPException(status_code=400, detail=f"Failed to read image upload: {str(e)}")
 
     # 0. Pre-Inference Image Quality Gate
-    # Intercepts blurry, underexposed, or overexposed captures before wasting inference compute.
     if settings.QUALITY_GATE_ENABLED:
         is_valid, quality_report = quality_gate.evaluate(contents)
         if not is_valid:
@@ -158,24 +184,35 @@ async def analyze_scalp(
                 }
             )
 
-    # Reconcile boolean flags with rich sensation/water categoricals for backwards compatibility
-    eff_itching = itching or (sensation in ["itching", "mixed"])
-    eff_burning = burning_or_pain or (sensation in ["burning", "painful", "mixed"])
-    eff_hard_water = hard_water_exposure or (water_environment in ["hard_borewell", "recent_relocation"])
+    # Parse deficiency flags list
+    deficiencies = [f.strip() for f in deficiency_flags.split(",")] if deficiency_flags else []
 
-    # Assemble symptom context
+    # Assemble comprehensive symptom context
     context = SymptomContext(
-        scan_angle=scan_angle if scan_angle in ["crown_vertex", "frontal_hairline", "left_temple", "right_temple", "parting_line"] else "unspecified",
+        age_group=age_group if age_group in ["under_18", "18_25", "26_35", "36_50", "over_50"] else "18_25",
+        biological_sex=biological_sex if biological_sex in ["male", "female", "other"] else "male",
+        primary_concern_zone=primary_concern_zone if primary_concern_zone in ["crown_vertex", "hairline_temples", "central_parting", "diffuse_all_over", "patchy_spots"] else "crown_vertex",
+        scan_angle=scan_angle,
         sensation=sensation if sensation in ["itching", "burning", "painful", "painless", "mixed"] else "painless",
-        itching=eff_itching,
-        burning_or_pain=eff_burning,
+        itching=itching or (sensation == "itching"),
+        burning_or_pain=burning_or_pain or (sensation in ["burning", "painful"]),
+        scalp_pain_trichodynia=scalp_pain_trichodynia,
         water_environment=water_environment if water_environment in ["hard_borewell", "treated_tap", "recent_relocation", "normal"] else "normal",
-        hard_water_exposure=eff_hard_water,
+        hard_water_exposure=hard_water_exposure or (water_environment == "hard_borewell"),
+        pollution_exposure=pollution_exposure if pollution_exposure in ["low_rural", "moderate_suburban", "high_metro_industrial", "high_campus_dust"] else "high_campus_dust",
+        daily_helmet_wearer=daily_helmet_wearer,
+        washing_frequency=washing_frequency if washing_frequency in ["daily", "2_3_per_week", "once_per_week", "rarely"] else "2_3_per_week",
+        chemical_heat_styling=chemical_heat_styling,
+        diet_pattern=diet_pattern if diet_pattern in ["balanced_protein", "vegetarian_vegan", "low_protein_crash_diet"] else "balanced_protein",
+        sleep_quality=sleep_quality if sleep_quality in ["good_7_8h", "irregular_under_6h", "shift_work_disrupted"] else "good_7_8h",
         stress_level=stress_level if stress_level in ["low", "moderate", "high"] else "moderate",
         recent_exam_work_stress=recent_exam_work_stress,
+        family_history_hair_loss=family_history_hair_loss,
+        deficiency_flags=deficiencies,
+        hair_pull_test=hair_pull_test if hair_pull_test in ["negative_under_3", "borderline_3_5", "positive_over_5"] else "negative_under_3",
+        flake_type=flake_type if flake_type in ["none", "dry_white_fine", "greasy_yellow_thick", "plaque_crusty"] else "none",
         shedding_pattern=shedding_pattern if shedding_pattern in ["sudden_acute", "gradual_chronic", "stable_no_shedding"] else "gradual_chronic",
         duration_weeks=max(0, duration_weeks),
-        family_history_hair_loss=family_history_hair_loss,
         symptom_notes=symptom_notes
     )
 
@@ -185,7 +222,7 @@ async def analyze_scalp(
     # 2. Pipeline 2: Classical Computer Vision Micro-Feature Extraction
     sub_scores = cv_pipeline.analyze_image(contents)
 
-    # 3. Server-Side Triage & Confidence Gate Evaluation
+    # 3. Server-Side Triage, Multi-Factor Correlation & Confidence Gate Evaluation
     analysis_result = triage_engine.evaluate(
         raw_condition=raw_condition,
         confidence=confidence,
@@ -196,44 +233,22 @@ async def analyze_scalp(
     return analysis_result
 
 
-@router.post("/progress/compare", response_model=ProgressComparisonResponse, tags=["Progress Tracker"])
-async def compare_longitudinal_scans(
-    baseline_image: UploadFile = File(..., description="Day 0 baseline scalp capture"),
-    followup_image: UploadFile = File(..., description="Follow-up scalp capture (e.g. Day 14 or 30)"),
-    days_elapsed: int = Form(default=14, ge=1, le=365, description="Days elapsed between scans")
+@router.post("/progress/compare", response_model=ProgressComparisonResponse, tags=["Longitudinal Progress Tracker"])
+async def compare_progress_scans(
+    baseline_image: UploadFile = File(..., description="Baseline scalp scan photo (Day 0)"),
+    followup_image: UploadFile = File(..., description="Follow-up scalp scan photo (Day 14/30)"),
+    days_elapsed: int = Form(default=14, ge=1, le=365)
 ):
     """
-    Longitudinal Hair Diary & Progress Comparison Engine:
-    Aligns multi-week photos using ORB keypoint homography and computes spot-by-spot
-    deltas for follicle density, erythema subsidence, and scaling reduction.
+    Compares two longitudinal scalp assessments (Baseline vs Follow-up) and computes
+    homography alignment quality, sub-score deltas, and overall treatment response trend.
     """
-    try:
-        base_bytes = await baseline_image.read()
-        follow_bytes = await followup_image.read()
-        if len(base_bytes) == 0 or len(follow_bytes) == 0:
-            raise HTTPException(status_code=400, detail="One or both uploaded images are empty.")
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to read comparison uploads: {str(e)}")
+    base_bytes = await baseline_image.read()
+    follow_bytes = await followup_image.read()
+    if len(base_bytes) == 0 or len(follow_bytes) == 0:
+        raise HTTPException(status_code=400, detail="One or both uploaded images are empty.")
 
-    from app.services.registration import registration_service
-    return registration_service.align_and_compare(
-        baseline_bytes=base_bytes,
-        followup_bytes=follow_bytes,
-        days_elapsed=days_elapsed
-    )
-
-
-@router.get("/domains", tags=["DermaIQ Modular Scalability"])
-async def list_derma_iq_domains():
-    """
-    Returns registered DermaIQ diagnostic modules (Scalp Health, Facial Acne, Eczema/Rashes)
-    to support pluggable multi-domain dermatological scaling.
-    """
-    from app.core.domains import get_registered_domains
-    return {
-        "framework": "DermaIQ Modular Dermatology Engine",
-        "domains": get_registered_domains()
-    }
+    return registration_service.align_and_compare(base_bytes, follow_bytes, days_elapsed)
 
 
 @router.post("/report/pdf", tags=["Clinical Export"])
@@ -253,4 +268,3 @@ async def export_clinical_pdf(
             "Content-Disposition": f"attachment; filename=follica_clinical_summary_{patient_ref_id}.pdf"
         }
     )
-

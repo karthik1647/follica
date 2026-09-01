@@ -1,71 +1,124 @@
-"""
+﻿"""
 Follica Pydantic Data Models and API Contracts.
 
-Architectural Design Intent & Rationale:
-1. Why Sub-Scores Are Kept Separate (Not Pre-Summed):
+Architectural Design Intent and Clinical Rationale:
+1. Multi-Factor Context Engine:
+   - Evaluates real-world physiological and lifestyle variables:
+     * Demographics (Age bracket, Biological Sex)
+     * Environmental Stressors (PM2.5 Pollution, Daily Helmet/Sweat Trap, Water Source)
+     * Hair Care Mechanics (Washing Frequency, Chemical/Heat Damage, Traction)
+     * Metabolic & Nutritional Biomarkers (Protein intake, Vitamin D3/Iron flags, Sleep)
+     * Clinical Follicular Dynamics (Hair Pull Test, Flake Consistency, Scalp Trichodynia)
+   - These variables correlate with visual computer vision signals to form a comprehensive clinical picture.
+
+2. Why Sub-Scores Are Kept Separate (Not Pre-Summed):
    - Flake, Redness, Sebum, and Density are distinct physiological manifestations.
-   - If the API only returned a composite score (e.g., 65/100), a user could not tell
-     whether their intervention resolved their flaking while causing compensatory dryness.
    - Exposing the 4 sub-scores as separate [0.0, 25.0] fields enables granular progress
-     tracking across longitudinal scans (e.g., in a 30-day hair diary).
-
-2. Why Confidence Gating Is Explicitly Surfaced (`confidence_gated: bool`):
-   - Transparency: The frontend and user must know if a Level 2 assignment was triggered
-     by algorithmic ambiguity rather than explicit disease indicators.
-
-3. Consent & Privacy Contract:
-   - Captures user consent, retention policies (default 30 days), and research opt-ins.
-   - Ensures that data privacy rules are formalized before frontend screens are built.
+     tracking across longitudinal scans.
 """
 
-from typing import List, Optional, Literal
+from typing import List, Optional, Literal, Dict, Any
 from pydantic import BaseModel, Field
 from app.core.constants import UNIVERSAL_DISCLAIMER
 
 
 # ---------------------------------------------------------------------------
-# Patient Questionnaire Context Model
+# Comprehensive Clinical Questionnaire Context Model
 # ---------------------------------------------------------------------------
 class SymptomContext(BaseModel):
     """
-    Self-reported patient symptom parameters and clinical context.
-    Captures multi-angle orientation, mechanical sensations, water/hostel environment,
-    stress history, and shedding timelines.
+    Comprehensive self-reported patient symptom parameters and lifestyle context.
+    Captures multi-angle orientation, demographic age, pollution, helmet usage,
+    metabolic/dietary markers, sensations, and shedding dynamics.
     """
-    # Angle Orientation
-    scan_angle: Literal[
+    # 1. Demographics & Concern Zone
+    age_group: Literal["under_18", "18_25", "26_35", "36_50", "over_50"] = Field(
+        default="18_25",
+        description="Biological age bracket"
+    )
+    biological_sex: Literal["male", "female", "other"] = Field(
+        default="male",
+        description="Biological sex for hormonal pattern mapping (Norwood vs Ludwig)"
+    )
+    primary_concern_zone: Literal[
         "crown_vertex",
-        "frontal_hairline",
-        "left_temple",
-        "right_temple",
-        "parting_line",
-        "unspecified"
-    ] = Field(default="unspecified", description="Targeted anatomical scalp region")
+        "hairline_temples",
+        "central_parting",
+        "diffuse_all_over",
+        "patchy_spots"
+    ] = Field(default="crown_vertex", description="Primary anatomical area of concern")
+    scan_angle: str = Field(default="crown_vertex", description="Targeted anatomical scalp angle")
 
-    # Sensation
+    # 2. Sensations & Trichodynia
     sensation: Literal["itching", "burning", "painful", "painless", "mixed"] = Field(
         default="painless",
         description="Predominant scalp sensation (pruritus, tenderness, dysesthesia)"
     )
     itching: bool = Field(default=False, description="Reported scalp itching or pruritus")
     burning_or_pain: bool = Field(default=False, description="Reported burning sensation, tenderness, or painful bumps")
+    scalp_pain_trichodynia: bool = Field(
+        default=False,
+        description="Scalp hurts or burns when touching, brushing, or moving hair"
+    )
 
-    # Water & Environment
+    # 3. Environmental & Physical Stressors
     water_environment: Literal["hard_borewell", "treated_tap", "recent_relocation", "normal"] = Field(
         default="normal",
         description="Hostel or residence water supply and environmental changes"
     )
     hard_water_exposure: bool = Field(default=False, description="Exposure to hard borewell/tap water in living quarters")
+    pollution_exposure: Literal["low_rural", "moderate_suburban", "high_metro_industrial", "high_campus_dust"] = Field(
+        default="high_campus_dust",
+        description="Atmospheric PM2.5 and urban dust exposure"
+    )
+    daily_helmet_wearer: bool = Field(
+        default=False,
+        description="Daily use of motorcycle helmet or tight headwear (friction & sweat occlusion)"
+    )
+    washing_frequency: Literal["daily", "2_3_per_week", "once_per_week", "rarely"] = Field(
+        default="2_3_per_week",
+        description="Scalp washing cadence"
+    )
+    chemical_heat_styling: bool = Field(
+        default=False,
+        description="Frequent heat blow-drying, chemical straightening, bleaching, or dyeing"
+    )
 
-    # Stress & Genetics
-    stress_level: Literal["low", "moderate", "high"] = Field(default="moderate", description="Self-reported stress level")
+    # 4. Metabolic, Dietary & Stress Factors
+    diet_pattern: Literal["balanced_protein", "vegetarian_vegan", "low_protein_crash_diet"] = Field(
+        default="balanced_protein",
+        description="Nutritional protein and macro-nutrient balance"
+    )
+    sleep_quality: Literal["good_7_8h", "irregular_under_6h", "shift_work_disrupted"] = Field(
+        default="good_7_8h",
+        description="Circadian rhythm and sleep duration"
+    )
+    stress_level: Literal["low", "moderate", "high"] = Field(
+        default="moderate",
+        description="Self-reported psychological stress"
+    )
     recent_exam_work_stress: bool = Field(
         default=False,
         description="Severe academic/exam/work stress within the preceding 3 months"
     )
-    family_history_hair_loss: bool = Field(default=False, description="Family history of androgenetic hair thinning")
+    family_history_hair_loss: bool = Field(
+        default=False,
+        description="Family history of androgenetic hair thinning in parents/grandparents"
+    )
+    deficiency_flags: List[str] = Field(
+        default_factory=list,
+        description="Known deficiencies (e.g., 'vitamin_d3', 'iron_ferritin', 'thyroid')"
+    )
 
-    # Progression Timeline
+    # 5. Follicular Dynamics & Timeline
+    hair_pull_test: Literal["negative_under_3", "borderline_3_5", "positive_over_5"] = Field(
+        default="negative_under_3",
+        description="Self-administered hair pull test outcome from scalp root"
+    )
+    flake_type: Literal["none", "dry_white_fine", "greasy_yellow_thick", "plaque_crusty"] = Field(
+        default="none",
+        description="Characteristic physical presentation of scalp scaling"
+    )
     shedding_pattern: Literal["sudden_acute", "gradual_chronic", "stable_no_shedding"] = Field(
         default="gradual_chronic",
         description="Acute shedding (telogen effluvium pattern) vs gradual chronic miniaturization"
@@ -75,7 +128,7 @@ class SymptomContext(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# Classical CV Sub-Scores Schema (Returned as Separate Discrete Fields)
+# Classical CV Sub-Scores Schema
 # ---------------------------------------------------------------------------
 class SubScores(BaseModel):
     """
@@ -119,11 +172,15 @@ class IngredientRecommendation(BaseModel):
     purpose: str = Field(..., description="Mechanism of action explaining why this molecule is recommended")
 
 
+class ClinicalCorrelationFactor(BaseModel):
+    """Correlated lifestyle / demographic risk driver."""
+    factor: str = Field(..., description="Identified lifestyle or clinical risk factor")
+    impact_level: Literal["high", "moderate", "low"] = "moderate"
+    clinical_note: str = Field(..., description="Physiological explanation of how this factor affects hair/scalp")
+
+
 class ConsultationReferral(BaseModel):
-    """
-    Generic clinical escalation data model.
-    Never references specific hospitals, maintaining geographic independence and avoiding institutional lock-in.
-    """
+    """Generic clinical escalation data model."""
     required: bool = Field(default=False, description="Whether consultation with a dermatologist is recommended")
     urgency: Literal["routine", "recommended", "immediate"] = "routine"
     addressed_to: str = Field(
@@ -146,7 +203,7 @@ class ConsultationReferral(BaseModel):
 class AnalysisResponse(BaseModel):
     """
     Full dual-pipeline response contract.
-    Combines DL classification, CV sub-scores, server-gated triage, and mandatory disclaimers.
+    Combines DL classification, CV sub-scores, multi-factor correlations, server-gated triage, and disclaimers.
     """
     suggested_condition: str = Field(
         ...,
@@ -180,6 +237,10 @@ class AnalysisResponse(BaseModel):
         ...,
         description="Clinical rationale explaining the triage categorization in non-diagnostic language"
     )
+    clinical_correlations: List[ClinicalCorrelationFactor] = Field(
+        default_factory=list,
+        description="Correlated multi-factor lifestyle and physiological risk drivers"
+    )
     recommended_ingredients: List[IngredientRecommendation] = Field(
         default_factory=list,
         description="List of suggested active OTC ingredients"
@@ -200,52 +261,9 @@ class AnalysisResponse(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# Progress Tracking & Longitudinal Image Registration Models
-# ---------------------------------------------------------------------------
-class ProgressComparisonResponse(BaseModel):
-    """
-    Longitudinal comparison contract between baseline and follow-up scalp captures.
-    """
-    baseline_timestamp: Optional[str] = None
-    followup_timestamp: Optional[str] = None
-    days_elapsed: int = 14
-    alignment_quality: str = Field(..., description="Homography alignment confidence (high, moderate, low)")
-    follicle_density_delta_pct: float = Field(
-        ...,
-        description="Percentage change in follicular coverage between scans (+ improvement, - thinning)"
-    )
-    redness_reduction_delta_pct: float = Field(
-        ...,
-        description="Percentage reduction in vascular erythema surface area"
-    )
-    flake_reduction_delta_pct: float = Field(
-        ...,
-        description="Percentage reduction in stratum corneum flaking area"
-    )
-    overall_trend: Literal["improving", "stable", "monitoring_advised", "escalation_recommended"]
-    clinical_interpretation: str
-    recommendation: str
-
-
-# ---------------------------------------------------------------------------
-# DermaIQ Modular Domain Architecture Contracts
-# ---------------------------------------------------------------------------
-class DermaIQDomainInfo(BaseModel):
-    """Module definition for DermaIQ multi-condition scalability."""
-    domain_id: str
-    display_name: str
-    description: str
-    status: Literal["production", "beta", "planned"]
-    supported_models: List[str]
-    active_sub_scores: List[str]
-
-
-
-# ---------------------------------------------------------------------------
 # Consent and Data Retention Contract
 # ---------------------------------------------------------------------------
 class ConsentRequest(BaseModel):
-    """Data contract for user privacy, biometric photo storage consent, and data retention."""
     user_id: str = Field(..., description="Pseudonymous user or device identifier")
     biometric_image_consent: bool = Field(
         ...,
@@ -264,7 +282,6 @@ class ConsentRequest(BaseModel):
 
 
 class ConsentResponse(BaseModel):
-    """Confirmation payload returned after registering user consent."""
     status: str = "success"
     user_id: str
     consent_recorded: bool
@@ -278,10 +295,6 @@ class ConsentResponse(BaseModel):
 # Cold-Start Warmup & Health Hook Schema
 # ---------------------------------------------------------------------------
 class SystemStatusResponse(BaseModel):
-    """
-    System health and container readiness schema.
-    Polled by mobile/web clients to handle cold-start container spin-up gracefully.
-    """
     status: Literal["ready", "warming_up", "standby"] = "ready"
     is_ready: bool = True
     model_loaded: bool = True
@@ -292,3 +305,28 @@ class SystemStatusResponse(BaseModel):
         "Free-tier cloud containers (Render/Hugging Face) may take up to 45 seconds on cold start. "
         "Client applications should poll this endpoint before submitting scan payloads."
     )
+
+# ---------------------------------------------------------------------------
+# Longitudinal Progress Tracking Contract
+# ---------------------------------------------------------------------------
+class ProgressComparisonResponse(BaseModel):
+    days_elapsed: int = Field(default=14, description="Days elapsed between baseline and follow-up scan")
+    alignment_quality: str = Field(..., description="Homography alignment confidence (high, moderate, low)")
+    follicle_density_delta_pct: float = Field(..., description="Percentage change in follicular coverage index")
+    redness_reduction_delta_pct: float = Field(..., description="Percentage change in erythema status (positive is improved)")
+    flake_reduction_delta_pct: float = Field(..., description="Percentage change in scaling status (positive is improved)")
+    overall_trend: Literal["improving", "stable", "monitoring_advised", "escalation_recommended"] = Field(...)
+    clinical_interpretation: str = Field(..., description="Objective clinical progress summary")
+    recommendation: str = Field(..., description="Actionable next step recommendation")
+    disclaimer: str = Field(default=UNIVERSAL_DISCLAIMER, description="Medical disclaimer")
+
+# ---------------------------------------------------------------------------
+# DermaIQ Modular Domain Architecture Schema
+# ---------------------------------------------------------------------------
+class DermaIQDomainInfo(BaseModel):
+    domain_id: str
+    display_name: str
+    description: str
+    status: str
+    supported_models: List[str]
+    active_sub_scores: List[str]

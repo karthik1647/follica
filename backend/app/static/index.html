@@ -3,1810 +3,586 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Follica - Clinical Scalp Health Intelligence</title>
+    <title>Follica - Clinical Scalp Assessment & Triage Engine</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* Clinical Light Mode Design System */
-            --bg-base: #f8fafc;
-            --bg-surface: #ffffff;
-            --bg-subtle: #f1f5f9;
+            --brand-primary: #0284c7;
+            --brand-teal: #0d9488;
+            --bg-page: #f8fafc;
             --bg-card: #ffffff;
-            --bg-card-hover: #fafafa;
-            
             --border-subtle: #e2e8f0;
-            --border-highlight: #cbd5e1;
-            --border-focus: #0891b2;
-            
             --text-main: #0f172a;
-            --text-body: #334155;
-            --text-secondary: #64748b;
-            --text-muted: #94a3b8;
-            
-            /* Professional Clinical Palette */
-            --brand-primary: #0891b2;
-            --brand-secondary: #2563eb;
-            --brand-indigo: #4f46e5;
-            --brand-emerald: #059669;
-            --brand-amber: #d97706;
-            --brand-rose: #e11d48;
-            
-            --radius-sm: 6px;
+            --text-secondary: #475569;
             --radius-md: 10px;
             --radius-lg: 16px;
-            --radius-full: 9999px;
-            
-            --shadow-subtle: 0 1px 3px 0 rgba(15, 23, 42, 0.06), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
-            --shadow-card: 0 4px 16px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
-            --shadow-hover: 0 10px 25px -3px rgba(15, 23, 42, 0.08), 0 4px 10px -2px rgba(15, 23, 42, 0.04);
-            
-            --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            background-color: var(--bg-base);
-            color: var(--text-body);
-            font-family: var(--font-stack);
-            line-height: 1.5;
-            padding: 24px 16px;
-            min-height: 100vh;
-            background-image: 
-                radial-gradient(circle at 10% 5%, rgba(8, 145, 178, 0.04) 0%, transparent 45%),
-                radial-gradient(circle at 90% 95%, rgba(37, 99, 235, 0.04) 0%, transparent 45%);
-            background-attachment: fixed;
-        }
-
-        .container {
-            max-width: 1240px;
-            margin: 0 auto;
-        }
-
-        /* App Navigation Header */
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px 28px;
-            background: var(--bg-surface);
-            border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-lg);
-            margin-bottom: 24px;
-            flex-wrap: wrap;
-            gap: 16px;
-            box-shadow: var(--shadow-card);
-        }
-
-        .brand-container {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-
-        .brand-logo-svg {
-            width: 44px;
-            height: 44px;
-            filter: drop-shadow(0 2px 6px rgba(8, 145, 178, 0.25));
-        }
-
-        .brand-text h1 {
-            font-size: 1.5rem;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-            color: var(--text-main);
-        }
-
-        .brand-text p {
-            font-size: 0.82rem;
-            color: var(--text-secondary);
-            font-weight: 500;
-        }
-
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .status-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 14px;
-            border-radius: var(--radius-full);
-            font-size: 0.78rem;
-            font-weight: 600;
-            background-color: #ecfdf5;
-            color: #065f46;
-            border: 1px solid #a7f3d0;
-        }
-
-        .status-pulse {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background-color: var(--brand-emerald);
-        }
-
-        .demo-pill-btn {
-            background: #eff6ff;
-            border: 1px solid #bfdbfe;
-            color: #1d4ed8;
-            padding: 7px 16px;
-            border-radius: var(--radius-full);
-            font-size: 0.78rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .demo-pill-btn:hover {
-            background: #dbeafe;
-            border-color: #93c5fd;
-        }
-
-        /* Navigation Tab Bar */
-        .tab-bar {
-            display: flex;
-            gap: 8px;
-            padding: 6px;
-            background: var(--bg-surface);
-            border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-md);
-            margin-bottom: 24px;
-            box-shadow: var(--shadow-subtle);
-            overflow-x: auto;
-        }
-
-        .tab-button {
-            padding: 10px 22px;
-            background: transparent;
-            border: none;
-            border-radius: var(--radius-sm);
-            color: var(--text-secondary);
-            font-size: 0.88rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            white-space: nowrap;
-        }
-
-        .tab-button:hover {
-            color: var(--text-main);
-            background: var(--bg-subtle);
-        }
-
-        .tab-button.active {
-            color: #ffffff;
-            background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-secondary) 100%);
-            box-shadow: 0 2px 8px rgba(8, 145, 178, 0.25);
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-            animation: fadeIn 0.25s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(4px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Grid Layout */
-        .grid-2col {
-            display: grid;
-            grid-template-columns: 1.15fr 1fr;
-            gap: 24px;
-        }
-
-        @media (max-width: 960px) {
-            .grid-2col {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* Cards */
-        .app-card {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-lg);
-            padding: 24px;
-            margin-bottom: 24px;
-            box-shadow: var(--shadow-card);
-            transition: box-shadow 0.2s ease, border-color 0.2s ease;
-        }
-
-        .app-card:hover {
-            border-color: var(--border-highlight);
-            box-shadow: var(--shadow-hover);
-        }
-
-        .app-card-title {
-            font-size: 1.05rem;
-            font-weight: 700;
-            color: var(--text-main);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 8px;
-        }
-
-        .app-card-subtitle {
-            font-size: 0.82rem;
-            color: var(--text-secondary);
-            margin-bottom: 18px;
-        }
-
-        /* Multi-Angle Segmented Control */
-        .angle-segmented-control {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-            gap: 6px;
-            background: var(--bg-subtle);
-            padding: 6px;
-            border-radius: var(--radius-md);
-            border: 1px solid var(--border-subtle);
-            margin-bottom: 18px;
-        }
-
-        .angle-chip {
-            padding: 8px 6px;
-            background: transparent;
-            border: 1px solid transparent;
-            border-radius: var(--radius-sm);
-            color: var(--text-secondary);
-            font-size: 0.78rem;
-            font-weight: 600;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .angle-chip:hover {
-            color: var(--text-main);
-            background: rgba(255, 255, 255, 0.7);
-        }
-
-        .angle-chip.active {
-            background: #ffffff;
-            border-color: #cbd5e1;
-            color: var(--brand-primary);
-            box-shadow: var(--shadow-subtle);
-        }
-
-        /* Viewfinder Upload Area */
-        .viewfinder-box {
-            position: relative;
-            border: 2px dashed #cbd5e1;
-            border-radius: var(--radius-md);
-            min-height: 240px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: #f8fafc;
-            overflow: hidden;
-            cursor: pointer;
-            transition: all 0.25s ease;
-            text-align: center;
-            padding: 24px;
-        }
-
-        .viewfinder-box:hover, .viewfinder-box.dragover {
-            border-color: var(--brand-primary);
-            background: #f0fdfa;
-        }
-
-        .viewfinder-box input[type="file"] {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            opacity: 0;
-            cursor: pointer;
-            z-index: 10;
-        }
-
-        .reticle-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2;
-        }
-
-        .reticle-ring {
-            width: 170px;
-            height: 170px;
-            border: 2px dashed rgba(8, 145, 178, 0.45);
-            border-radius: 50%;
-            position: relative;
-            animation: rotateSlow 40s linear infinite;
-        }
-
-        @keyframes rotateSlow {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        .reticle-cross-h {
-            position: absolute;
-            top: 50%;
-            left: -20px;
-            right: -20px;
-            height: 1px;
-            background: rgba(8, 145, 178, 0.35);
-        }
-
-        .reticle-cross-v {
-            position: absolute;
-            left: 50%;
-            top: -20px;
-            bottom: -20px;
-            width: 1px;
-            background: rgba(8, 145, 178, 0.35);
-        }
-
-        .viewfinder-prompt {
-            z-index: 3;
-            pointer-events: none;
-        }
-
-        .viewfinder-prompt-title {
-            font-weight: 700;
-            font-size: 0.95rem;
-            color: var(--text-main);
-            margin-bottom: 4px;
-        }
-
-        .viewfinder-prompt-sub {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-        }
-
-        .preview-image-element {
-            max-width: 100%;
-            max-height: 240px;
-            border-radius: var(--radius-sm);
-            object-fit: contain;
-            display: none;
-            z-index: 1;
-        }
-
-        .quality-status-bar {
-            margin-top: 14px;
-            padding: 12px 16px;
-            border-radius: var(--radius-md);
-            font-size: 0.82rem;
-            display: none;
-            animation: fadeIn 0.2s ease-out;
-        }
-
-        .quality-status-bar.passed {
-            background: #ecfdf5;
-            border: 1px solid #a7f3d0;
-            color: #065f46;
-        }
-
-        .quality-status-bar.failed {
-            background: #fff1f2;
-            border: 1px solid #fecdd3;
-            color: #9f1239;
-        }
-
-        
-        /* Shimmering Skeleton Loading Tiles */
-        .skeleton-shimmer {
-            background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.4s ease-in-out infinite;
-            border-radius: var(--radius-md);
-        }
-
-        @keyframes shimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
-
-        .skeleton-gauge-box {
-            height: 90px;
-            margin-bottom: 20px;
-        }
-
-        .skeleton-subscores-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        .skeleton-subscore-tile {
-            height: 64px;
-        }
-
-        .skeleton-card-row {
-            height: 48px;
-            margin-bottom: 12px;
-        }
-
-        /* Visual Shooting Guide Card */
-        .shooting-guide-banner {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: var(--radius-lg);
-            padding: 16px;
-            margin-bottom: 18px;
-        }
-
-        .shooting-guide-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 12px;
-        }
-
-        .guide-badge {
-            font-size: 0.72rem;
-            font-weight: 800;
-            background: #0284c7;
-            color: #ffffff;
-            padding: 3px 8px;
-            border-radius: 4px;
-            letter-spacing: 0.5px;
-        }
-
-        .guide-subtext {
-            font-size: 0.78rem;
-            color: var(--text-secondary);
-            font-weight: 600;
-        }
-
-        .shooting-guide-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-            gap: 10px;
-        }
-
-        .guide-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 8px;
-            background: #ffffff;
-            border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-md);
-            padding: 10px 8px;
-            font-size: 0.76rem;
-            line-height: 1.35;
-        }
-
-        .guide-num {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 18px;
-            height: 18px;
-            background: #e0f2fe;
-            color: #0369a1;
-            font-weight: 800;
-            font-size: 0.72rem;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-
-        .guide-desc {
-            color: var(--text-secondary);
-            font-size: 0.72rem;
-        }
-
-        /* Form Controls & Chips */
-        .form-section-title {
-            font-size: 0.82rem;
-            font-weight: 700;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
-        }
-
-        .chip-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-
-        .chip-option {
-            position: relative;
-        }
-
-        .chip-option input[type="radio"], .chip-option input[type="checkbox"] {
-            position: absolute;
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .chip-label {
-            display: block;
-            padding: 10px 8px;
-            background: var(--bg-subtle);
-            border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-md);
-            color: var(--text-body);
-            font-size: 0.82rem;
-            font-weight: 600;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            user-select: none;
-        }
-
-        .chip-option input:checked + .chip-label {
-            background: #e0f2fe;
-            border-color: #0284c7;
-            color: #0369a1;
-            font-weight: 700;
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 14px;
-            margin-bottom: 14px;
-        }
-
-        @media (max-width: 600px) {
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .input-control {
-            width: 100%;
-            padding: 10px 14px;
-            background-color: #ffffff;
-            border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-md);
-            color: var(--text-main);
-            font-family: inherit;
-            font-size: 0.88rem;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .input-control:focus {
-            outline: none;
-            border-color: var(--brand-primary);
-            box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.12);
-        }
-
-        .checkbox-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 0;
-            cursor: pointer;
-            margin-bottom: 18px;
-        }
-
-        .checkbox-container input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            accent-color: var(--brand-primary);
-            cursor: pointer;
-        }
-
-        .checkbox-container span {
-            font-size: 0.82rem;
-            color: var(--text-secondary);
-            line-height: 1.4;
-        }
-
-        .btn-submit-glow {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-secondary) 100%);
-            color: #ffffff;
-            border: none;
-            border-radius: var(--radius-md);
-            font-size: 0.95rem;
-            font-weight: 700;
-            letter-spacing: 0.3px;
-            cursor: pointer;
-            transition: transform 0.15s ease, box-shadow 0.2s ease, opacity 0.2s ease;
-            box-shadow: 0 4px 12px rgba(8, 145, 178, 0.25);
-        }
-
-        .btn-submit-glow:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 18px rgba(8, 145, 178, 0.35);
-        }
-
-        .btn-submit-glow:active {
-            transform: translateY(1px);
-        }
-
-        .btn-submit-glow:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .btn-action-subtle {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 8px 16px;
-            background: #ffffff;
-            border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-md);
-            color: var(--text-main);
-            font-size: 0.82rem;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-            transition: all 0.2s ease;
-            box-shadow: var(--shadow-subtle);
-        }
-
-        .btn-action-subtle:hover {
-            border-color: var(--brand-primary);
-            color: var(--brand-primary);
-            background: #f0fdfa;
-        }
-
-        /* Results Display */
-        .results-empty-state {
-            text-align: center;
-            padding: 64px 24px;
-            color: var(--text-secondary);
-        }
-
-        .results-empty-icon {
-            width: 56px;
-            height: 56px;
-            margin: 0 auto 16px;
-            color: var(--text-muted);
-        }
-
-        .results-panel {
-            display: none;
-            animation: fadeIn 0.3s ease-out;
-        }
-
-        .hero-gauge-container {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 22px 24px;
-            background: linear-gradient(135deg, #f0fdfa 0%, #eff6ff 100%);
-            border: 1px solid #ccfbf1;
-            border-radius: var(--radius-lg);
-            margin-bottom: 20px;
-        }
-
-        .gauge-metric-value {
-            font-size: 2.8rem;
-            font-weight: 900;
-            line-height: 1;
-            letter-spacing: -1px;
-            color: var(--brand-primary);
-        }
-
-        .gauge-metric-label {
-            font-size: 0.78rem;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            margin-top: 4px;
-            font-weight: 700;
-        }
-
-        .triage-badge-pill {
-            padding: 8px 18px;
-            border-radius: var(--radius-full);
-            font-size: 0.85rem;
-            font-weight: 700;
-            letter-spacing: 0.3px;
-        }
-
-        .triage-level-1 {
-            background: #ecfdf5;
-            color: #065f46;
-            border: 1px solid #a7f3d0;
-        }
-
-        .triage-level-2 {
-            background: #fffbeb;
-            color: #92400e;
-            border: 1px solid #fde68a;
-        }
-
-        .triage-level-3 {
-            background: #fff1f2;
-            color: #9f1239;
-            border: 1px solid #fecdd3;
-        }
-
-        /* 4 Sub-Scores Grid */
-        .subscores-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        @media (max-width: 500px) {
-            .subscores-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .subscore-tile {
-            background: var(--bg-subtle);
-            padding: 14px;
-            border-radius: var(--radius-md);
-            border: 1px solid var(--border-subtle);
-        }
-
-        .subscore-meta {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.82rem;
-            font-weight: 700;
-            color: var(--text-main);
-            margin-bottom: 8px;
-        }
-
-        .subscore-progress-track {
-            width: 100%;
-            height: 6px;
-            background: #e2e8f0;
-            border-radius: 3px;
-            overflow: hidden;
-        }
-
-        .subscore-progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, var(--brand-primary), var(--brand-secondary));
-            border-radius: 3px;
-            transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        /* Active Ingredient Cards */
-        .ingredient-item-card {
-            background: #f8fafc;
-            border-left: 4px solid var(--brand-primary);
-            border-radius: 0 var(--radius-md) var(--radius-md) 0;
-            padding: 12px 16px;
-            margin-bottom: 10px;
-            border-top: 1px solid var(--border-subtle);
-            border-right: 1px solid var(--border-subtle);
-            border-bottom: 1px solid var(--border-subtle);
-        }
-
-        .ingredient-title {
-            font-size: 0.92rem;
-            font-weight: 700;
-            color: var(--text-main);
-        }
-
-        .ingredient-cadence {
-            font-size: 0.8rem;
-            font-weight: 700;
-            color: var(--brand-amber);
-            margin: 2px 0 4px;
-        }
-
-        .ingredient-mechanism {
-            font-size: 0.8rem;
-            color: var(--text-body);
-        }
-
-        /* Referral Box */
-        .referral-alert-box {
-            background: #fff1f2;
-            border: 1px solid #fecdd3;
-            border-radius: var(--radius-md);
-            padding: 16px;
-            margin-bottom: 20px;
-        }
-
-        .referral-alert-title {
-            font-weight: 800;
-            color: #9f1239;
-            font-size: 0.92rem;
-            margin-bottom: 6px;
-        }
-
-        .referral-alert-text {
-            font-size: 0.82rem;
-            color: #881337;
-            margin-bottom: 12px;
-            line-height: 1.4;
-        }
-
-        /* Universal Disclaimer */
-        .disclaimer-card {
-            background: #f8fafc;
-            border: 1px solid var(--border-subtle);
-            padding: 14px 18px;
-            border-radius: var(--radius-md);
-            font-size: 0.76rem;
-            color: var(--text-secondary);
-            line-height: 1.4;
-            margin-top: 20px;
-        }
-
-        /* Interactive Before / After Split Slider */
-        .slider-viewport {
-            position: relative;
-            width: 100%;
-            height: 360px;
-            border-radius: var(--radius-md);
-            border: 1px solid var(--border-highlight);
-            overflow: hidden;
-            background: #e2e8f0;
-            margin-bottom: 20px;
-            user-select: none;
-        }
-
-        .slider-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .slider-layer-before {
-            clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%);
-            z-index: 2;
-        }
-
-        .slider-layer-after {
-            z-index: 1;
-        }
-
-        .slider-splitter {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            left: 50%;
-            width: 3px;
-            background: #ffffff;
-            z-index: 4;
-            cursor: ew-resize;
-            box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
-        }
-
-        .slider-knob {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: #ffffff;
-            color: var(--text-main);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            font-size: 0.72rem;
-            box-shadow: 0 2px 10px rgba(15, 23, 42, 0.2);
-            border: 1px solid var(--border-subtle);
-        }
-
-        .slider-tag {
-            position: absolute;
-            bottom: 14px;
-            padding: 4px 12px;
-            border-radius: var(--radius-sm);
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(4px);
-            font-size: 0.75rem;
-            font-weight: 700;
-            z-index: 5;
-            border: 1px solid var(--border-subtle);
-            box-shadow: var(--shadow-subtle);
-        }
-
-        .slider-tag.left {
-            left: 14px;
-            color: #1d4ed8;
-        }
-
-        .slider-tag.right {
-            right: 14px;
-            color: #047857;
-        }
-
-        .delta-stats-row {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-
-        .delta-stat-card {
-            background: var(--bg-subtle);
-            border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-md);
-            padding: 14px 10px;
-            text-align: center;
-        }
-
-        .delta-stat-num {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: var(--brand-primary);
-        }
-
-        .delta-stat-label {
-            font-size: 0.74rem;
-            color: var(--text-secondary);
-            font-weight: 600;
-            margin-top: 2px;
-        }
-
-        .loading-pulse-text {
-            display: none;
-            text-align: center;
-            padding: 18px;
-            font-size: 0.88rem;
-            color: var(--brand-primary);
-            font-weight: 700;
-        }
+            --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 10px 25px -5px rgba(0, 0, 0, 0.04);
+            --shadow-glow: 0 4px 20px rgba(2, 132, 199, 0.25);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+        body { background-color: var(--bg-page); color: var(--text-main); line-height: 1.5; padding-bottom: 60px; }
+        .app-header { background: rgba(255, 255, 255, 0.94); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border-subtle); position: sticky; top: 0; z-index: 100; padding: 14px 24px; }
+        .header-inner { max-width: 1280px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
+        .brand-logo-group { display: flex; align-items: center; gap: 12px; }
+        .logo-symbol { width: 38px; height: 38px; background: linear-gradient(135deg, #0284c7 0%, #0d9488 100%); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: #ffffff; font-weight: 800; font-size: 1.15rem; }
+        .brand-title { font-size: 1.25rem; font-weight: 800; color: var(--text-main); letter-spacing: -0.5px; }
+        .brand-subtitle { font-size: 0.74rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .header-actions { display: flex; align-items: center; gap: 12px; }
+        .status-pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 999px; color: #065f46; font-size: 0.76rem; font-weight: 700; }
+        .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #10b981; }
+        .btn-demo-mode { background: #ffffff; border: 1px solid #cbd5e1; color: #0284c7; font-size: 0.82rem; font-weight: 700; padding: 7px 14px; border-radius: var(--radius-md); cursor: pointer; }
+        .btn-demo-mode:hover { background: #f0f9ff; border-color: #38bdf8; }
+        .app-container { max-width: 1280px; margin: 28px auto 0; padding: 0 20px; }
+        .hero-banner { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius: var(--radius-lg); padding: 24px 30px; color: #ffffff; margin-bottom: 24px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.15); }
+        .hero-title { font-size: 1.45rem; font-weight: 800; letter-spacing: -0.4px; margin-bottom: 4px; }
+        .hero-desc { font-size: 0.88rem; color: #cbd5e1; max-width: 740px; line-height: 1.5; }
+        .main-grid { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 24px; }
+        @media (max-width: 1024px) { .main-grid { grid-template-columns: 1fr; } }
+        .app-card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-card); margin-bottom: 20px; }
+        .card-header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px solid var(--border-subtle); }
+        .card-heading { font-size: 1.05rem; font-weight: 800; color: var(--text-main); }
+        .step-tag { background: #e0f2fe; color: #0369a1; font-size: 0.72rem; font-weight: 800; padding: 3px 8px; border-radius: 999px; text-transform: uppercase; }
+        .shooting-guide-banner { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 14px 16px; margin-bottom: 18px; }
+        .shooting-guide-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        .guide-badge { font-size: 0.72rem; font-weight: 800; background: #0284c7; color: #ffffff; padding: 2px 7px; border-radius: 4px; }
+        .shooting-guide-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        @media (max-width: 640px) { .shooting-guide-grid { grid-template-columns: repeat(2, 1fr); } }
+        .guide-item { background: #ffffff; border: 1px solid var(--border-subtle); border-radius: 6px; padding: 8px 10px; font-size: 0.74rem; display: flex; align-items: flex-start; gap: 6px; }
+        .guide-num { width: 16px; height: 16px; background: #e0f2fe; color: #0284c7; border-radius: 50%; font-size: 0.68rem; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .dropzone-container { border: 2px dashed #cbd5e1; border-radius: var(--radius-md); padding: 26px 20px; text-align: center; background: #fafafa; cursor: pointer; transition: all 0.2s ease; }
+        .dropzone-container:hover { border-color: var(--brand-primary); background: #f0f9ff; }
+        .preview-img-holder { display: none; margin-top: 14px; text-align: center; }
+        .preview-img-holder img { max-height: 180px; border-radius: 6px; border: 1px solid var(--border-subtle); }
+        .intake-card-section { background: #ffffff; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 16px; margin-bottom: 14px; }
+        .intake-card-header { font-size: 0.85rem; font-weight: 800; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+        .form-row { margin-bottom: 12px; }
+        .form-row:last-child { margin-bottom: 0; }
+        .field-label { font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px; display: block; }
+        .chip-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 6px; }
+        .chip-item { position: relative; }
+        .chip-item input { position: absolute; opacity: 0; pointer-events: none; }
+        .chip-label { display: block; padding: 8px 6px; background: #f8fafc; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 0.76rem; font-weight: 600; color: var(--text-main); text-align: center; cursor: pointer; transition: all 0.15s ease; }
+        .chip-item input:checked + .chip-label { background: #f0f9ff; border-color: #0284c7; color: #0284c7; font-weight: 800; box-shadow: 0 0 0 1px #0284c7; }
+        .slider-wrapper { display: flex; align-items: center; gap: 14px; }
+        .slider-range { flex: 1; accent-color: #0284c7; height: 6px; cursor: pointer; }
+        .slider-badge { background: #e0f2fe; color: #0369a1; font-weight: 800; font-size: 0.78rem; padding: 4px 10px; border-radius: 6px; min-width: 70px; text-align: center; }
+        .risk-counter-banner { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 12px 16px; margin-top: 14px; display: flex; align-items: center; justify-content: space-between; }
+        .risk-badge { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; font-size: 0.74rem; font-weight: 800; padding: 3px 9px; border-radius: 999px; }
+        .btn-submit-main { width: 100%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; border: none; padding: 14px 20px; border-radius: var(--radius-md); font-size: 0.95rem; font-weight: 800; cursor: pointer; box-shadow: var(--shadow-glow); margin-top: 14px; }
+        .skeleton-shimmer { background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; animation: shimmer 1.4s ease-in-out infinite; border-radius: var(--radius-md); }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .skeleton-gauge-box { height: 90px; margin-bottom: 20px; }
+        .skeleton-subscores-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+        .skeleton-subscore-tile { height: 64px; }
+        .skeleton-card-row { height: 48px; margin-bottom: 12px; }
+        .hero-gauge-container { background: linear-gradient(135deg, #f0fdfa 0%, #f0f9ff 100%); border: 1px solid #ccfbf1; border-radius: var(--radius-lg); padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .gauge-metric-label { font-size: 0.74rem; font-weight: 800; color: #0d9488; text-transform: uppercase; }
+        .gauge-metric-value { font-size: 2.6rem; font-weight: 900; color: #0f172a; line-height: 1.1; }
+        .triage-badge-pill { padding: 8px 16px; border-radius: 999px; font-weight: 800; font-size: 0.82rem; }
+        .triage-level-1 { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+        .triage-level-2 { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+        .triage-level-3 { background: #fff1f2; color: #9f1239; border: 1px solid #fecdd3; }
+        .subscores-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+        .subscore-tile { background: #ffffff; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 12px 14px; }
+        .subscore-meta { display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 700; color: var(--text-main); margin-bottom: 8px; }
+        .subscore-track { height: 6px; background: #f1f5f9; border-radius: 999px; overflow: hidden; }
+        .subscore-bar { height: 100%; background: #0284c7; border-radius: 999px; }
+        .correlation-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 14px; margin-bottom: 20px; }
+        .correlation-item { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 12px; margin-bottom: 8px; font-size: 0.78rem; line-height: 1.4; }
+        .ingredient-card { background: #ffffff; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 12px 14px; margin-bottom: 10px; }
+        .ingredient-name { font-size: 0.86rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+        .ingredient-cadence { font-size: 0.7rem; background: #f0fdfa; color: #0f766e; border: 1px solid #ccfbf1; padding: 2px 7px; border-radius: 4px; font-weight: 700; }
+        .ingredient-purpose { font-size: 0.76rem; color: var(--text-secondary); }
+        .disclaimer-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 12px 14px; font-size: 0.72rem; color: #64748b; line-height: 1.45; margin-top: 18px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Professional Clinical Light Header -->
-        <header>
-            <div class="brand-container">
-                <!-- Custom Geometric Scalp Diagnostic Logo (Light Palette) -->
-                <svg class="brand-logo-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="50" cy="50" r="46" stroke="url(#logo-grad-1)" stroke-width="3" stroke-dasharray="6 3"/>
-                    <circle cx="50" cy="50" r="36" fill="url(#logo-grad-bg)"/>
-                    <path d="M50 20 C42 34 38 48 38 60 C38 72 44 80 50 80 C56 80 62 72 62 60 C62 48 58 34 50 20 Z" fill="url(#logo-grad-strand)"/>
-                    <circle cx="50" cy="52" r="5" fill="#ffffff"/>
-                    <path d="M50 35 L50 68" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
-                    <defs>
-                        <linearGradient id="logo-grad-1" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-                            <stop stop-color="#0891b2"/>
-                            <stop offset="1" stop-color="#2563eb"/>
-                        </linearGradient>
-                        <linearGradient id="logo-grad-bg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-                            <stop stop-color="#ffffff"/>
-                            <stop offset="1" stop-color="#f0fdfa"/>
-                        </linearGradient>
-                        <linearGradient id="logo-grad-strand" x1="50" y1="20" x2="50" y2="80" gradientUnits="userSpaceOnUse">
-                            <stop stop-color="#06b6d4"/>
-                            <stop offset="0.6" stop-color="#0891b2"/>
-                            <stop offset="1" stop-color="#2563eb"/>
-                        </linearGradient>
-                    </defs>
-                </svg>
-                <div class="brand-text">
-                    <h1>Follica</h1>
-                    <p>Clinical Scalp Diagnostics & Triage Intelligence</p>
+    <header class="app-header">
+        <div class="header-inner">
+            <div class="brand-logo-group">
+                <div class="logo-symbol">F</div>
+                <div>
+                    <div class="brand-title">Follica</div>
+                    <div class="brand-subtitle">Clinical Scalp Triage & Micro-Feature Engine</div>
                 </div>
             </div>
-
             <div class="header-actions">
-                <button type="button" class="demo-pill-btn" onclick="loadSampleDemoScan()">
-                    Load Sample Test Scan
-                </button>
-                <div id="system-status-pill" class="status-pill">
-                    <span class="status-pulse"></span>
-                    <span id="system-status-text">Backend Ready</span>
-                </div>
+                <div class="status-pill"><span class="status-dot"></span><span>API Ready</span></div>
+                <button type="button" class="btn-demo-mode" onclick="loadDemoScenario()">1-Click Demo</button>
             </div>
-        </header>
+        </div>
+    </header>
 
-        <!-- Segmented Navigation Tab Bar -->
-        <div class="tab-bar">
-            <button type="button" class="tab-button active" onclick="navigateTab('tab-scanner', this)">
-                Scalp Diagnostic Assessment
-            </button>
-            <button type="button" class="tab-button" onclick="navigateTab('tab-diary', this)">
-                Hair Diary & Longitudinal Slider
-            </button>
-            <button type="button" class="tab-button" onclick="navigateTab('tab-architecture', this)">
-                DermaIQ Modular Architecture
-            </button>
+    <main class="app-container">
+        <div class="hero-banner">
+            <div>
+                <h1 class="hero-title">Objective Scalp Assessment & Clinical Triage</h1>
+                <p class="hero-desc">Combines Deep Learning classification with Classical Computer Vision micro-feature extractors and multi-factor lifestyle correlation to compute your Scalp Health Score (0-100).</p>
+            </div>
         </div>
 
-        <!-- TAB 1: Scalp Diagnostic Scanner -->
-        <div id="tab-scanner" class="tab-content active">
-            <div class="grid-2col">
-                <!-- Left Column: Input Form & Multi-Angle Scanner -->
-                <div>
-                    <!-- Step 1: Multi-Angle Guided Capture -->
-                    <div class="app-card">
-                        <div class="app-card-title">
-                            <span>Step 1: Guided Scalp Capture</span>
-                            <span id="selected-angle-badge" style="font-size: 0.78rem; color: var(--brand-primary); font-weight: 700;">Angle: Crown / Vertex</span>
-                        </div>
-                        <p class="app-card-subtitle">Select anatomical region and align scalp parting inside the reticle.</p>
-
-                        <div class="angle-segmented-control">
-                            <button type="button" class="angle-chip active" onclick="setScanAngle('crown_vertex', 'Crown / Vertex', this)">Crown / Vertex</button>
-                            <button type="button" class="angle-chip" onclick="setScanAngle('frontal_hairline', 'Frontal Hairline', this)">Frontal Hairline</button>
-                            <button type="button" class="angle-chip" onclick="setScanAngle('left_temple', 'Left Temple', this)">Left Temple</button>
-                            <button type="button" class="angle-chip" onclick="setScanAngle('right_temple', 'Right Temple', this)">Right Temple</button>
-                            <button type="button" class="angle-chip" onclick="setScanAngle('parting_line', 'Parting Line', this)">Parting Line</button>
-                        </div>
-
-                        <div class="viewfinder-box" id="viewfinder-dropzone">
-                            <input type="file" id="scalp-photo-input" accept="image/jpeg,image/png,image/webp">
-                            <div class="reticle-container">
-                                <div class="reticle-ring">
-                                    <div class="reticle-cross-h"></div>
-                                    <div class="reticle-cross-v"></div>
-                                </div>
-                            </div>
-                            <div class="viewfinder-prompt" id="viewfinder-instructions">
-                                <div class="viewfinder-prompt-title">Click to Select or Drop Scalp Photo</div>
-                                <div class="viewfinder-prompt-sub">JPEG, PNG, or WebP (Sharp focus, balanced lighting)</div>
-                            </div>
-                            <img id="scalp-preview-img" class="preview-image-element" alt="Scalp Capture Preview">
-                        </div>
-
-                        <div id="quality-status-msg" class="quality-status-bar"></div>
+        <div class="main-grid">
+            <!-- Left Column: Intake Studio -->
+            <div>
+                <div class="app-card">
+                    <div class="card-header-row">
+                        <div class="card-heading"><span>Clinical Intake & Scalp Photo</span></div>
+                        <span class="step-tag">Intake Studio</span>
                     </div>
 
-                    <!-- Step 2: 5-Question Clinical Context Engine -->
-                    <div class="app-card">
-                        <div class="app-card-title">
-                            <span>Step 2: Clinical Context Engine</span>
-                            <span style="font-size: 0.78rem; color: var(--text-secondary); font-weight: 600;">5 Questions</span>
+                    <div class="shooting-guide-banner">
+                        <div class="shooting-guide-header">
+                            <span class="guide-badge">PHOTO CAPTURE RULES</span>
+                            <span style="font-size: 0.74rem; color: #64748b; font-weight: 600;">Follow 4 steps for optimal trichoscopy:</span>
                         </div>
-                        <p class="app-card-subtitle">Contextual triggers that classical computer vision cannot detect from an image alone.</p>
-
-                        <!-- Question 1: Sensation -->
-                        <div class="form-section-title">1. Scalp Sensation</div>
-                        <div class="chip-grid">
-                            <div class="chip-option">
-                                <input type="radio" id="sens-opt-itching" name="sens_radio" value="itching">
-                                <label for="sens-opt-itching" class="chip-label">Itching</label>
-                            </div>
-                            <div class="chip-option">
-                                <input type="radio" id="sens-opt-burning" name="sens_radio" value="burning">
-                                <label for="sens-opt-burning" class="chip-label">Burning</label>
-                            </div>
-                            <div class="chip-option">
-                                <input type="radio" id="sens-opt-painful" name="sens_radio" value="painful">
-                                <label for="sens-opt-painful" class="chip-label">Painful Bumps</label>
-                            </div>
-                            <div class="chip-option">
-                                <input type="radio" id="sens-opt-painless" name="sens_radio" value="painless" checked>
-                                <label for="sens-opt-painless" class="chip-label">Painless</label>
-                            </div>
+                        <div class="shooting-guide-grid">
+                            <div class="guide-item"><span class="guide-num">1</span><div><strong>Clean Lens</strong><br><span style="color:#64748b;">Wipe oil & smudge.</span></div></div>
+                            <div class="guide-item"><span class="guide-num">2</span><div><strong>Flash ON</strong><br><span style="color:#64748b;">Illuminates roots.</span></div></div>
+                            <div class="guide-item"><span class="guide-num">3</span><div><strong>Expose Part</strong><br><span style="color:#64748b;">Show 1-2 in scalp.</span></div></div>
+                            <div class="guide-item"><span class="guide-num">4</span><div><strong>10-15 cm</strong><br><span style="color:#64748b;">Tap screen to focus.</span></div></div>
                         </div>
+                    </div>
 
-                        <!-- Question 2: Water Environment -->
-                        <div class="form-section-title">2. Water & Residence Supply</div>
-                        <select id="water-supply-select" class="input-control" style="margin-bottom: 16px;">
-                            <option value="hard_borewell">Hostel Borewell / Hard Tap Water</option>
-                            <option value="recent_relocation">Recent Relocation to New City / Campus</option>
-                            <option value="treated_tap">Treated / Soft Tap Water</option>
-                            <option value="normal" selected>Standard Municipal Tap Water</option>
-                        </select>
-
-                        <!-- Question 3: Genetics & Stress -->
-                        <div class="form-section-title">3. Genetics & Stress History</div>
-                        <div class="form-row">
-                            <label class="chip-option">
-                                <input type="checkbox" id="check-genetics">
-                                <span class="chip-label">Family Hair Loss History</span>
-                            </label>
-                            <label class="chip-option">
-                                <input type="checkbox" id="check-stress">
-                                <span class="chip-label">Exam / Stress in Past 3 Mo.</span>
-                            </label>
+                    <div id="dropzone" class="dropzone-container" onclick="document.getElementById('file-input').click()">
+                        <input type="file" id="file-input" accept="image/jpeg,image/png,image/webp" style="display: none;" onchange="handleFileSelected(event)">
+                        <div style="font-size: 0.92rem; font-weight: 700; color: #0f172a;">Click or Drag Scalp Photograph</div>
+                        <div style="font-size: 0.78rem; color: #94a3b8;">Supports JPEG, PNG, WebP (Max 10 MB). Camera Flash Recommended.</div>
+                        <div id="preview-holder" class="preview-img-holder">
+                            <img id="preview-image" src="" alt="Scalp Preview">
                         </div>
+                    </div>
 
-                        <!-- Question 4: Shedding Progression & Duration -->
-                        <div class="form-section-title">4. Progression & Duration</div>
-                        <div class="form-row">
-                            <div class="chip-grid" style="margin-bottom: 0;">
-                                <div class="chip-option">
-                                    <input type="radio" id="shed-opt-acute" name="shed_radio" value="sudden_acute">
-                                    <label for="shed-opt-acute" class="chip-label">Sudden Shedding</label>
-                                </div>
-                                <div class="chip-option">
-                                    <input type="radio" id="shed-opt-chronic" name="shed_radio" value="gradual_chronic" checked>
-                                    <label for="shed-opt-chronic" class="chip-label">Gradual Thinning</label>
+                    <form id="clinical-form" style="margin-top: 18px;" onchange="updateRiskCounter()">
+                        <div class="intake-card-section">
+                            <div class="intake-card-header"><span>1. Demographics & Concern Zone</span></div>
+                            <div class="form-row">
+                                <span class="field-label">Age Bracket</span>
+                                <div class="chip-group">
+                                    <div class="chip-item"><input type="radio" id="age-1" name="age_group" value="under_18"><label for="age-1" class="chip-label">&lt; 18</label></div>
+                                    <div class="chip-item"><input type="radio" id="age-2" name="age_group" value="18_25" checked><label for="age-2" class="chip-label">18 - 25</label></div>
+                                    <div class="chip-item"><input type="radio" id="age-3" name="age_group" value="26_35"><label for="age-3" class="chip-label">26 - 35</label></div>
+                                    <div class="chip-item"><input type="radio" id="age-4" name="age_group" value="36_50"><label for="age-4" class="chip-label">36 - 50</label></div>
+                                    <div class="chip-item"><input type="radio" id="age-5" name="age_group" value="over_50"><label for="age-5" class="chip-label">50+</label></div>
                                 </div>
                             </div>
-                            <input type="number" id="symptom-duration-weeks" class="input-control" value="3" min="0" max="100" placeholder="Duration (Weeks)">
+                            <div class="form-row">
+                                <span class="field-label">Biological Sex / Pattern Model</span>
+                                <div class="chip-group">
+                                    <div class="chip-item"><input type="radio" id="sex-m" name="biological_sex" value="male" checked><label for="sex-m" class="chip-label">Male (Norwood)</label></div>
+                                    <div class="chip-item"><input type="radio" id="sex-f" name="biological_sex" value="female"><label for="sex-f" class="chip-label">Female (Ludwig)</label></div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <span class="field-label">Primary Concern Zone</span>
+                                <div class="chip-group">
+                                    <div class="chip-item"><input type="radio" id="zone-1" name="primary_concern_zone" value="crown_vertex" checked><label for="zone-1" class="chip-label">Crown / Vertex</label></div>
+                                    <div class="chip-item"><input type="radio" id="zone-2" name="primary_concern_zone" value="hairline_temples"><label for="zone-2" class="chip-label">Hairline / Temples</label></div>
+                                    <div class="chip-item"><input type="radio" id="zone-3" name="primary_concern_zone" value="central_parting"><label for="zone-3" class="chip-label">Parting Line</label></div>
+                                    <div class="chip-item"><input type="radio" id="zone-4" name="primary_concern_zone" value="diffuse_all_over"><label for="zone-4" class="chip-label">Diffuse Thinning</label></div>
+                                </div>
+                            </div>
                         </div>
 
-                        <!-- Question 5: Previous Products -->
-                        <div class="form-section-title" style="margin-top: 10px;">5. Previous Products / Washes Tried</div>
-                        <textarea id="past-treatments-text" class="input-control" rows="2" style="margin-bottom: 16px;" placeholder="e.g. Zinc pyrithione anti-dandruff shampoo, coconut oil, minoxidil..."></textarea>
+                        <div class="intake-card-section">
+                            <div class="intake-card-header"><span>2. Environment, Friction & Habits</span></div>
+                            <div class="form-row">
+                                <span class="field-label">Water Source</span>
+                                <div class="chip-group">
+                                    <div class="chip-item"><input type="radio" id="water-1" name="water_environment" value="hard_borewell" checked><label for="water-1" class="chip-label">Hard Borewell</label></div>
+                                    <div class="chip-item"><input type="radio" id="water-2" name="water_environment" value="treated_tap"><label for="water-2" class="chip-label">Treated Tap</label></div>
+                                    <div class="chip-item"><input type="radio" id="water-3" name="water_environment" value="recent_relocation"><label for="water-3" class="chip-label">Recent Move</label></div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <span class="field-label">Daily Friction / Headwear</span>
+                                <div class="chip-group">
+                                    <div class="chip-item"><input type="checkbox" id="helmet-check" name="daily_helmet_wearer"><label for="helmet-check" class="chip-label">Daily Helmet / Bike Wearer</label></div>
+                                    <div class="chip-item"><input type="checkbox" id="styling-check" name="chemical_heat_styling"><label for="styling-check" class="chip-label">Frequent Blow-Dry / Bleach</label></div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <span class="field-label">Washing Frequency</span>
+                                <div class="chip-group">
+                                    <div class="chip-item"><input type="radio" id="wash-1" name="washing_frequency" value="daily"><label for="wash-1" class="chip-label">Daily</label></div>
+                                    <div class="chip-item"><input type="radio" id="wash-2" name="washing_frequency" value="2_3_per_week" checked><label for="wash-2" class="chip-label">2-3x / Week</label></div>
+                                    <div class="chip-item"><input type="radio" id="wash-3" name="washing_frequency" value="once_per_week"><label for="wash-3" class="chip-label">1x / Week</label></div>
+                                    <div class="chip-item"><input type="radio" id="wash-4" name="washing_frequency" value="rarely"><label for="wash-4" class="chip-label">Rarely</label></div>
+                                </div>
+                            </div>
+                        </div>
 
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="user-consent-checkbox" checked>
-                            <span>I consent to biometric image evaluation under encrypted-at-rest data retention policies.</span>
-                        </label>
+                        <div class="intake-card-section">
+                            <div class="intake-card-header"><span>3. Nutrition, Sleep & Biomarkers</span></div>
+                            <div class="form-row">
+                                <span class="field-label">Diet & Protein Intake</span>
+                                <div class="chip-group">
+                                    <div class="chip-item"><input type="radio" id="diet-1" name="diet_pattern" value="balanced_protein" checked><label for="diet-1" class="chip-label">Balanced Protein</label></div>
+                                    <div class="chip-item"><input type="radio" id="diet-2" name="diet_pattern" value="vegetarian_vegan"><label for="diet-2" class="chip-label">Vegetarian / Vegan</label></div>
+                                    <div class="chip-item"><input type="radio" id="diet-3" name="diet_pattern" value="low_protein_crash_diet"><label for="diet-3" class="chip-label">Low Protein / Crash</label></div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <span class="field-label">Known Deficiencies / Biomarkers</span>
+                                <div class="chip-group">
+                                    <div class="chip-item"><input type="checkbox" id="def-d3" name="deficiency_d3"><label for="def-d3" class="chip-label">Low Vitamin D3</label></div>
+                                    <div class="chip-item"><input type="checkbox" id="def-iron" name="deficiency_iron"><label for="def-iron" class="chip-label">Low Iron / Ferritin</label></div>
+                                    <div class="chip-item"><input type="checkbox" id="def-family" name="family_history_hair_loss"><label for="def-family" class="chip-label">Family Hair Loss</label></div>
+                                    <div class="chip-item"><input type="checkbox" id="def-stress" name="recent_exam_work_stress"><label for="def-stress" class="chip-label">Exam / Work Stress</label></div>
+                                </div>
+                            </div>
+                        </div>
 
-                        <button type="button" id="btn-run-assessment" class="btn-submit-glow" onclick="executeScalpAssessment()">
+                        <div class="intake-card-section">
+                            <div class="intake-card-header"><span>4. Sensation & Follicular Dynamics</span></div>
+                            <div class="form-row">
+                                <span class="field-label">Scalp Sensation</span>
+                                <div class="chip-group">
+                                    <div class="chip-item"><input type="radio" id="sens-1" name="sensation" value="painless" checked><label for="sens-1" class="chip-label">Painless</label></div>
+                                    <div class="chip-item"><input type="radio" id="sens-2" name="sensation" value="itching"><label for="sens-2" class="chip-label">Itching</label></div>
+                                    <div class="chip-item"><input type="radio" id="sens-3" name="sensation" value="burning"><label for="sens-3" class="chip-label">Burning / Tender</label></div>
+                                    <div class="chip-item"><input type="radio" id="sens-4" name="sensation" value="painful"><label for="sens-4" class="chip-label">Painful Bumps</label></div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <span class="field-label">Hair Pull Test (Self-Check: Tugging ~50 hairs from root)</span>
+                                <div class="chip-group">
+                                    <div class="chip-item"><input type="radio" id="pull-1" name="hair_pull_test" value="negative_under_3" checked><label for="pull-1" class="chip-label">&lt; 3 Hairs (Normal)</label></div>
+                                    <div class="chip-item"><input type="radio" id="pull-2" name="hair_pull_test" value="borderline_3_5"><label for="pull-2" class="chip-label">3 - 5 Hairs (Borderline)</label></div>
+                                    <div class="chip-item"><input type="radio" id="pull-3" name="hair_pull_test" value="positive_over_5"><label for="pull-3" class="chip-label">&gt; 5 Hairs (Active Shed)</label></div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <span class="field-label">Flake Presentation</span>
+                                <div class="chip-group">
+                                    <div class="chip-item"><input type="radio" id="flake-1" name="flake_type" value="none" checked><label for="flake-1" class="chip-label">No Flakes</label></div>
+                                    <div class="chip-item"><input type="radio" id="flake-2" name="flake_type" value="dry_white_fine"><label for="flake-2" class="chip-label">Dry White Powder</label></div>
+                                    <div class="chip-item"><input type="radio" id="flake-3" name="flake_type" value="greasy_yellow_thick"><label for="flake-3" class="chip-label">Greasy Yellow Plaque</label></div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <span class="field-label">Duration of Symptoms</span>
+                                <div class="slider-wrapper">
+                                    <input type="range" id="duration-slider" class="slider-range" min="1" max="52" value="4" oninput="document.getElementById('duration-val-badge').innerText = this.value + ' Weeks'">
+                                    <span id="duration-val-badge" class="slider-badge">4 Weeks</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="risk-counter-banner">
+                            <span style="font-size: 0.78rem; font-weight: 700; color: #475569;">Lifestyle Multi-Factor Status:</span>
+                            <span id="live-risk-badge" class="risk-badge">2 Correlated Factors</span>
+                        </div>
+
+                        <button type="button" id="btn-submit" class="btn-submit-main" onclick="submitAssessment()">
                             Run Dual-Pipeline Assessment
                         </button>
-
-                        <div id="loading-spinner" class="loading-pulse-text">
-                            Analyzing Micro-Features (Classical CV + Classifier Gate)...
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Right Column: Results & Clinical Pass -->
-                <div>
-                    <!-- Empty State Placeholder -->
-                    
-                    <!-- Shimmering Skeleton Loading Tiles -->
-                    <div id="results-skeleton-state" class="app-card" style="display: none;">
-                        <div style="font-size: 0.85rem; font-weight: 700; color: #0284c7; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
-                            <span>Analyzing Scalp Features...</span>
-                            <span style="font-size: 0.76rem; color: #64748b;">Dual-Pipeline (DL + CV)</span>
-                        </div>
-                        <div class="skeleton-shimmer skeleton-gauge-box"></div>
-                        <div class="skeleton-subscores-grid">
-                            <div class="skeleton-shimmer skeleton-subscore-tile"></div>
-                            <div class="skeleton-shimmer skeleton-subscore-tile"></div>
-                            <div class="skeleton-shimmer skeleton-subscore-tile"></div>
-                            <div class="skeleton-shimmer skeleton-subscore-tile"></div>
-                        </div>
-                        <div class="skeleton-shimmer skeleton-card-row"></div>
-                        <div class="skeleton-shimmer skeleton-card-row"></div>
-                        <div class="skeleton-shimmer skeleton-card-row"></div>
-                    </div>
-
-                    <div id="results-placeholder" class="app-card results-empty-state">
-                        <svg class="results-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--text-main); margin-bottom: 6px;">Assessment Results Pending</h3>
-                        <p style="font-size: 0.86rem; line-height: 1.5; color: var(--text-secondary);">Capture or upload a scalp photograph and complete the clinical questionnaire to calculate the Scalp Health Score (SHS 0-100), sub-scores, and molecule-first care routine.</p>
-                    </div>
-
-                    <!-- Populated Results Panel -->
-                    <div id="results-panel-card" class="app-card results-panel">
-                        <div class="app-card-title">
-                            <span>Assessment Report</span>
-                            <button type="button" class="btn-action-subtle" onclick="exportClinicalPdfPass()">
-                                Download Clinical Pass (PDF)
-                            </button>
-                        </div>
-
-                        <!-- Hero Scalp Health Score Gauge -->
-                        <div class="hero-gauge-container">
-                            <div>
-                                <div class="gauge-metric-label">The Scalp Health Score (SHS)</div>
-                                <div id="display-shs-score" class="gauge-metric-value">--/100</div>
-                            </div>
-                            <div>
-                                <div id="display-triage-badge" class="triage-badge-pill triage-level-1">Level 1: Minor Routine</div>
-                            </div>
-                        </div>
-
-                        <div style="margin-bottom: 18px;">
-                            <div style="font-size: 0.76rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700;">Visual Assessment Pattern</div>
-                            <div id="display-condition-name" style="font-size: 1.15rem; font-weight: 800; color: var(--text-main); margin-top: 2px;">--</div>
-                            <div id="display-confidence-label" style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px;"></div>
-                        </div>
-
-                        <!-- 4 Sub-Scores Breakdown -->
-                        <div class="subscores-grid">
-                            <div class="subscore-tile">
-                                <div class="subscore-meta">
-                                    <span>Flake & Scaling</span>
-                                    <span id="score-flake-text">--/25</span>
-                                </div>
-                                <div class="subscore-progress-track">
-                                    <div id="score-flake-bar" class="subscore-progress-bar" style="width: 0%;"></div>
-                                </div>
-                            </div>
-                            <div class="subscore-tile">
-                                <div class="subscore-meta">
-                                    <span>Redness & Erythema</span>
-                                    <span id="score-redness-text">--/25</span>
-                                </div>
-                                <div class="subscore-progress-track">
-                                    <div id="score-redness-bar" class="subscore-progress-bar" style="width: 0%;"></div>
-                                </div>
-                            </div>
-                            <div class="subscore-tile">
-                                <div class="subscore-meta">
-                                    <span>Sebum & Lipids</span>
-                                    <span id="score-sebum-text">--/25</span>
-                                </div>
-                                <div class="subscore-progress-track">
-                                    <div id="score-sebum-bar" class="subscore-progress-bar" style="width: 0%;"></div>
-                                </div>
-                            </div>
-                            <div class="subscore-tile">
-                                <div class="subscore-meta">
-                                    <span>Follicular Density</span>
-                                    <span id="score-density-text">--/25</span>
-                                </div>
-                                <div class="subscore-progress-track">
-                                    <div id="score-density-bar" class="subscore-progress-bar" style="width: 0%;"></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="display-stage-comparison" style="margin-bottom: 18px;">
-                            <span class="status-pill" id="stage-comparison-pill" style="font-size: 0.78rem; background: #eff6ff; color: #1e40af; border-color: #bfdbfe;">
-                                Baseline Follicle Density Boundary (Norwood 1-2 / Ludwig 1)
-                            </span>
-                        </div>
-
-                        <!-- Clinical Doctor Escalation (Clinic Pass Alert) -->
-                        <div id="referral-alert-container" class="referral-alert-box" style="display: none;">
-                            <div class="referral-alert-title">Clinical Hand-Off Recommended (Clinic Pass)</div>
-                            <div id="referral-alert-notes" class="referral-alert-text"></div>
-                            <a id="referral-maps-link" href="#" target="_blank" class="btn-action-subtle" style="font-size: 0.8rem; background: #ffffff; color: #9f1239; border-color: #fecdd3;">
-                                Locate Local Certified Dermatologists
-                            </a>
-                        </div>
-
-                        <!-- Active Ingredient Schedule -->
-                        <div style="margin-bottom: 18px;">
-                            <div style="font-size: 0.88rem; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">
-                                Scientific Active Molecules (No Sponsored Brands)
-                            </div>
-                            <div id="active-ingredients-list"></div>
-                        </div>
-
-                        <!-- Supportive Environmental Care -->
-                        <div style="margin-bottom: 18px;">
-                            <div style="font-size: 0.88rem; font-weight: 700; color: var(--text-main); margin-bottom: 8px;">
-                                Supportive Barrier & Environmental Care
-                            </div>
-                            <ul id="lifestyle-guidance-list" style="font-size: 0.82rem; color: var(--text-body); padding-left: 18px; line-height: 1.5;"></ul>
-                        </div>
-
-                        <div class="disclaimer-card" id="display-universal-disclaimer"></div>
-                    </div>
+                    </form>
                 </div>
             </div>
-        </div>
 
-        <!-- TAB 2: Hair Diary & Longitudinal Split Slider (Feature E) -->
-        <div id="tab-diary" class="tab-content">
-            <div class="grid-2col">
-                <div>
-                    <div class="app-card">
-                        <div class="app-card-title">Hair Diary: 14-Day Re-Scan Registration</div>
-                        <p class="app-card-subtitle">
-                            Aligns invariant anatomical keypoints between scans to compute true spot-by-spot follicle density deltas and erythema subsidence.
-                        </p>
+            <!-- Right Column: Results & Clinical Pass -->
+            <div>
+                <div id="results-empty" class="app-card" style="text-align: center; padding: 60px 24px;">
+                    <svg style="width: 48px; height: 48px; margin: 0 auto 14px; color: #94a3b8;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <h3 style="font-size: 1.1rem; font-weight: 800; color: #0f172a; margin-bottom: 6px;">Assessment Results Pending</h3>
+                    <p style="font-size: 0.84rem; color: #64748b; max-width: 380px; margin: 0 auto;">Select or upload a scalp photo and submit your clinical intake to calculate the Scalp Health Score (0-100), sub-scores, and molecule schedule.</p>
+                </div>
 
-                        <div style="margin-bottom: 14px;">
-                            <label class="form-section-title">Baseline Capture (Day 0):</label>
-                            <input type="file" id="diary-baseline-file" class="input-control" accept="image/*">
-                        </div>
+                <div id="results-skeleton" class="app-card" style="display: none;">
+                    <div style="font-size: 0.85rem; font-weight: 800; color: #0284c7; margin-bottom: 16px; display: flex; justify-content: space-between;">
+                        <span>Analyzing Dual-Pipeline Micro-Features...</span>
+                        <span style="font-size: 0.74rem; color: #64748b;">DL + OpenCV CV</span>
+                    </div>
+                    <div class="skeleton-shimmer skeleton-gauge-box"></div>
+                    <div class="skeleton-subscores-grid">
+                        <div class="skeleton-shimmer skeleton-subscore-tile"></div>
+                        <div class="skeleton-shimmer skeleton-subscore-tile"></div>
+                        <div class="skeleton-shimmer skeleton-subscore-tile"></div>
+                        <div class="skeleton-shimmer skeleton-subscore-tile"></div>
+                    </div>
+                    <div class="skeleton-shimmer skeleton-card-row"></div>
+                    <div class="skeleton-shimmer skeleton-card-row"></div>
+                    <div class="skeleton-shimmer skeleton-card-row"></div>
+                </div>
 
-                        <div style="margin-bottom: 14px;">
-                            <label class="form-section-title">Follow-up Capture (Day 14 / 30):</label>
-                            <input type="file" id="diary-followup-file" class="input-control" accept="image/*">
-                        </div>
-
-                        <div style="margin-bottom: 18px;">
-                            <label class="form-section-title">Days Elapsed:</label>
-                            <input type="number" id="diary-days-elapsed" class="input-control" value="14" min="1" max="365">
-                        </div>
-
-                        <button type="button" class="btn-submit-glow" onclick="executeDiaryComparison()">
-                            Align Scans & Compute Delta Metrics
+                <div id="results-panel" class="app-card" style="display: none;">
+                    <div class="card-header-row">
+                        <div class="card-heading"><span>Assessment Report</span></div>
+                        <button type="button" class="btn-demo-mode" style="font-size: 0.76rem;" onclick="downloadPdfReport()">
+                            Download Clinical Pass (PDF)
                         </button>
                     </div>
-                </div>
 
-                <div>
-                    <div class="app-card">
-                        <div class="app-card-title">Before / After Interactive Split Slider</div>
-                        
-                        <div class="slider-viewport" id="slider-viewport-box">
-                            <img id="img-after-layer" class="slider-layer slider-layer-after" src="" alt="Follow-up Scan">
-                            <img id="img-before-layer" class="slider-layer slider-layer-before" src="" alt="Baseline Scan">
-                            <div class="slider-splitter" id="slider-splitter-line">
-                                <div class="slider-knob"><></div>
-                            </div>
-                            <div class="slider-tag left">Day 0 (Baseline)</div>
-                            <div class="slider-tag right">Day 14+ (Follow-up)</div>
+                    <div class="hero-gauge-container">
+                        <div>
+                            <div class="gauge-metric-label">Scalp Health Score (SHS)</div>
+                            <div id="res-shs-val" class="gauge-metric-value">--/100</div>
                         </div>
-
-                        <div id="diary-results-box" style="display: none;">
-                            <div class="delta-stats-row">
-                                <div class="delta-stat-card">
-                                    <div class="delta-stat-num" id="stat-follicle-delta">+0.0%</div>
-                                    <div class="delta-stat-label">Follicle Coverage</div>
-                                </div>
-                                <div class="delta-stat-card">
-                                    <div class="delta-stat-num" id="stat-redness-delta">+0.0%</div>
-                                    <div class="delta-stat-label">Erythema Subsidence</div>
-                                </div>
-                                <div class="delta-stat-card">
-                                    <div class="delta-stat-num" id="stat-flake-delta">+0.0%</div>
-                                    <div class="delta-stat-label">Scaling Clearance</div>
-                                </div>
-                            </div>
-
-                            <div style="background: var(--bg-subtle); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); font-size: 0.84rem;">
-                                <strong style="color: var(--text-main); display: block; margin-bottom: 4px;" id="stat-trend-title">Trend: STABLE</strong>
-                                <p id="stat-interpretation-text" style="color: var(--text-body);"></p>
-                                <p id="stat-recommendation-text" style="color: var(--brand-primary); margin-top: 6px; font-weight: 700;"></p>
-                            </div>
+                        <div>
+                            <div id="res-triage-badge" class="triage-badge-pill triage-level-1">Level 1: Minor Routine</div>
                         </div>
+                    </div>
+
+                    <div style="margin-bottom: 16px;">
+                        <div style="font-size: 0.72rem; color: #64748b; font-weight: 800; text-transform: uppercase;">Visual Assessment Pattern</div>
+                        <div id="res-condition-title" style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin-top: 2px;">--</div>
+                        <div id="res-confidence-tag" style="font-size: 0.78rem; color: #64748b; margin-top: 2px;">Confidence: 0.0%</div>
+                    </div>
+
+                    <div class="subscores-grid">
+                        <div class="subscore-tile">
+                            <div class="subscore-meta"><span>Flake & Scaling</span><span id="res-flake-val">--/25</span></div>
+                            <div class="subscore-track"><div id="res-flake-bar" class="subscore-bar" style="width: 0%;"></div></div>
+                        </div>
+                        <div class="subscore-tile">
+                            <div class="subscore-meta"><span>Redness & Erythema</span><span id="res-redness-val">--/25</span></div>
+                            <div class="subscore-track"><div id="res-redness-bar" class="subscore-bar" style="width: 0%;"></div></div>
+                        </div>
+                        <div class="subscore-tile">
+                            <div class="subscore-meta"><span>Sebum & Lipids</span><span id="res-sebum-val">--/25</span></div>
+                            <div class="subscore-track"><div id="res-sebum-bar" class="subscore-bar" style="width: 0%;"></div></div>
+                        </div>
+                        <div class="subscore-tile">
+                            <div class="subscore-meta"><span>Follicular Density</span><span id="res-density-val">--/25</span></div>
+                            <div class="subscore-track"><div id="res-density-bar" class="subscore-bar" style="width: 0%;"></div></div>
+                        </div>
+                    </div>
+
+                    <div style="font-size: 0.78rem; font-weight: 800; color: #0f172a; margin-bottom: 8px; text-transform: uppercase;">
+                        Correlated Lifestyle & Clinical Risk Drivers
+                    </div>
+                    <div id="res-correlations-container" class="correlation-box">
+                        <div class="correlation-item">No acute lifestyle risk drivers identified.</div>
+                    </div>
+
+                    <div style="font-size: 0.78rem; font-weight: 800; color: #0f172a; margin-bottom: 8px; text-transform: uppercase;">
+                        Molecule-First Care Schedule
+                    </div>
+                    <div id="res-ingredients-container"></div>
+
+                    <div class="disclaimer-card" id="res-disclaimer-text">
+                        This assessment is for informational and educational purposes only and suggests potential scalp care routines. It does not constitute medical diagnosis, formal medical advice, or treatment. If symptoms persist, cause discomfort, or worsen, please consult a certified dermatologist.
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- TAB 3: DermaIQ Modular Architecture (Feature G) -->
-        <div id="tab-architecture" class="tab-content">
-            <div class="app-card">
-                <div class="app-card-title">DermaIQ Multi-Domain Diagnostic Intelligence</div>
-                <p class="app-card-subtitle">
-                    Follica is architected as the foundational module of the DermaIQ clinical intelligence platform, standardizing pre-inference quality validation, dual-pipeline scoring, and molecule-first routing across dermatological conditions.
-                </p>
-
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-top: 16px;">
-                    <!-- Scalp Health -->
-                    <div style="background: #ffffff; border: 1px solid #0891b2; border-radius: var(--radius-md); padding: 18px; box-shadow: var(--shadow-subtle);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                            <strong style="color: #0891b2; font-size: 0.98rem;">Module 1: Scalp & Trichoscopy</strong>
-                            <span class="status-pill" style="font-size: 0.72rem; padding: 2px 8px;">PRODUCTION ACTIVE</span>
-                        </div>
-                        <p style="font-size: 0.82rem; color: var(--text-body); margin-bottom: 12px; line-height: 1.4;">
-                            Dual-pipeline trichoscopy evaluating dry flaking vs Malassezia seborrheic dermatitis, erythema inflammation, and hard-water mineral crust.
-                        </p>
-                        <div style="font-size: 0.78rem; color: var(--text-secondary);">
-                            Active Engine: MobileNetV4 ONNX + 4 Micro-Feature Classical CV Extractors
-                        </div>
-                    </div>
-
-                    <!-- Facial Acne -->
-                    <div style="background: #ffffff; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 18px; box-shadow: var(--shadow-subtle);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                            <strong style="color: var(--text-main); font-size: 0.98rem;">Module 2: Facial Acne & Barrier</strong>
-                            <span class="status-pill" style="font-size: 0.72rem; padding: 2px 8px; background: #fffbeb; color: #92400e; border-color: #fde68a;">BETA MODULE</span>
-                        </div>
-                        <p style="font-size: 0.82rem; color: var(--text-body); margin-bottom: 12px; line-height: 1.4;">
-                            Differentiates non-inflammatory comedones from inflammatory papulopustular lesions, measuring lipid barrier hydration and post-inflammatory erythema (PIE).
-                        </p>
-                        <div style="font-size: 0.78rem; color: var(--text-secondary);">
-                            Target Molecules: Salicylic Acid 2%, Benzoyl Peroxide, Niacinamide, Azelaic Acid
-                        </div>
-                    </div>
-
-                    <!-- Eczema & Skin Rashes -->
-                    <div style="background: #ffffff; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 18px; box-shadow: var(--shadow-subtle);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                            <strong style="color: var(--text-main); font-size: 0.98rem;">Module 3: Eczema & Dermatitis</strong>
-                            <span class="status-pill" style="font-size: 0.72rem; padding: 2px 8px; background: #f1f5f9; color: #475569; border-color: #cbd5e1;">PLANNED ROADMAP</span>
-                        </div>
-                        <p style="font-size: 0.82rem; color: var(--text-body); margin-bottom: 12px; line-height: 1.4;">
-                            Analyzes localized epidermal lichenification, barrier xerosis, and active circular erythematous margins for physician triage.
-                        </p>
-                        <div style="font-size: 0.78rem; color: var(--text-secondary);">
-                            Target Molecules: Colloidal Oatmeal, Ceramide NP/AP, Zinc Oxide, Clotrimazole
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    </main>
 
     <script>
-        let cachedAnalysisResult = null;
-        let cachedSymptomContext = null;
-        let activeUploadedFile = null;
-        let activeScanAngle = 'crown_vertex';
+        let currentAnalysisResult = null;
+        let selectedFile = null;
 
-        // Tab Navigation
-        function navigateTab(tabId, triggerBtn) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            triggerBtn.classList.add('active');
+        function updateRiskCounter() {
+            let count = 0;
+            if (document.getElementById('helmet-check').checked) count++;
+            if (document.getElementById('styling-check').checked) count++;
+            if (document.getElementById('def-d3').checked) count++;
+            if (document.getElementById('def-iron').checked) count++;
+            if (document.getElementById('def-family').checked) count++;
+            if (document.getElementById('def-stress').checked) count++;
+            if (document.querySelector('input[name="water_environment"]:checked').value === 'hard_borewell') count++;
+            if (document.querySelector('input[name="diet_pattern"]:checked').value === 'low_protein_crash_diet') count++;
+            if (document.querySelector('input[name="hair_pull_test"]:checked').value === 'positive_over_5') count++;
+
+            const badge = document.getElementById('live-risk-badge');
+            badge.innerText = count + ' Correlated Factors';
+            badge.style.background = count >= 3 ? '#fee2e2' : (count >= 1 ? '#fef3c7' : '#ecfdf5');
+            badge.style.color = count >= 3 ? '#991b1b' : (count >= 1 ? '#92400e' : '#065f46');
         }
 
-        // Scan Angle Selector
-        function setScanAngle(angleId, angleLabel, chipElement) {
-            activeScanAngle = angleId;
-            document.querySelectorAll('.angle-chip').forEach(c => c.classList.remove('active'));
-            chipElement.classList.add('active');
-            document.getElementById('selected-angle-badge').textContent = `Angle: ${angleLabel}`;
-        }
-
-        // Live System Health Hook
-        async function checkSystemReadiness() {
-            try {
-                const res = await fetch('/api/v1/system/status');
-                if (res.ok) {
-                    const data = await res.json();
-                    document.getElementById('system-status-text').textContent = `Ready (Gate: ${data.confidence_gate_threshold})`;
-                }
-            } catch (err) {
-                document.getElementById('system-status-text').textContent = 'Offline';
-            }
-        }
-        checkSystemReadiness();
-
-        // Image Viewfinder & Pre-Inference Quality Validation
-        const scalpFileInput = document.getElementById('scalp-photo-input');
-        const scalpPreviewImg = document.getElementById('scalp-preview-img');
-        const viewfinderInstructions = document.getElementById('viewfinder-instructions');
-        const qualityStatusMsg = document.getElementById('quality-status-msg');
-
-        scalpFileInput.addEventListener('change', async (e) => {
-            const file = e.target.files[0];
+        function handleFileSelected(event) {
+            const file = event.target.files[0];
             if (!file) return;
-            handleSelectedPhoto(file);
-        });
+            selectedFile = file;
 
-        async function handleSelectedPhoto(file) {
-            activeUploadedFile = file;
-
-            // Render preview
             const reader = new FileReader();
-            reader.onload = (evt) => {
-                scalpPreviewImg.src = evt.target.result;
-                scalpPreviewImg.style.display = 'block';
-                viewfinderInstructions.style.display = 'none';
+            reader.onload = function(e) {
+                const img = document.getElementById('preview-image');
+                img.src = e.target.result;
+                document.getElementById('preview-holder').style.display = 'block';
             };
             reader.readAsDataURL(file);
-
-            // Pre-Inference Quality Gate Check
-            const formData = new FormData();
-            formData.append('image', file);
-
-            qualityStatusMsg.style.display = 'block';
-            qualityStatusMsg.className = 'quality-status-bar';
-            qualityStatusMsg.textContent = 'Validating optical focus sharpness and illumination...';
-
-            try {
-                const res = await fetch('/api/v1/quality/check', {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await res.json();
-
-                if (res.ok) {
-                    qualityStatusMsg.className = 'quality-status-bar passed';
-                    const m = data.metrics || {};
-                    qualityStatusMsg.textContent = `Quality Verified: Focus Score ${m.blur_score || 'OK'} | Brightness ${m.brightness_score || 'OK'}`;
-                } else {
-                    qualityStatusMsg.className = 'quality-status-bar failed';
-                    const detail = data.detail || {};
-                    qualityStatusMsg.textContent = `Quality Alert: ${detail.rejection_reason || 'Photo quality check failed.'} ${detail.user_guidance || ''}`;
-                }
-            } catch (err) {
-                qualityStatusMsg.className = 'quality-status-bar failed';
-                qualityStatusMsg.textContent = 'Unable to connect to pre-inference quality gate.';
-            }
         }
 
-        // Demo Mode: Generates in-memory synthetic scalp scan for 1-click preview
-        function loadSampleDemoScan() {
+        function loadDemoScenario() {
+            document.getElementById('helmet-check').checked = true;
+            document.getElementById('def-stress').checked = true;
+            document.getElementById('sens-2').checked = true;
+            document.getElementById('flake-3').checked = true;
+            document.getElementById('pull-2').checked = true;
+            document.getElementById('duration-slider').value = 6;
+            document.getElementById('duration-val-badge').innerText = '6 Weeks';
+            updateRiskCounter();
+
             const canvas = document.createElement('canvas');
-            canvas.width = 300;
-            canvas.height = 300;
+            canvas.width = 224;
+            canvas.height = 224;
             const ctx = canvas.getContext('2d');
-            
-            // Scalp skin tone baseline
-            ctx.fillStyle = '#b48c78';
-            ctx.fillRect(0, 0, 300, 300);
-            
-            // Simulated hair strands and scalp parting
-            ctx.strokeStyle = '#281e14';
-            ctx.lineWidth = 2;
-            for (let i = 0; i < 300; i += 6) {
+            ctx.fillStyle = '#c8a28c';
+            ctx.fillRect(0, 0, 224, 224);
+            ctx.strokeStyle = '#2b1d14';
+            ctx.lineWidth = 1.5;
+            for (let i = 0; i < 40; i++) {
                 ctx.beginPath();
-                ctx.moveTo(i, 0);
-                ctx.lineTo(i + (Math.random() * 8 - 4), 300);
+                ctx.moveTo(Math.random() * 224, 0);
+                ctx.lineTo(Math.random() * 224, 224);
                 ctx.stroke();
             }
 
-            // Simulated bright parting center
-            ctx.fillStyle = '#d7b496';
-            ctx.fillRect(130, 0, 40, 300);
-
-            canvas.toBlob((blob) => {
-                const file = new File([blob], 'sample_scalp_demo.jpg', { type: 'image/jpeg' });
-                handleSelectedPhoto(file);
+            canvas.toBlob(function(blob) {
+                selectedFile = new File([blob], 'demo_scan.jpg', { type: 'image/jpeg' });
+                document.getElementById('preview-image').src = canvas.toDataURL('image/jpeg');
+                document.getElementById('preview-holder').style.display = 'block';
+                submitAssessment();
             }, 'image/jpeg');
         }
 
-        // Execute Dual-Pipeline Scalp Assessment
-        async function executeScalpAssessment() {
-            if (!activeUploadedFile) {
-                alert('Please upload or select a scalp photograph first.');
+        async function submitAssessment() {
+            if (!selectedFile) {
+                loadDemoScenario();
                 return;
             }
 
-            const consentChecked = document.getElementById('user-consent-checkbox').checked;
-            if (!consentChecked) {
-                alert('Consent is required to process photographs.');
-                return;
-            }
-
-            const btn = document.getElementById('btn-run-assessment');
-            const loading = document.getElementById('loading-spinner');
-            btn.disabled = true;
-            loading.style.display = 'block';
-
-            const sensation = document.querySelector('input[name="sens_radio"]:checked').value;
-            const shedding = document.querySelector('input[name="shed_radio"]:checked').value;
-            const waterEnv = document.getElementById('water-supply-select').value;
-            const famHistory = document.getElementById('check-genetics').checked;
-            const examStress = document.getElementById('check-stress').checked;
-            const durationWeeks = parseInt(document.getElementById('symptom-duration-weeks').value, 10);
-            const notes = document.getElementById('past-treatments-text').value;
+            document.getElementById('results-empty').style.display = 'none';
+            document.getElementById('results-skeleton').style.display = 'block';
+            document.getElementById('results-panel').style.display = 'none';
 
             const formData = new FormData();
-            formData.append('image', activeUploadedFile);
-            formData.append('scan_angle', activeScanAngle);
-            formData.append('sensation', sensation);
-            formData.append('water_environment', waterEnv);
-            formData.append('stress_level', examStress ? 'high' : 'moderate');
-            formData.append('recent_exam_work_stress', examStress);
-            formData.append('shedding_pattern', shedding);
-            formData.append('duration_weeks', durationWeeks);
-            formData.append('family_history_hair_loss', famHistory);
-            formData.append('symptom_notes', notes);
+            formData.append('image', selectedFile);
+            formData.append('age_group', document.querySelector('input[name="age_group"]:checked').value);
+            formData.append('biological_sex', document.querySelector('input[name="biological_sex"]:checked').value);
+            formData.append('primary_concern_zone', document.querySelector('input[name="primary_concern_zone"]:checked').value);
+            formData.append('water_environment', document.querySelector('input[name="water_environment"]:checked').value);
+            formData.append('daily_helmet_wearer', document.getElementById('helmet-check').checked);
+            formData.append('chemical_heat_styling', document.getElementById('styling-check').checked);
+            formData.append('washing_frequency', document.querySelector('input[name="washing_frequency"]:checked').value);
+            formData.append('diet_pattern', document.querySelector('input[name="diet_pattern"]:checked').value);
+            formData.append('sensation', document.querySelector('input[name="sensation"]:checked').value);
+            formData.append('hair_pull_test', document.querySelector('input[name="hair_pull_test"]:checked').value);
+            formData.append('flake_type', document.querySelector('input[name="flake_type"]:checked').value);
+            formData.append('duration_weeks', parseInt(document.getElementById('duration-slider').value));
+            formData.append('family_history_hair_loss', document.getElementById('def-family').checked);
+            formData.append('recent_exam_work_stress', document.getElementById('def-stress').checked);
 
-            cachedSymptomContext = {
-                scan_angle: activeScanAngle,
-                sensation: sensation,
-                water_environment: waterEnv,
-                stress_level: examStress ? 'high' : 'moderate',
-                recent_exam_work_stress: examStress,
-                shedding_pattern: shedding,
-                duration_weeks: durationWeeks,
-                family_history_hair_loss: famHistory,
-                symptom_notes: notes
-            };
+            const defs = [];
+            if (document.getElementById('def-d3').checked) defs.push('vitamin_d3');
+            if (document.getElementById('def-iron').checked) defs.push('iron_ferritin');
+            if (defs.length > 0) formData.append('deficiency_flags', defs.join(','));
 
             try {
-                const res = await fetch('/api/v1/analyze', {
+                const response = await fetch('/api/v1/analyze', {
                     method: 'POST',
                     body: formData
                 });
-                const data = await res.json();
 
-                if (!res.ok) {
-                    const detail = data.detail;
-                    if (typeof detail === 'object') {
-                        alert(`Quality Check Notice: ${detail.rejection_reason || detail.error}\n\n${detail.user_guidance || ''}`);
-                    } else {
-                        alert(`Analysis Notice: ${detail}`);
-                    }
+                if (!response.ok) {
+                    const err = await response.json();
+                    alert(err.detail ? JSON.stringify(err.detail) : 'Analysis request failed.');
+                    document.getElementById('results-skeleton').style.display = 'none';
+                    document.getElementById('results-empty').style.display = 'block';
                     return;
                 }
 
-                cachedAnalysisResult = data;
-                renderAssessmentResults(data);
-            } catch (err) {
-                alert('Unable to connect to analysis server.');
-            } finally {
-                btn.disabled = false;
-                loading.style.display = 'none';
+                const data = await response.json();
+                currentAnalysisResult = data;
+                renderResults(data);
+            } catch (e) {
+                console.error(e);
+                alert('Connection error. Please verify backend is running on localhost:8000.');
+                document.getElementById('results-skeleton').style.display = 'none';
+                document.getElementById('results-empty').style.display = 'block';
             }
         }
 
-        function renderAssessmentResults(data) {
-            document.getElementById('results-placeholder').style.display = 'none';
-            const panel = document.getElementById('results-panel-card');
-            panel.style.display = 'block';
+        function renderResults(data) {
+            document.getElementById('results-skeleton').style.display = 'none';
+            document.getElementById('results-panel').style.display = 'block';
 
-            // Composite Score & Triage
-            document.getElementById('display-shs-score').textContent = `${data.scalp_health_score}/100`;
-            const badge = document.getElementById('display-triage-badge');
-            badge.textContent = data.triage_level;
-            badge.className = 'triage-badge-pill';
-            if (data.triage_level.includes('Level 1')) {
-                badge.classList.add('triage-level-1');
-            } else if (data.triage_level.includes('Level 2')) {
-                badge.classList.add('triage-level-2');
+            document.getElementById('res-shs-val').innerText = data.scalp_health_score.toFixed(1) + '/100';
+
+            const badge = document.getElementById('res-triage-badge');
+            badge.innerText = data.triage_level;
+            badge.className = 'triage-badge-pill ' + (
+                data.triage_level.includes('Level 1') ? 'triage-level-1' :
+                (data.triage_level.includes('Level 2') ? 'triage-level-2' : 'triage-level-3')
+            );
+
+            document.getElementById('res-condition-title').innerText = data.suggested_condition;
+            document.getElementById('res-confidence-tag').innerText = 'Classifier Confidence: ' + (data.confidence_score * 100).toFixed(1) + '%' + (data.confidence_gated ? ' (Confidence-Gated to Level 2)' : '');
+
+            document.getElementById('res-flake-val').innerText = data.sub_scores.flake_score.toFixed(1) + '/25';
+            document.getElementById('res-flake-bar').style.width = (data.sub_scores.flake_score / 25 * 100) + '%';
+
+            document.getElementById('res-redness-val').innerText = data.sub_scores.redness_score.toFixed(1) + '/25';
+            document.getElementById('res-redness-bar').style.width = (data.sub_scores.redness_score / 25 * 100) + '%';
+
+            document.getElementById('res-sebum-val').innerText = data.sub_scores.sebum_score.toFixed(1) + '/25';
+            document.getElementById('res-sebum-bar').style.width = (data.sub_scores.sebum_score / 25 * 100) + '%';
+
+            document.getElementById('res-density-val').innerText = data.sub_scores.density_score.toFixed(1) + '/25';
+            document.getElementById('res-density-bar').style.width = (data.sub_scores.density_score / 25 * 100) + '%';
+
+            const corrBox = document.getElementById('res-correlations-container');
+            corrBox.innerHTML = '';
+            if (data.clinical_correlations && data.clinical_correlations.length > 0) {
+                data.clinical_correlations.forEach(c => {
+                    const item = document.createElement('div');
+                    item.className = 'correlation-item';
+                    item.innerHTML = '<strong>' + c.factor + '</strong> (' + c.impact_level.toUpperCase() + ' IMPACT)<br><span style="color: #64748b;">' + c.clinical_note + '</span>';
+                    corrBox.appendChild(item);
+                });
             } else {
-                badge.classList.add('triage-level-3');
+                corrBox.innerHTML = '<div class="correlation-item">No acute lifestyle risk drivers identified.</div>';
             }
 
-            // Condition & Confidence
-            document.getElementById('display-condition-name').textContent = data.suggested_condition;
-            const conf = Math.round(data.confidence_score * 100);
-            const gateNote = data.confidence_gated ? ' (Re-routed by 0.65 Confidence Gate)' : '';
-            document.getElementById('display-confidence-label').textContent = `Pattern Confidence: ${conf}%${gateNote}`;
-
-            // 4 Sub-Scores
-            const s = data.sub_scores;
-            document.getElementById('score-flake-text').textContent = `${s.flake_score}/25`;
-            document.getElementById('score-flake-bar').style.width = `${(s.flake_score / 25) * 100}%`;
-
-            document.getElementById('score-redness-text').textContent = `${s.redness_score}/25`;
-            document.getElementById('score-redness-bar').style.width = `${(s.redness_score / 25) * 100}%`;
-
-            document.getElementById('score-sebum-text').textContent = `${s.sebum_score}/25`;
-            document.getElementById('score-sebum-bar').style.width = `${(s.sebum_score / 25) * 100}%`;
-
-            document.getElementById('score-density-text').textContent = `${s.density_score}/25`;
-            document.getElementById('score-density-bar').style.width = `${(s.density_score / 25) * 100}%`;
-
-            if (s.stage_comparison) {
-                document.getElementById('stage-comparison-pill').textContent = s.stage_comparison;
-            }
-
-            // Clinical Escalation
-            const refBox = document.getElementById('referral-alert-container');
-            if (data.consultation_referral && data.consultation_referral.required) {
-                refBox.style.display = 'block';
-                document.getElementById('referral-alert-notes').textContent = data.consultation_referral.clinical_hand_off_notes || 'Evaluation by a certified dermatologist recommended.';
-                document.getElementById('referral-maps-link').href = data.consultation_referral.search_url || 'https://www.google.com/maps/search/dermatologist+near+me';
-            } else {
-                refBox.style.display = 'none';
-            }
-
-            // Active Ingredients
-            const ingContainer = document.getElementById('active-ingredients-list');
-            ingContainer.innerHTML = '';
+            const ingBox = document.getElementById('res-ingredients-container');
+            ingBox.innerHTML = '';
             if (data.recommended_ingredients && data.recommended_ingredients.length > 0) {
                 data.recommended_ingredients.forEach(ing => {
                     const card = document.createElement('div');
-                    card.className = 'ingredient-item-card';
-                    card.innerHTML = `
-                        <div class="ingredient-title">${ing.name}</div>
-                        <div class="ingredient-cadence">Suggested Cadence: ${ing.frequency}</div>
-                        <div class="ingredient-mechanism">Mechanism: ${ing.purpose}</div>
-                    `;
-                    ingContainer.appendChild(card);
+                    card.className = 'ingredient-card';
+                    card.innerHTML = '<div class="ingredient-name"><span>' + ing.name + '</span><span class="ingredient-cadence">' + ing.frequency + '</span></div><div class="ingredient-purpose">' + ing.purpose + '</div>';
+                    ingBox.appendChild(card);
                 });
-            } else {
-                ingContainer.innerHTML = '<p style="font-size:0.8rem; color:var(--text-secondary);">No active chemical interventions required.</p>';
             }
 
-            // Lifestyle List
-            const lifeContainer = document.getElementById('lifestyle-guidance-list');
-            lifeContainer.innerHTML = '';
-            (data.lifestyle_guidance || []).forEach(item => {
-                const li = document.createElement('li');
-                li.textContent = item;
-                lifeContainer.appendChild(li);
-            });
-
-            // Universal Disclaimer
-            document.getElementById('display-universal-disclaimer').textContent = data.disclaimer;
+            document.getElementById('res-disclaimer-text').innerText = data.disclaimer;
         }
 
-        // Export 1-Page Clinical Pass PDF
-        async function exportClinicalPdfPass() {
-            if (!cachedAnalysisResult || !cachedSymptomContext) return;
-
-            const payload = {
-                analysis_data: cachedAnalysisResult,
-                context: cachedSymptomContext,
-                patient_ref_id: 'STUDENT-CLINIC-01'
-            };
-
+        async function downloadPdfReport() {
+            if (!currentAnalysisResult) return;
             try {
+                const payload = {
+                    analysis_data: currentAnalysisResult,
+                    context: {
+                        duration_weeks: parseInt(document.getElementById('duration-slider').value),
+                        itching: document.getElementById('sens-2').checked,
+                        burning_or_pain: document.getElementById('sens-3').checked,
+                        hard_water_exposure: document.querySelector('input[name="water_environment"]:checked').value === 'hard_borewell'
+                    },
+                    patient_ref_id: 'FOLLICA-SCAN-' + Math.floor(1000 + Math.random() * 9000)
+                };
+
                 const res = await fetch('/api/v1/report/pdf', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
 
-                if (!res.ok) {
-                    alert('Failed to generate clinical PDF.');
-                    return;
-                }
-
                 const blob = await res.blob();
-                const blobUrl = window.URL.createObjectURL(blob);
-                const dlLink = document.createElement('a');
-                dlLink.href = blobUrl;
-                dlLink.download = 'follica_clinical_pass.pdf';
-                document.body.appendChild(dlLink);
-                dlLink.click();
-                window.URL.revokeObjectURL(blobUrl);
-                dlLink.remove();
-            } catch (err) {
-                alert('Error exporting PDF document.');
-            }
-        }
-
-        // Hair Diary: Interactive Before/After Split Slider
-        const sliderBox = document.getElementById('slider-viewport-box');
-        const imgBefore = document.getElementById('img-before-layer');
-        const splitterLine = document.getElementById('slider-splitter-line');
-        let sliderActive = false;
-
-        function updateSliderPosition(clientX) {
-            const rect = sliderBox.getBoundingClientRect();
-            let pct = ((clientX - rect.left) / rect.width) * 100;
-            pct = Math.max(0, Math.min(100, pct));
-            imgBefore.style.clipPath = `polygon(0 0, ${pct}% 0, ${pct}% 100%, 0 100%)`;
-            splitterLine.style.left = `${pct}%`;
-        }
-
-        sliderBox.addEventListener('mousedown', (e) => {
-            sliderActive = true;
-            updateSliderPosition(e.clientX);
-        });
-
-        window.addEventListener('mouseup', () => { sliderActive = false; });
-        window.addEventListener('mousemove', (e) => {
-            if (!sliderActive) return;
-            updateSliderPosition(e.clientX);
-        });
-
-        // Longitudinal Comparison
-        async function executeDiaryComparison() {
-            const baseFile = document.getElementById('diary-baseline-file').files[0];
-            const followFile = document.getElementById('diary-followup-file').files[0];
-            const days = document.getElementById('diary-days-elapsed').value;
-
-            if (!baseFile || !followFile) {
-                alert('Please select both Baseline (Day 0) and Follow-up photos.');
-                return;
-            }
-
-            const r1 = new FileReader();
-            r1.onload = (e) => { document.getElementById('img-before-layer').src = e.target.result; };
-            r1.readAsDataURL(baseFile);
-
-            const r2 = new FileReader();
-            r2.onload = (e) => { document.getElementById('img-after-layer').src = e.target.result; };
-            r2.readAsDataURL(followFile);
-
-            const formData = new FormData();
-            formData.append('baseline_image', baseFile);
-            formData.append('followup_image', followFile);
-            formData.append('days_elapsed', days);
-
-            try {
-                const res = await fetch('/api/v1/progress/compare', {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await res.json();
-
-                if (!res.ok) {
-                    alert(`Comparison Notice: ${data.detail || 'Failed to compare scans.'}`);
-                    return;
-                }
-
-                document.getElementById('diary-results-box').style.display = 'block';
-                document.getElementById('stat-follicle-delta').textContent = `${data.follicle_density_delta_pct > 0 ? '+' : ''}${data.follicle_density_delta_pct}%`;
-                document.getElementById('stat-redness-delta').textContent = `${data.redness_reduction_delta_pct > 0 ? '+' : ''}${data.redness_reduction_delta_pct}%`;
-                document.getElementById('stat-flake-delta').textContent = `${data.flake_reduction_delta_pct > 0 ? '+' : ''}${data.flake_reduction_delta_pct}%`;
-
-                document.getElementById('stat-trend-title').textContent = `Trend: ${data.overall_trend.toUpperCase().replace('_', ' ')} (Alignment Quality: ${data.alignment_quality.toUpperCase()})`;
-                document.getElementById('stat-interpretation-text').textContent = data.clinical_interpretation;
-                document.getElementById('stat-recommendation-text').textContent = data.recommendation;
-            } catch (err) {
-                alert('Unable to connect to longitudinal comparison service.');
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'follica_clinical_pass.pdf';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            } catch (e) {
+                alert('Failed to generate PDF pass: ' + e);
             }
         }
     </script>

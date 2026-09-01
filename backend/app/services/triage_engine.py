@@ -1,26 +1,24 @@
 ﻿"""
 Follica Server-Side Triage and Clinical Scoring Engine.
 
-Architectural Design Intent & Rationale:
-1. Why the Confidence Gate Reroutes to Level 2 (Monitored Routine):
-   - When a deep learning model produces a low-confidence classification (< 0.65),
-     the underlying pattern is ambiguous (e.g. poor photo lighting, blurry focus, or early-stage symptoms).
-   - Why not Level 1 (Minor)?
-     If an actual inflammatory infection (Folliculitis) or autoimmune loss (Alopecia Areata)
-     is present but poorly captured, routing to Level 1 would falsely reassure the user,
-     risking disease progression.
-   - Why not Level 3 (Doctor Escalation)?
-     If ordinary dandruff is captured poorly, routing to Level 3 causes unnecessary panic
-     and places undue burden on clinical dermatology queues.
-   - Level 2 (Monitored Routine) is the optimal medical-adjacent triage: it guides the user
-     to use non-irritating base care, improve scan conditions, and track changes over 7-14 days.
+Architectural Design Intent and Clinical Rationale:
+1. Multi-Factor Clinical Correlation:
+   - In addition to visual computer vision feature extraction and classifier gating,
+     this engine correlates patient lifestyle and demographic risk factors:
+     * Age + Family History -> Androgenetic Alopecia (AGA) miniaturization risk
+     * Sudden Shedding + Positive Pull Test + Stress/Deficiencies -> Acute Telogen Effluvium (TE)
+     * Greasy Scaling + Daily Helmet + Hard Water -> Malassezia yeast overgrowth and sebum occlusion
+     * Hard Water + Dry Powder Flakes -> Stratum corneum mineral buildup
+     * Scalp Burning/Trichodynia -> Perifollicular inflammation risk
+   - These correlations are returned in the `clinical_correlations` array.
 
-2. Transparent Composite Health Score:
-   - Scalp Health Score = Flake + Redness + Sebum + Density in range [0.0, 100.0].
-   - Each component is bounded to [0.0, 25.0], ensuring clear visibility into what drives the total score.
+2. Server-Side Confidence Gate (< 0.65):
+   - Inconclusive visual confidence is strictly diverted to Level 2 (Monitored Routine).
 """
 
 from datetime import datetime, timezone
+from typing import List
+
 from app.core.config import settings
 from app.core.constants import (
     UNIVERSAL_DISCLAIMER,
@@ -42,15 +40,88 @@ from app.models.schemas import (
     SubScores,
     AnalysisResponse,
     IngredientRecommendation,
-    ConsultationReferral
+    ConsultationReferral,
+    ClinicalCorrelationFactor
 )
 
 
 class TriageEngine:
     """
-    Evaluates multimodal signals, enforces server-side confidence gates,
-    and constructs non-diagnostic, safety-compliant triage recommendations.
+    Evaluates multimodal signals, correlates multi-factor lifestyle data,
+    enforces server-side confidence gates, and constructs non-diagnostic triage plans.
     """
+
+    @classmethod
+    def compute_correlations(cls, context: SymptomContext, sub_scores: SubScores) -> List[ClinicalCorrelationFactor]:
+        """
+        Derives physiological correlations between self-reported context and scalp state.
+        """
+        correlations = []
+
+        # 1. Hard Water & Mineral Occlusion
+        if context.hard_water_exposure or context.water_environment == "hard_borewell":
+            correlations.append(ClinicalCorrelationFactor(
+                factor="Hard Water Mineral Deposition",
+                impact_level="high",
+                clinical_note="High calcium/magnesium ion concentration binds with fatty acids in sebum, forming insoluble soap scum that disrupts the stratum corneum barrier."
+            ))
+
+        # 2. Daily Helmet / Sweat Occlusion
+        if context.daily_helmet_wearer:
+            correlations.append(ClinicalCorrelationFactor(
+                factor="Daily Helmet / Occlusive Friction",
+                impact_level="high" if context.itching else "moderate",
+                clinical_note="Prolonged helmet wear traps heat, perspiration, and sebum, creating a warm micro-environment that accelerates Malassezia fungal proliferation and mechanical traction."
+            ))
+
+        # 3. High PM2.5 Pollution & Particulate Settling
+        if context.pollution_exposure in ["high_metro_industrial", "high_campus_dust"]:
+            correlations.append(ClinicalCorrelationFactor(
+                factor="Atmospheric Particulate (PM2.5) Load",
+                impact_level="moderate",
+                clinical_note="Fine particulate matter adheres to sebum-coated hair shafts and oxidizes surface lipids, triggering low-grade micro-inflammation."
+            ))
+
+        # 4. Acute Telogen Effluvium Correlation (Pull Test + Sudden Shedding + Stress/Diet)
+        is_te_profile = (
+            context.shedding_pattern == "sudden_acute" or
+            context.hair_pull_test == "positive_over_5" or
+            context.recent_exam_work_stress or
+            context.diet_pattern == "low_protein_crash_diet"
+        )
+        if is_te_profile and context.hair_pull_test != "negative_under_3":
+            correlations.append(ClinicalCorrelationFactor(
+                factor="Acute Telogen Effluvium Risk Dynamics",
+                impact_level="high",
+                clinical_note="Sudden shedding combined with a positive hair pull test and physiological stressors (exam stress, low protein intake, or nutritional gap) suggests premature follicle transition from anagen to telogen."
+            ))
+
+        # 5. Androgenetic Miniaturization Correlation (Family History + Gradual Thinning + Age)
+        if context.family_history_hair_loss and (context.primary_concern_zone in ["crown_vertex", "hairline_temples"] or context.shedding_pattern == "gradual_chronic"):
+            correlations.append(ClinicalCorrelationFactor(
+                factor="Familial Androgenetic Miniaturization Predisposition",
+                impact_level="high",
+                clinical_note="Genetic sensitivity to dihydrotestosterone (DHT) progressively shortens the anagen growth cycle and miniaturizes hair shaft diameter along the frontal hairline and vertex."
+            ))
+
+        # 6. Scalp Trichodynia / Inflammatory Hyperalgesia
+        if context.scalp_pain_trichodynia or context.burning_or_pain:
+            correlations.append(ClinicalCorrelationFactor(
+                factor="Perifollicular Trichodynia & Nerve Sensitization",
+                impact_level="high",
+                clinical_note="Scalp tenderness or burning upon hair movement indicates localized perifollicular inflammation, release of substance P, and vascular irritation."
+            ))
+
+        # 7. Nutritional & Blood Marker Deficiencies
+        if context.deficiency_flags or context.diet_pattern == "low_protein_crash_diet":
+            flags_str = ", ".join(context.deficiency_flags) if context.deficiency_flags else "low dietary protein"
+            correlations.append(ClinicalCorrelationFactor(
+                factor=f"Nutritional Synthesis Gap ({flags_str})",
+                impact_level="moderate",
+                clinical_note="Keratin synthesis and follicle matrix division depend heavily on adequate serum ferritin, 25-hydroxyvitamin D3, and amino acid availability."
+            ))
+
+        return correlations
 
     @classmethod
     def evaluate(
@@ -61,9 +132,8 @@ class TriageEngine:
         context: SymptomContext
     ) -> AnalysisResponse:
         """
-        Main triage evaluation method.
+        Main triage evaluation method with multi-factor correlation synthesis.
         """
-        # Calculate composite Scalp Health Score (0.0 to 100.0) from discrete CV sub-scores
         total_shs = round(
             sub_scores.flake_score +
             sub_scores.redness_score +
@@ -73,6 +143,8 @@ class TriageEngine:
         )
         total_shs = float(max(0.0, min(100.0, total_shs)))
 
+        correlations = cls.compute_correlations(context, sub_scores)
+
         # -------------------------------------------------------------------
         # 1. Server-Side Confidence Gate Enforcement
         # -------------------------------------------------------------------
@@ -80,7 +152,6 @@ class TriageEngine:
         final_condition = raw_condition
 
         if confidence < settings.CONFIDENCE_GATE_THRESHOLD:
-            # Low classifier confidence: Reroute strictly to Level 2 (Monitored)
             confidence_gated = True
             final_condition = CONDITION_UNVERIFIED_MONITORED
             triage_level = TRIAGE_LEVEL_2_MONITORED
@@ -115,13 +186,12 @@ class TriageEngine:
         # 2. Confident Prediction Triage Evaluation (Confidence >= 0.65)
         # -------------------------------------------------------------------
         else:
-            # Check for Urgent Red Flags / Level 3 Escalation
             is_level_3_condition = raw_condition in [
                 CONDITION_ALOPECIA_AREATA,
                 CONDITION_FOLLICULITIS,
                 CONDITION_SCALP_PSORIASIS
             ]
-            has_severe_pain = context.burning_or_pain
+            has_severe_pain = context.burning_or_pain or context.scalp_pain_trichodynia
             has_severe_erythema = sub_scores.redness_score < 8.0
 
             if is_level_3_condition or has_severe_pain or has_severe_erythema:
@@ -143,12 +213,12 @@ class TriageEngine:
                     clinical_hand_off_notes=(
                         f"Visual analysis suggests {raw_condition}. "
                         f"Reported symptoms: Burning/Pain={context.burning_or_pain}, "
+                        f"Trichodynia={context.scalp_pain_trichodynia}, "
                         f"Duration={context.duration_weeks} weeks. Scalp Health Score={total_shs}/100."
                     )
                 )
 
-            # Check for Level 2 Monitored Routine
-            elif raw_condition == CONDITION_SEBORRHEIC_DERMATITIS or context.duration_weeks > 4:
+            elif raw_condition == CONDITION_SEBORRHEIC_DERMATITIS or context.duration_weeks > 4 or context.flake_type == "greasy_yellow_thick":
                 triage_level = TRIAGE_LEVEL_2_MONITORED
                 triage_reason = (
                     "Visual indications suggest active sebum/microbial flaking. Recommends an "
@@ -167,7 +237,6 @@ class TriageEngine:
                     clinical_hand_off_notes="Monitored active ingredient regimen in progress. Review if unresolved after 4 weeks."
                 )
 
-            # Level 1 Minor Routine
             else:
                 triage_level = TRIAGE_LEVEL_1_MINOR
                 triage_reason = (
@@ -193,6 +262,7 @@ class TriageEngine:
             scalp_health_score=total_shs,
             triage_level=triage_level,
             triage_reason=triage_reason,
+            clinical_correlations=correlations,
             recommended_ingredients=ingredients,
             lifestyle_guidance=lifestyle,
             consultation_referral=referral,
