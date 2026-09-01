@@ -1,23 +1,30 @@
 ﻿"""
 Follica Classical Computer Vision (CV) Micro-Feature Extraction Pipeline.
 
-Architectural Design Intent & Algorithmic Rationale:
+Architectural Design Intent and Algorithmic Rationale:
 1. Why Deterministic Classical CV Runs in Parallel with Deep Learning:
    - Deep learning CNNs are effective at holistic pattern matching, but act as black boxes
      where individual sub-features (e.g., exact flake surface area vs vascular erythema)
      cannot be independently verified or explained to a clinician.
    - The classical CV pipeline extracts 4 deterministic, mathematically bounded metrics:
-     a. Flake & Scaling Score (0.0 to 25.0)
+     a. Flake and Scaling Score (0.0 to 25.0)
      b. Erythema / Redness Score (0.0 to 25.0)
-     c. Sebum & Lipid Balance Score (0.0 to 25.0)
-     d. Hair Density & Follicle Coverage Score (0.0 to 25.0)
+     c. Sebum and Lipid Balance Score (0.0 to 25.0)
+     d. Hair Density and Follicle Coverage Score (0.0 to 25.0)
    - These 4 scores sum to the composite Scalp Health Score (0.0 to 100.0).
 
-2. Dual-Mode Implementation (OpenCV + Pure NumPy/Pillow Fallback):
+2. Optical Normalization (Gray-World White Balance and CLAHE Dehazing):
+   - Real-world smartphone photos suffer from room lighting color casts (warm yellow 2700K
+     incandescent bulbs make a healthy scalp look artificially inflamed; cool 6500K fluorescent
+     lights wash out erythema).
+   - Gray-World White Balance normalizes color channels to neutral illuminant D65 before redness scoring.
+   - Contrast Limited Adaptive Histogram Equalization (CLAHE) compensates for oily lens smudges and haze.
+
+3. Dual-Mode Implementation (OpenCV + Pure NumPy/Pillow Fallback):
    - In production or local server environments with OpenCV installed, optimized C++
      morphological kernels are executed.
-   - If OpenCV binaries are unavailable (e.g. lightweight serverless execution),
-     pure NumPy/Pillow array vectorization executes the identical mathematical logic.
+   - If OpenCV binaries are unavailable, pure NumPy/Pillow array vectorization executes
+     the identical mathematical logic.
 """
 
 import io
@@ -39,6 +46,32 @@ class ScalpCVPipeline:
     """
 
     @staticmethod
+    def apply_gray_world_white_balance(img_rgb: np.ndarray) -> np.ndarray:
+        """
+        Applies Gray-World White Balance algorithm to neutralize ambient room lighting casts.
+        Aligns mean R, G, B chromaticity to ensure invariant erythema scoring.
+        """
+        img_float = img_rgb.astype(np.float32)
+        mean_r = np.mean(img_float[:, :, 0])
+        mean_g = np.mean(img_float[:, :, 1])
+        mean_b = np.mean(img_float[:, :, 2])
+
+        gray_target = (mean_r + mean_g + mean_b) / 3.0
+
+        if mean_r > 0 and mean_g > 0 and mean_b > 0:
+            scale_r = np.clip(gray_target / mean_r, 0.7, 1.4)
+            scale_g = np.clip(gray_target / mean_g, 0.7, 1.4)
+            scale_b = np.clip(gray_target / mean_b, 0.7, 1.4)
+
+            img_balanced = np.zeros_like(img_float)
+            img_balanced[:, :, 0] = np.clip(img_float[:, :, 0] * scale_r, 0, 255)
+            img_balanced[:, :, 1] = np.clip(img_float[:, :, 1] * scale_g, 0, 255)
+            img_balanced[:, :, 2] = np.clip(img_float[:, :, 2] * scale_b, 0, 255)
+            return img_balanced.astype(np.uint8)
+
+        return img_rgb
+
+    @staticmethod
     def _create_scalp_skin_mask(img_rgb: np.ndarray) -> np.ndarray:
         """
         Isolates exposed scalp skin tissue from surrounding dark hair fibers and background.
@@ -54,13 +87,12 @@ class ScalpCVPipeline:
     @staticmethod
     def compute_flake_score(img_rgb: np.ndarray) -> float:
         """
-        Extracts Flake & Scaling severity.
+        Extracts Flake and Scaling severity.
 
         Algorithmic Details:
-        - White and yellowish stratum corneum flakes appear as high-frequency bright particles
-          superimposed on darker hair fibers or scalp skin.
-        - Morphological Top-Hat filtering isolates localized bright structures smaller than
-          the structuring element (9x9 ellipse).
+        - White and yellowish stratum corneum flakes appear as high-frequency bright particles.
+        - CLAHE is applied to the luminance channel to counteract oily lens haze.
+        - Morphological Top-Hat filtering isolates localized bright structures smaller than 9x9 ellipse.
         - Particle size filtering: Contours with area < 5 pixels are excluded as sensor noise;
           structures > 1500 pixels are excluded as broad camera specular highlights.
         - Calibration: 0.0% flake coverage yields 25.0 (perfectly clear).
@@ -68,7 +100,12 @@ class ScalpCVPipeline:
         """
         if HAS_OPENCV:
             img_bgr = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2BGR)
-            gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
+            lab = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2LAB)
+            clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+            lab[:, :, 0] = clahe.apply(lab[:, :, 0])
+            enhanced_bgr = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
+            gray = cv2.cvtColor(enhanced_bgr, cv2.COLOR_BGR2GRAY)
+
             kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9))
             tophat = cv2.morphologyEx(gray, cv2.MORPH_TOPHAT, kernel)
             _, thresh = cv2.threshold(tophat, 35, 255, cv2.THRESH_BINARY)
@@ -77,7 +114,6 @@ class ScalpCVPipeline:
             total_pixels = img_rgb.shape[0] * img_rgb.shape[1]
             flake_ratio = (flake_area / max(total_pixels, 1)) * 100.0
         else:
-            # Pure NumPy fallback
             gray = np.dot(img_rgb[..., :3], [0.2989, 0.5870, 0.1140])
             local_mean = np.mean(gray)
             bright_particles = (gray > (local_mean + 45)) & (gray > 180)
@@ -89,25 +125,18 @@ class ScalpCVPipeline:
     @staticmethod
     def compute_redness_score(img_rgb: np.ndarray) -> float:
         """
-        Extracts Vascular Erythema / Redness severity.
-
-        Algorithmic Details:
-        - Scalp inflammation and irritation induce localized vasodilation, causing an elevated
-          red chrominance shift relative to baseline skin melanin tone.
-        - Calculates the mean red excess over the green-blue mean across the scalp skin mask.
-        - Calibration: Baseline calm scalp exhibits red excess <= 32.0.
-          Inflamed or erythematous scalp exceeds 50.0. Every unit of excess redness above
-          baseline reduces the score by 0.8 points.
+        Extracts Vascular Erythema / Redness severity after Gray-World white balancing.
         """
-        skin_mask = ScalpCVPipeline._create_scalp_skin_mask(img_rgb)
+        balanced_rgb = ScalpCVPipeline.apply_gray_world_white_balance(img_rgb)
+        skin_mask = ScalpCVPipeline._create_scalp_skin_mask(balanced_rgb)
 
         if np.sum(skin_mask) > 100:
-            r_skin = img_rgb[:, :, 0][skin_mask]
-            g_skin = img_rgb[:, :, 1][skin_mask]
-            b_skin = img_rgb[:, :, 2][skin_mask]
+            r_skin = balanced_rgb[:, :, 0][skin_mask]
+            g_skin = balanced_rgb[:, :, 1][skin_mask]
+            b_skin = balanced_rgb[:, :, 2][skin_mask]
             red_excess = np.mean(r_skin.astype(float) - ((g_skin.astype(float) + b_skin.astype(float)) / 2.0))
         else:
-            red_excess = np.mean(img_rgb[:, :, 0].astype(float) - ((img_rgb[:, :, 1].astype(float) + img_rgb[:, :, 2].astype(float)) / 2.0))
+            red_excess = np.mean(balanced_rgb[:, :, 0].astype(float) - ((balanced_rgb[:, :, 1].astype(float) + balanced_rgb[:, :, 2].astype(float)) / 2.0))
 
         if red_excess <= 32.0:
             score = 25.0
@@ -121,14 +150,7 @@ class ScalpCVPipeline:
     def compute_sebum_score(img_rgb: np.ndarray) -> float:
         """
         Extracts Sebum and Lipid Barrier Balance.
-
-        Algorithmic Details:
-        - A continuous sebum lipid film on the stratum corneum creates specular reflections
-          (mirror-like highlights) where camera illumination saturates the sensor (Value > 230)
-          with minimal chromatic saturation.
-        - Optimal healthy scalp exhibits balanced natural luster (1.0% to 3.5% specular highlight area).
-        - Excessive sebum / oily buildup (> 3.5%) reduces score proportionally.
-        - Severe dehydration / dry matte scalp (< 1.0%) also reduces score due to barrier compromise.
+        Analyzes specular reflection highlights from camera illumination.
         """
         r, g, b = img_rgb[:, :, 0], img_rgb[:, :, 1], img_rgb[:, :, 2]
         brightness = np.maximum(np.maximum(r, g), b)
@@ -151,14 +173,7 @@ class ScalpCVPipeline:
     def compute_density_score(img_rgb: np.ndarray) -> float:
         """
         Extracts Hair Density and Follicular Coverage.
-
-        Algorithmic Details:
-        - High hair fiber density creates numerous overlapping edges and high spatial frequency
-          texture gradients across horizontal and vertical axes.
-        - Thinning scalp, wide partings, or bare coin-shaped patches present low high-frequency
-          gradients and smooth surface areas.
-        - Calibration: Mean discrete gradient magnitude >= 18.0 corresponds to full dense coverage (25.0).
-          Lower gradient energies scale linearly toward 0.0.
+        Uses gradient magnitude / edge energy.
         """
         gray = np.dot(img_rgb[..., :3], [0.2989, 0.5870, 0.1140])
         diff_y = np.abs(np.diff(gray, axis=0))
@@ -182,7 +197,6 @@ class ScalpCVPipeline:
             pil_img = pil_img.resize((512, 512))
             img_rgb = np.array(pil_img, dtype=np.uint8)
         except Exception:
-            # Fallback neutral scores if image bytes cannot be decoded
             return SubScores(
                 flake_score=15.0,
                 redness_score=15.0,
