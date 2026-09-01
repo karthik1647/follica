@@ -1,12 +1,17 @@
 ﻿"""
 Follica Deep Learning Classifier Service.
 
-Provides interface for MobileNetV4 / EfficientNet-B0 scalp classification.
-Supports:
-- ONNX Runtime and PyTorch inference models
-- Graceful initialization with warmup status
-- Heuristic fallback inference for local dev & testing when model weights are being trained
-- Non-diagnostic output naming conventions
+Architectural Design Intent & Rationale:
+1. Model Choice (MobileNetV4 vs EfficientNet-B0):
+   - MobileNetV4 (2024) is chosen as default because its Universal Inverted Bottleneck (UIB)
+     architecture delivers lower inference latency and smaller parameter footprint (~14 MB ONNX),
+     making it ideal for free cloud containers or on-device mobile execution.
+   - EfficientNet-B0 is provided as a battle-tested fallback if ONNX export issues arise.
+
+2. Embedded Heuristic Classifier for Local Testing:
+   - To ensure the repository is completely testable on localhost:8000 immediately without
+     forcing the developer to first spend 30 minutes training or downloading 20 MB weights,
+     an embedded contextual fallback operates when no model weights file is present.
 """
 
 import os
@@ -46,7 +51,7 @@ class ScalpClassifierService:
         self._initialize_model()
 
     def _initialize_model(self):
-        """Attempts to load ONNX / PyTorch weights, or sets ready status."""
+        """Attempts to load ONNX / PyTorch weights, or sets ready status for heuristic mode."""
         if os.path.exists(self.model_path):
             try:
                 import onnxruntime as ort
@@ -54,10 +59,10 @@ class ScalpClassifierService:
                 self.model_loaded = True
                 print(f"[Follica ML] Loaded ONNX weights from {self.model_path}")
             except Exception as e:
-                print(f"[Follica ML] Could not load ONNX model ({e}). Using heuristic fallback.")
+                print(f"[Follica ML] Could not load ONNX model ({e}). Using embedded heuristic fallback.")
                 self.model_loaded = True
         else:
-            # Model weights not yet downloaded; active in heuristic/dev mode
+            # Model weights not yet placed in /models; active in heuristic/dev mode
             print(f"[Follica ML] No weights found at {self.model_path}. Running with embedded feature classifier.")
             self.model_loaded = True
 
@@ -83,7 +88,6 @@ class ScalpClassifierService:
                 img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
                 img = img.resize((224, 224))
                 img_np = np.array(img, dtype=np.float32) / 255.0
-                # Standard ImageNet normalization
                 mean = np.array([0.485, 0.456, 0.406], dtype=np.float32)
                 std = np.array([0.229, 0.224, 0.225], dtype=np.float32)
                 img_np = (img_np - mean) / std
@@ -93,11 +97,11 @@ class ScalpClassifierService:
                 input_name = self.onnx_session.get_inputs()[0].name
                 outputs = self.onnx_session.run(None, {input_name: img_tensor})
                 logits = outputs[0][0]
-                
-                # Softmax
+
+                # Numerically stable softmax
                 exp_logits = np.exp(logits - np.max(logits))
                 probs = exp_logits / np.sum(exp_logits)
-                
+
                 class_idx = int(np.argmax(probs))
                 confidence = float(probs[class_idx])
                 return self.CLASSES[class_idx], round(confidence, 3)
@@ -112,7 +116,6 @@ class ScalpClassifierService:
         Contextual fallback evaluator for local testing.
         Combines questionnaire flags and simple image statistics.
         """
-        # Red flags for Alopecia Areata / Folliculitis
         if context.burning_or_pain and context.duration_weeks > 3:
             return CONDITION_FOLLICULITIS, 0.78
         elif context.itching and context.hard_water_exposure:

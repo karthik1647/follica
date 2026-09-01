@@ -1,16 +1,26 @@
 ﻿"""
 Follica Server-Side Triage and Clinical Scoring Engine.
 
-Enforces:
-1. Server-Side Confidence Gating (Reroutes <0.65 confidence predictions to Level 2)
-2. Strict Non-Diagnostic Phrasing ("recommends an active ingredient schedule", never "prescribes")
-3. Generic Clinical Referral generation without named institutions
-4. Calculation of Composite Scalp Health Score (0-100) from 4 separate CV sub-scores
+Architectural Design Intent & Rationale:
+1. Why the Confidence Gate Reroutes to Level 2 (Monitored Routine):
+   - When a deep learning model produces a low-confidence classification (< 0.65),
+     the underlying pattern is ambiguous (e.g. poor photo lighting, blurry focus, or early-stage symptoms).
+   - Why not Level 1 (Minor)?
+     If an actual inflammatory infection (Folliculitis) or autoimmune loss (Alopecia Areata)
+     is present but poorly captured, routing to Level 1 would falsely reassure the user,
+     risking disease progression.
+   - Why not Level 3 (Doctor Escalation)?
+     If ordinary dandruff is captured poorly, routing to Level 3 causes unnecessary panic
+     and places undue burden on clinical dermatology queues.
+   - Level 2 (Monitored Routine) is the optimal medical-adjacent triage: it guides the user
+     to use non-irritating base care, improve scan conditions, and track changes over 7-14 days.
+
+2. Transparent Composite Health Score:
+   - Scalp Health Score = Flake + Redness + Sebum + Density in range [0.0, 100.0].
+   - Each component is bounded to [0.0, 25.0], ensuring clear visibility into what drives the total score.
 """
 
 from datetime import datetime, timezone
-from typing import Tuple, List
-
 from app.core.config import settings
 from app.core.constants import (
     UNIVERSAL_DISCLAIMER,
@@ -37,7 +47,10 @@ from app.models.schemas import (
 
 
 class TriageEngine:
-    """Evaluates dual-pipeline signals, applies confidence gates, and produces triage plans."""
+    """
+    Evaluates multimodal signals, enforces server-side confidence gates,
+    and constructs non-diagnostic, safety-compliant triage recommendations.
+    """
 
     @classmethod
     def evaluate(
@@ -50,7 +63,7 @@ class TriageEngine:
         """
         Main triage evaluation method.
         """
-        # Calculate composite Scalp Health Score (0.0 - 100.0)
+        # Calculate composite Scalp Health Score (0.0 to 100.0) from discrete CV sub-scores
         total_shs = round(
             sub_scores.flake_score +
             sub_scores.redness_score +
@@ -60,14 +73,14 @@ class TriageEngine:
         )
         total_shs = float(max(0.0, min(100.0, total_shs)))
 
-        # -------------------------------------------------------------
+        # -------------------------------------------------------------------
         # 1. Server-Side Confidence Gate Enforcement
-        # -------------------------------------------------------------
+        # -------------------------------------------------------------------
         confidence_gated = False
         final_condition = raw_condition
 
         if confidence < settings.CONFIDENCE_GATE_THRESHOLD:
-            # Low confidence: Reroute to Level 2 (Monitored) before finalizing triage
+            # Low classifier confidence: Reroute strictly to Level 2 (Monitored)
             confidence_gated = True
             final_condition = CONDITION_UNVERIFIED_MONITORED
             triage_level = TRIAGE_LEVEL_2_MONITORED
@@ -98,9 +111,9 @@ class TriageEngine:
                 clinical_hand_off_notes="Inconclusive visual classifier confidence. Monitoring recommended."
             )
 
-        # -------------------------------------------------------------
-        # 2. Confident Prediction Triage Evaluation
-        # -------------------------------------------------------------
+        # -------------------------------------------------------------------
+        # 2. Confident Prediction Triage Evaluation (Confidence >= 0.65)
+        # -------------------------------------------------------------------
         else:
             # Check for Urgent Red Flags / Level 3 Escalation
             is_level_3_condition = raw_condition in [

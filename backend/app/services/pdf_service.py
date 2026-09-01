@@ -1,14 +1,15 @@
 ﻿"""
 Follica Generic Clinical Summary PDF Service.
 
-Generates a clean 1-page clinical hand-off report for the user to present to
-their doctor or dermatologist.
-
-Compliance:
-- Addressed generically ("For your treating physician / dermatologist")
-- No named hospitals or clinics
-- Non-diagnostic language throughout
-- Explicit timestamp and disclaimer
+Architectural Design Intent & Rationale:
+1. Universal Non-Affiliated Clinical Hand-Off:
+   - Rationale: A key failure in student healthcare is information loss between the patient
+     and the clinic. When a student visits a general clinic or dermatologist, they often forget
+     how long symptoms lasted, what products they tried, or whether hard water was a factor.
+   - This service produces a standardized 1-page summary ("For your treating physician / dermatologist")
+     containing timestamped objective CV sub-scores, reported context, and suspected patterns.
+   - It intentionally omits any specific clinic or hospital names to ensure geographic portability
+     and avoid institutional endorsement assumptions.
 """
 
 import io
@@ -110,9 +111,9 @@ class ClinicalPDFService:
             story.append(Paragraph("Computer Vision Micro-Feature Sub-Scores", heading_style))
             sub_data = [
                 ["Flake & Scaling Score (0-25)", f"{analysis.sub_scores.flake_score:.1f}", "High-contrast particle count & area ratio"],
-                ["Erythema / Redness Score (0-25)", f"{analysis.sub_scores.redness_score:.1f}", "CIELAB a* chrominance delta from baseline"],
+                ["Erythema / Redness Score (0-25)", f"{analysis.sub_scores.redness_score:.1f}", "Skin chrominance delta from baseline"],
                 ["Sebum / Lipid Score (0-25)", f"{analysis.sub_scores.sebum_score:.1f}", "Specular highlight and luster distribution"],
-                ["Follicular Density Score (0-25)", f"{analysis.sub_scores.density_score:.1f}", "Multi-angle Gabor/edge texture density"]
+                ["Follicular Density Score (0-25)", f"{analysis.sub_scores.density_score:.1f}", "Multi-directional edge texture density"]
             ]
             sub_table = Table([["Metric", "Score", "Extraction Method"]] + sub_data, colWidths=[180, 70, 270])
             sub_table.setStyle(TableStyle([
@@ -155,7 +156,6 @@ class ClinicalPDFService:
             return buffer.getvalue()
 
         except ImportError:
-            # Plain text fallback if reportlab is not installed
             report_str = f"""
 ================================================================================
                       FOLLICA SCALP ASSESSMENT REPORT

@@ -1,97 +1,143 @@
-﻿# Follica 🌿
-### AI-Powered Hair & Scalp Health Diagnostic & Triage System
+﻿# Follica: AI-Powered Scalp Health Diagnostic and Triage System
 
-**Follica** is a dual-pipeline, non-diagnostic hair and scalp assessment platform built to bridge the gap between neglected scalp disorders, ineffective over-the-counter guessing, and appropriate clinical triage.
-
----
-
-## 🌟 Key Architecture & Capabilities
-
-1. **Dual-Pipeline Analysis**:
-   - **Deep Learning Classifier**: MobileNetV4 (with EfficientNet-B0 fallback) for condition pattern recognition.
-   - **Classical Computer Vision**: OpenCV micro-feature extractors returning 4 separate sub-scores:
-     - ❄️ **Flake & Scaling Score (0–25)**
-     - 🔴 **Erythema / Redness Score (0–25)**
-     - 💧 **Sebum & Lipid Balance Score (0–25)**
-     - 💇 **Hair Density & Follicle Visibility Score (0–25)**
-     - 🏆 **Composite Scalp Health Score (0–100)**
-
-2. **Server-Side Safety & Confidence Gate**:
-   - Automatically detects low-confidence classifications (`< 0.65`) and reroutes them to **Level 2 (Monitored Routine)** to avoid improper escalation or self-care errors.
-   - Enforces strictly non-diagnostic phrasing across all responses (*"suggests"*, *"recommends an ingredient schedule"*, never *"diagnoses"* or *"prescribes"*).
-   - Mandatory universal disclaimer included on every API response.
-
-3. **Generic Clinical Hand-off (No Named Institutions)**:
-   - Exports a 1-page printable clinical summary PDF addressed generically to *"For your treating physician / dermatologist"* with a self-triggered local search link.
-
-4. **Zero-Cost Cloud Training Pipeline**:
-   - Trains on free Google Colab Nvidia T4 GPUs with per-epoch checkpointing (surviving disconnects) and zero local storage burden on your laptop.
+Follica is an open-source, dual-pipeline scalp health assessment and clinical triage platform. It evaluates user-uploaded scalp photographs and contextual symptom questionnaires to provide objective health scoring, active ingredient care routines for minor issues, and structured clinical hand-off summaries when medical escalation is warranted.
 
 ---
 
-## 📁 Repository Structure
+## 1. The Problem Being Solved
+
+Hair thinning, dandruff, and scalp inflammation affect a large percentage of college students and young adults, yet early intervention is consistently hindered by three systemic issues:
+
+1. **The Over-The-Counter Guessing Trap**:
+   Dry scalp flaking, fungal *Seborrheic Dermatitis*, and *Scalp Psoriasis* all present superficially as "white flakes". When students or general clinic staff treat all flaking with generic commercial shampoos (or random anti-dandruff products), it frequently aggravates the underlying barrier damage or yeast proliferation. Each distinct condition requires specific active molecules (e.g., Ketoconazole 2% vs. Salicylic Acid vs. Barrier Lipids vs. Chelating washes).
+
+2. **Campus and Environmental Aggravators**:
+   Hostel borewell hard water (calcium and magnesium buildup), academic stress, irregular sleep, and nutritional changes accelerate scalp barrier disruption. Standard general health centers often lack specialized trichoscopy tools to differentiate benign flaking from active follicular inflammation.
+
+3. **Delayed Escalation for High-Risk Conditions**:
+   Conditions such as *Alopecia Areata* (coin-shaped bald patches) or *Folliculitis* (painful follicular pustules) require prompt dermatological evaluation. Because booking a specialist can be intimidating, expensive, or delayed, students often wait until irreversible follicular miniaturization or scarring occurs.
+
+**Follica bridges this gap**: It acts as an objective, non-diagnostic triage layer that recommends science-backed active ingredient schedules for minor self-resolving cases, and immediately generates a standardized clinical hand-off document for dermatologists when red flags appear.
+
+---
+
+## 2. Core Design Principles
+
+Every engineering decision in Follica is governed by five strict principles:
+
+- **Zero-Cost Infrastructure**:
+  The entire pipeline is engineered to run on free-tier services. Heavy deep-learning training runs on free Google Colab/Kaggle cloud GPUs (0 MB storage burden on local laptops). Model weights are compressed to lightweight ONNX formats (~14 MB).
+- **Explainable Scoring (No Black Boxes)**:
+  Rather than outputting an opaque label, Follica executes a Dual-Pipeline: a Deep Learning classifier runs alongside a deterministic Classical Computer Vision pipeline that extracts four discrete, mathematically bounded sub-scores (Flake, Redness, Sebum, Density).
+- **Strict Non-Diagnostic Language**:
+  Software analyzing consumer photos must not make authoritative medical diagnoses. The system strictly uses probabilistic terminology (*"suggests"*, *"patterns consistent with"*, *"recommends an active ingredient schedule"*) and never uses prescriptive verbs (*"diagnoses"*, *"prescribes"*).
+- **Institutional Neutrality**:
+  The system contains no hardcoded clinic, university, or hospital names. Escalations are addressed generically (*"For your treating physician / dermatologist"*) and provide a self-triggered local search link rather than a locked-in booking vendor.
+- **Safety-First Confidence Gating**:
+  Any classifier prediction with confidence below 0.65 is intercepted server-side and automatically rerouted to Level 2 (Monitored Routine) to prevent improper dismissal or unnecessary panic.
+
+---
+
+## 3. System Architecture at a Glance
 
 ```
-follica/
-├── backend/                  # FastAPI REST API & Dual-Pipeline Engine
-│   ├── app/
-│   │   ├── api/             # API Endpoints (/analyze, /consent, /system/status, /report/pdf)
-│   │   ├── core/            # Config, Constants, Non-Diagnostic Phrasing, Disclaimers
-│   │   ├── models/          # Pydantic Schemas (SubScores, SymptomContext, Consent)
-│   │   └── services/        # CV Pipeline, ML Classifier, Triage Engine, PDF Service
-│   ├── tests/               # Pytest Suite (Sub-scores, Confidence Gate, Consent, PDF)
-│   └── requirements.txt
-├── training/                 # Cloud ML Training & Calibration Pipeline
-│   ├── follica_training_colab.ipynb # Ready-to-run Google Colab Notebook with Drive Mount
-│   ├── train.py             # Standalone Python training script with checkpointing
-│   ├── calibration_loader.py# Volunteer calibration dataset merge module
-│   └── README.md
-├── docs/                     # Documentation & Database Schemas
-│   ├── architecture.md      # Dual-pipeline architecture specification
-│   └── supabase_storage_security.sql # AES-256 encrypted storage & 30-day purge RLS
-├── mobile/                   # Mobile app directory (Reserved for Phase 3)
-└── README.md
+                         [User Upload: Scalp Photo + Questionnaire]
+                                             │
+                  ┌──────────────────────────┴──────────────────────────┐
+                  ▼                                                     ▼
+     [Pipeline 1: Deep Learning]                           [Pipeline 2: Classical CV]
+     MobileNetV4 / EfficientNet-B0                         OpenCV / NumPy Micro-Features
+                  │                                                     │
+                  ▼                                                     ▼
+     Raw Condition + Confidence (0.00-1.00)                4 Discrete Sub-Scores (0-25):
+                  │                                        - Flake & Scaling Score
+                  │                                        - Erythema / Redness Score
+                  │                                        - Sebum / Lipid Balance Score
+                  │                                        - Follicular Density Score
+                  │                                                     │
+                  └──────────────────────────┬──────────────────────────┘
+                                             ▼
+                              [Server-Side Triage Engine]
+                                             │
+                  ┌──────────────────────────┴──────────────────────────┐
+                  ▼                                                     ▼
+         [Confidence < 0.65]                                   [Confidence >= 0.65]
+     Strict Server Reroute:                                Evaluate Severity:
+     Level 2: Monitored Routine                            - Level 1: Minor Home Routine
+     (Inconclusive visual signals)                         - Level 2: Monitored Active Routine
+                                                           - Level 3: Escalation (Dermatologist)
 ```
 
 ---
 
-## 🚀 Running the Backend Locally on `localhost:8000`
+## 4. Current Status: What Is Built vs. Stubbed
 
-### 1. Set Up Virtual Environment & Dependencies
+To help new contributors navigate the codebase without ambiguity:
+
+| Component / File | Implementation Status | Description & Notes |
+| :--- | :--- | :--- |
+| `backend/app/api/endpoints.py` | **Fully Implemented** | Exposes `/analyze`, `/consent`, `/system/status`, `/report/pdf`. |
+| `backend/app/services/cv_pipeline.py` | **Fully Implemented** | Production-ready classical CV micro-feature extractors with pure NumPy fallback. |
+| `backend/app/services/triage_engine.py` | **Fully Implemented** | Enforces 0.65 confidence gate, non-diagnostic phrasing, and sub-score summation. |
+| `backend/app/services/pdf_service.py` | **Fully Implemented** | Generates generic 1-page clinical PDF hand-off report using ReportLab. |
+| `backend/app/core/constants.py` | **Fully Implemented** | Active ingredient guides, non-diagnostic terms, and mandatory universal disclaimer. |
+| `backend/app/models/schemas.py` | **Fully Implemented** | Pydantic data contracts for separate sub-scores, symptoms, and consent. |
+| `backend/app/services/classifier_service.py` | **Functional / Heuristic Stub** | Ready to load `.onnx` weights from `models/`. Runs an embedded heuristic classifier when local model weights are not present. |
+| `training/follica_training_colab.ipynb` | **Fully Implemented** | Cloud training notebook with Google Drive checkpointing to survive disconnects. |
+| `training/calibration_loader.py` | **Fully Implemented / Data Placeholder** | Pipeline logic ready; awaiting physical addition of 100-200 volunteer photos. |
+| `docs/supabase_storage_security.sql` | **Fully Implemented** | SQL schema for AES-256 encrypted bucket and automated 30-day retention purge. |
+| `mobile/` | **Not Started** | Reserved for React Native / Expo cross-platform mobile frontend. |
+
+---
+
+## 5. Next Steps for Contributors
+
+If you are joining this repository, pick up the following tasks in priority order:
+
+1. **Task 1: Image Quality Pre-Inference Gate** (`backend/app/services/quality_gate.py`):
+   - Implement server-side Laplacian variance blur detection and illumination distribution checks before running inference. If an image is severely blurred or under-exposed, return a structured 400 error asking the user to retake the photo with flash.
+2. **Task 2: Progress-Tracking Image Registration** (`backend/app/services/registration.py`):
+   - Build an image alignment/homography service using ORB/SIFT feature matching to align photos taken 14–30 days apart, enabling exact spot-by-spot follicle density delta calculations.
+3. **Task 3: Mobile UI (React Native / Expo)** (`mobile/`):
+   - Initialize the Expo app.
+   - Build the camera capture interface with crosshair/quadrant overlays for Crown, Hairline, and Parting.
+   - Build the Consent Screen adhering to the `/api/v1/consent` contract.
+   - Build the interactive Scalp Health Score visualization dashboard.
+4. **Task 4: Volunteer Calibration Dataset Collection**:
+   - Collect and organize 100–200 consented scalp photos across Fitzpatrick skin types into `data/calibration/` and execute training via `follica_training_colab.ipynb`.
+5. **Task 5: Push Notification Adherence Reminders**:
+   - Add local push notification hooks in the mobile app for wash schedules (e.g. Ketoconazole 2x/week) and 14-day re-scan reminders.
+
+---
+
+## 6. How to Run Locally
+
+### Setup and Start Backend Server
 ```bash
+# 1. Navigate to backend directory
 cd backend
+
+# 2. Create virtual environment
 python -m venv venv
-# On Windows:
+
+# 3. Activate virtual environment
+# On Windows PowerShell:
 .\venv\Scripts\activate
-# On Linux/macOS:
+# On macOS/Linux:
 source venv/bin/activate
 
+# 4. Install dependencies
 pip install -r requirements.txt
+
+# 5. Start FastAPI on localhost:8000
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-### 2. Start the FastAPI Server
+### Interactive API Documentation
+- Swagger UI: `http://127.0.0.1:8000/docs`
+- Health Check: `http://127.0.0.1:8000/api/v1/system/status`
+
+### Run Automated Tests
 ```bash
-uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+pytest backend/tests/test_api.py
 ```
-
-### 3. Access Interactive API Docs & Health Checks
-- **Interactive Swagger UI**: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
-- **Alternative ReDoc UI**: [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
-- **Cold-Start Warmup Hook**: [http://127.0.0.1:8000/api/v1/system/status](http://127.0.0.1:8000/api/v1/system/status)
-
-### 4. Run Automated Test Suite
-```bash
-pytest tests/
-```
-
----
-
-## 🔮 Next-Phase Implementation TODOs (Explicitly Tracked)
-
-The following components are scheduled for the next phase once the backend and scoring pipeline verification is complete:
-
-- [ ] **Mobile UI (React Native / Expo)**: Build the cross-platform mobile client with camera capture overlays (Crown, Hairline, Parting, Macro close-up) and interactive Scalp Health Score visualization.
-- [ ] **Image-Quality Gate**: Pre-inference client-side and server-side checks for blur (Laplacian variance), insufficient lighting, and extreme distance.
-- [ ] **Progress-Tracking Image Registration**: Computer vision alignment/homography algorithm to match scalp photos taken 14–30 days apart for exact spot-to-spot follicle density comparison.
-- [ ] **Adherence & Routine Reminders**: Push notification scheduling for wash routines (e.g. Ketoconazole 2x/week) and 14-day check-in scans.
-- [ ] **Dermatology Expansion (DermaIQ)**: Extend classifier heads to facial acne, eczema, and skin lesions.
