@@ -1,4 +1,4 @@
-﻿"""
+"""
 Follica Server-Side Triage and Clinical Scoring Engine.
 
 Architectural Design Intent and Clinical Rationale:
@@ -121,6 +121,14 @@ class TriageEngine:
                 clinical_note="Keratin synthesis and follicle matrix division depend heavily on adequate serum ferritin, 25-hydroxyvitamin D3, and amino acid availability."
             ))
 
+        # 8. Optimal Homeostasis Factor for Healthy Users
+        if not context.itching and not context.burning_or_pain and context.flake_type == "none" and context.hair_pull_test == "negative_under_3":
+            correlations.append(ClinicalCorrelationFactor(
+                factor="Optimal Scalp Homeostasis & Protective Acid Mantle",
+                impact_level="low",
+                clinical_note="No active inflammation, microbial scaling, or pathological shedding reported. Epidermal barrier function and follicle retention are intact."
+            ))
+
         return correlations
 
     @classmethod
@@ -133,6 +141,7 @@ class TriageEngine:
     ) -> AnalysisResponse:
         """
         Main triage evaluation method with multi-factor correlation synthesis.
+        Supports healthy routine baseline checkups as well as active clinical triage.
         """
         total_shs = round(
             sub_scores.flake_score +
@@ -237,11 +246,31 @@ class TriageEngine:
                     clinical_hand_off_notes="Monitored active ingredient regimen in progress. Review if unresolved after 4 weeks."
                 )
 
+            elif raw_condition == CONDITION_NORMAL or (total_shs >= 75.0 and not context.itching and not context.burning_or_pain and context.flake_type == "none"):
+                triage_level = TRIAGE_LEVEL_1_MINOR
+                final_condition = CONDITION_NORMAL
+                triage_reason = (
+                    "Visual signals and clinical intake confirm optimal scalp homeostasis, intact "
+                    "protective acid mantle, and balanced sebum levels. Preventive care regimen recommended."
+                )
+                guide = INGREDIENT_GUIDES.get(CONDITION_NORMAL, INGREDIENT_GUIDES[CONDITION_DRY_SCALP])
+                ingredients = [
+                    IngredientRecommendation(**item) for item in guide.get("ingredients", [])
+                ]
+                lifestyle = guide.get("lifestyle", [])
+                referral = ConsultationReferral(
+                    required=False,
+                    urgency="routine",
+                    addressed_to="For your treating physician / dermatologist",
+                    search_url=GENERIC_DERMATOLOGIST_SEARCH_URL,
+                    clinical_hand_off_notes="Routine healthy scalp checkup. No active clinical intervention indicated."
+                )
+
             else:
                 triage_level = TRIAGE_LEVEL_1_MINOR
                 triage_reason = (
-                    "Visual indications suggest mild surface dryness or balanced scalp state. "
-                    "Standard supportive hygiene and barrier hydration recommended."
+                    "Visual indications suggest mild surface dryness or minor flaking. "
+                    "Standard supportive barrier hydration and gentle cleansing recommended."
                 )
                 guide = INGREDIENT_GUIDES.get(raw_condition, INGREDIENT_GUIDES[CONDITION_DRY_SCALP])
                 ingredients = [
@@ -258,6 +287,7 @@ class TriageEngine:
             suggested_condition=final_condition,
             confidence_score=confidence,
             confidence_gated=confidence_gated,
+
             sub_scores=sub_scores,
             scalp_health_score=total_shs,
             triage_level=triage_level,

@@ -84,10 +84,12 @@ Every engineering decision in Follica is governed by five strict principles:
 - **Pre-Inference Quality Validation**: Real-time flash, focus distance, and Laplacian blur gating (`/api/v1/quality/check`) preventing blurry or poorly illuminated uploads from skewing scores.
 
 ### B. Clinical Questionnaire (Context Engine)
-- **Sensation**: Itching / pruritus, burning, painful bumps, or painless.
+- **Primary Goal & Concern Zone**: Supports both **Routine Baseline / Healthy Checkups** and targeted concern zones (Crown/Vertex, Hairline/Temples, Parting Line, Diffuse Thinning).
+- **Multi-Select Sensations**: Allows selecting multiple concurrent sensations (e.g., both itching and burning/tenderness, painful pustules, or calm/painless).
 - **Water & Environment**: Hostel borewell hard water, treated tap, or recent city/campus relocation.
 - **Family History & Stress**: Genetic hair thinning in parents/siblings, intense exam/work stress in past 3 months.
-- **Progression & Duration**: Sudden acute shedding (telogen effluvium pattern) vs gradual chronic thinning.
+- **Progression & Duration**: Sudden acute shedding (telogen effluvium pattern) vs gradual chronic thinning (or 0 weeks for routine baseline scans).
+
 
 ### C. The "Scalp Health Score" (SHS: 0–100)
 - **Transparent Composite Index** calculated across 4 discrete sub-scores (0–25 each):

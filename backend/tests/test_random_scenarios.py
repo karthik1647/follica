@@ -137,6 +137,8 @@ def test_randomized_dual_pipeline_invariants(scenario_idx):
     valid_conditions = [
         "Normal / Balanced Scalp",
         "Dry Scalp / Mild Flaking",
+        "Pattern Consistent with Balanced / Healthy Scalp",
+        "Pattern Suggestive of Dry Scalp / Mild Flaking",
         "Pattern Suggestive of Seborrheic Dermatitis",
         "Pattern Suggestive of Alopecia Areata / Patchy Loss",
         "Pattern Suggestive of Folliculitis / Scalp Bumps",
@@ -146,6 +148,7 @@ def test_randomized_dual_pipeline_invariants(scenario_idx):
     assert res["suggested_condition"] in valid_conditions, f"Invalid condition: {res['suggested_condition']}"
     assert "prescribe" not in str(res).lower()
     assert res["disclaimer"] == UNIVERSAL_DISCLAIMER
+
 
 
 

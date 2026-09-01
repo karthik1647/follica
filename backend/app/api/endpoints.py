@@ -187,16 +187,23 @@ async def analyze_scalp(
     # Parse deficiency flags list
     deficiencies = [f.strip() for f in deficiency_flags.split(",")] if deficiency_flags else []
 
+    # Parse multi-select sensations if passed as list or comma-separated
+    sens_items = [s.strip() for s in sensation.split(",") if s.strip()] if isinstance(sensation, str) else ["painless"]
+    if not sens_items:
+        sens_items = ["painless"]
+
     # Assemble comprehensive symptom context
+    valid_zones = ["routine_healthy_check", "crown_vertex", "hairline_temples", "central_parting", "diffuse_all_over", "patchy_spots"]
     context = SymptomContext(
         age_group=age_group if age_group in ["under_18", "18_25", "26_35", "36_50", "over_50"] else "18_25",
         biological_sex=biological_sex if biological_sex in ["male", "female", "other"] else "male",
-        primary_concern_zone=primary_concern_zone if primary_concern_zone in ["crown_vertex", "hairline_temples", "central_parting", "diffuse_all_over", "patchy_spots"] else "crown_vertex",
+        primary_concern_zone=primary_concern_zone if primary_concern_zone in valid_zones else "crown_vertex",
         scan_angle=scan_angle,
-        sensation=sensation if sensation in ["itching", "burning", "painful", "painless", "mixed"] else "painless",
-        itching=itching or (sensation == "itching"),
-        burning_or_pain=burning_or_pain or (sensation in ["burning", "painful"]),
-        scalp_pain_trichodynia=scalp_pain_trichodynia,
+        sensation=",".join(sens_items),
+        sensations=sens_items,
+        itching=itching or ("itching" in sens_items or "pruritus" in sens_items),
+        burning_or_pain=burning_or_pain or any(s in sens_items for s in ["burning", "burning_or_tender", "painful", "painful_bumps", "tenderness"]),
+        scalp_pain_trichodynia=scalp_pain_trichodynia or ("burning_or_tender" in sens_items or "tenderness" in sens_items),
         water_environment=water_environment if water_environment in ["hard_borewell", "treated_tap", "recent_relocation", "normal"] else "normal",
         hard_water_exposure=hard_water_exposure or (water_environment == "hard_borewell"),
         pollution_exposure=pollution_exposure if pollution_exposure in ["low_rural", "moderate_suburban", "high_metro_industrial", "high_campus_dust"] else "high_campus_dust",

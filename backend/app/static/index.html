@@ -110,8 +110,10 @@
             </div>
             <div class="header-actions">
                 <div class="status-pill"><span class="status-dot"></span><span>API Ready</span></div>
-                <button type="button" class="btn-demo-mode" onclick="loadDemoScenario()">1-Click Demo</button>
+                <button type="button" class="btn-demo-mode" onclick="loadHealthyDemoScenario()" style="border-color: #a7f3d0; color: #065f46; background: #ecfdf5;">Demo Healthy Check</button>
+                <button type="button" class="btn-demo-mode" onclick="loadDemoScenario()">Demo Symptom Case</button>
             </div>
+
         </div>
     </header>
 
@@ -175,9 +177,10 @@
                                 </div>
                             </div>
                             <div class="form-row">
-                                <span class="field-label">Primary Concern Zone</span>
+                                <span class="field-label">Primary Concern Zone / Assessment Goal</span>
                                 <div class="chip-group">
-                                    <div class="chip-item"><input type="radio" id="zone-1" name="primary_concern_zone" value="crown_vertex" checked><label for="zone-1" class="chip-label">Crown / Vertex</label></div>
+                                    <div class="chip-item"><input type="radio" id="zone-0" name="primary_concern_zone" value="routine_healthy_check" checked><label for="zone-0" class="chip-label">Routine Health Check (Baseline)</label></div>
+                                    <div class="chip-item"><input type="radio" id="zone-1" name="primary_concern_zone" value="crown_vertex"><label for="zone-1" class="chip-label">Crown / Vertex</label></div>
                                     <div class="chip-item"><input type="radio" id="zone-2" name="primary_concern_zone" value="hairline_temples"><label for="zone-2" class="chip-label">Hairline / Temples</label></div>
                                     <div class="chip-item"><input type="radio" id="zone-3" name="primary_concern_zone" value="central_parting"><label for="zone-3" class="chip-label">Parting Line</label></div>
                                     <div class="chip-item"><input type="radio" id="zone-4" name="primary_concern_zone" value="diffuse_all_over"><label for="zone-4" class="chip-label">Diffuse Thinning</label></div>
@@ -190,8 +193,8 @@
                             <div class="form-row">
                                 <span class="field-label">Water Source</span>
                                 <div class="chip-group">
-                                    <div class="chip-item"><input type="radio" id="water-1" name="water_environment" value="hard_borewell" checked><label for="water-1" class="chip-label">Hard Borewell</label></div>
-                                    <div class="chip-item"><input type="radio" id="water-2" name="water_environment" value="treated_tap"><label for="water-2" class="chip-label">Treated Tap</label></div>
+                                    <div class="chip-item"><input type="radio" id="water-1" name="water_environment" value="normal" checked><label for="water-1" class="chip-label">Normal / Filtered Tap</label></div>
+                                    <div class="chip-item"><input type="radio" id="water-2" name="water_environment" value="hard_borewell"><label for="water-2" class="chip-label">Hard Borewell</label></div>
                                     <div class="chip-item"><input type="radio" id="water-3" name="water_environment" value="recent_relocation"><label for="water-3" class="chip-label">Recent Move</label></div>
                                 </div>
                             </div>
@@ -237,12 +240,13 @@
                         <div class="intake-card-section">
                             <div class="intake-card-header"><span>4. Sensation & Follicular Dynamics</span></div>
                             <div class="form-row">
-                                <span class="field-label">Scalp Sensation</span>
-                                <div class="chip-group">
-                                    <div class="chip-item"><input type="radio" id="sens-1" name="sensation" value="painless" checked><label for="sens-1" class="chip-label">Painless</label></div>
-                                    <div class="chip-item"><input type="radio" id="sens-2" name="sensation" value="itching"><label for="sens-2" class="chip-label">Itching</label></div>
-                                    <div class="chip-item"><input type="radio" id="sens-3" name="sensation" value="burning"><label for="sens-3" class="chip-label">Burning / Tender</label></div>
-                                    <div class="chip-item"><input type="radio" id="sens-4" name="sensation" value="painful"><label for="sens-4" class="chip-label">Painful Bumps</label></div>
+                                <span class="field-label">Scalp Sensation (Multi-Select Supported)</span>
+                                <div class="chip-group" id="sensation-chips">
+                                    <div class="chip-item"><input type="checkbox" id="sens-1" name="sensation_opt" value="painless" checked onchange="handleSensationChange(this)"><label for="sens-1" class="chip-label">No Discomfort / Painless (Healthy)</label></div>
+                                    <div class="chip-item"><input type="checkbox" id="sens-2" name="sensation_opt" value="itching" onchange="handleSensationChange(this)"><label for="sens-2" class="chip-label">Itching / Pruritus</label></div>
+                                    <div class="chip-item"><input type="checkbox" id="sens-3" name="sensation_opt" value="burning" onchange="handleSensationChange(this)"><label for="sens-3" class="chip-label">Burning / Heat</label></div>
+                                    <div class="chip-item"><input type="checkbox" id="sens-4" name="sensation_opt" value="burning_or_tender" onchange="handleSensationChange(this)"><label for="sens-4" class="chip-label">Tenderness / Scalp Hurt</label></div>
+                                    <div class="chip-item"><input type="checkbox" id="sens-5" name="sensation_opt" value="painful" onchange="handleSensationChange(this)"><label for="sens-5" class="chip-label">Painful Bumps</label></div>
                                 </div>
                             </div>
                             <div class="form-row">
@@ -408,10 +412,67 @@
             reader.readAsDataURL(file);
         }
 
+        function handleSensationChange(el) {
+            const painlessEl = document.getElementById('sens-1');
+            const otherSens = document.querySelectorAll('input[name="sensation_opt"]:not(#sens-1)');
+            if (el.id === 'sens-1' && el.checked) {
+                otherSens.forEach(cb => cb.checked = false);
+            } else if (el.id !== 'sens-1' && el.checked) {
+                painlessEl.checked = false;
+            }
+            const anyChecked = Array.from(document.querySelectorAll('input[name="sensation_opt"]')).some(cb => cb.checked);
+            if (!anyChecked) {
+                painlessEl.checked = true;
+            }
+            updateRiskCounter();
+        }
+
+        async function loadHealthyDemoScenario() {
+            document.getElementById('zone-0').checked = true;
+            document.getElementById('water-1').checked = true;
+            document.getElementById('helmet-check').checked = false;
+            document.getElementById('styling-check').checked = false;
+            document.getElementById('diet-1').checked = true;
+            document.getElementById('def-d3').checked = false;
+            document.getElementById('def-iron').checked = false;
+            document.getElementById('def-family').checked = false;
+            document.getElementById('def-stress').checked = false;
+            
+            document.getElementById('sens-1').checked = true;
+            document.querySelectorAll('input[name="sensation_opt"]:not(#sens-1)').forEach(cb => cb.checked = false);
+            
+            document.getElementById('pull-1').checked = true;
+            document.getElementById('flake-1').checked = true;
+            document.getElementById('duration-slider').value = 0;
+            document.getElementById('duration-val-badge').innerText = '0 Weeks (Routine Scan)';
+            updateRiskCounter();
+
+            try {
+                const response = await fetch('/static/sample_scalp_demo.jpg');
+                const blob = await response.blob();
+                selectedFile = new File([blob], 'sample_scalp_demo.jpg', { type: 'image/jpeg' });
+                
+                const previewImg = document.getElementById('preview-image');
+                previewImg.src = '/static/sample_scalp_demo.jpg';
+                document.getElementById('preview-holder').style.display = 'block';
+                
+                await submitAssessment();
+            } catch (err) {
+                console.error('Failed to load realistic sample scalp asset:', err);
+                alert('Unable to load sample scalp image from server.');
+            }
+        }
+
         async function loadDemoScenario() {
+            document.getElementById('zone-1').checked = true;
+            document.getElementById('water-2').checked = true;
             document.getElementById('helmet-check').checked = true;
             document.getElementById('def-stress').checked = true;
+            
+            document.getElementById('sens-1').checked = false;
             document.getElementById('sens-2').checked = true;
+            document.getElementById('sens-3').checked = true;
+            
             document.getElementById('flake-3').checked = true;
             document.getElementById('pull-2').checked = true;
             document.getElementById('duration-slider').value = 6;
@@ -437,7 +498,7 @@
 
         async function submitAssessment() {
             if (!selectedFile) {
-                loadDemoScenario();
+                loadHealthyDemoScenario();
                 return;
             }
 
@@ -455,7 +516,10 @@
             formData.append('chemical_heat_styling', document.getElementById('styling-check').checked);
             formData.append('washing_frequency', document.querySelector('input[name="washing_frequency"]:checked').value);
             formData.append('diet_pattern', document.querySelector('input[name="diet_pattern"]:checked').value);
-            formData.append('sensation', document.querySelector('input[name="sensation"]:checked').value);
+            
+            const sensChecked = Array.from(document.querySelectorAll('input[name="sensation_opt"]:checked')).map(cb => cb.value);
+            formData.append('sensation', sensChecked.join(',') || 'painless');
+            
             formData.append('hair_pull_test', document.querySelector('input[name="hair_pull_test"]:checked').value);
             formData.append('flake_type', document.querySelector('input[name="flake_type"]:checked').value);
             formData.append('duration_weeks', parseInt(document.getElementById('duration-slider').value));
@@ -491,6 +555,7 @@
                 document.getElementById('results-empty').style.display = 'block';
             }
         }
+
 
         function renderResults(data) {
             document.getElementById('results-skeleton').style.display = 'none';

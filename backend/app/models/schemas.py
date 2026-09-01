@@ -1,4 +1,4 @@
-﻿"""
+"""
 Follica Pydantic Data Models and API Contracts.
 
 Architectural Design Intent and Clinical Rationale:
@@ -17,8 +17,8 @@ Architectural Design Intent and Clinical Rationale:
      tracking across longitudinal scans.
 """
 
-from typing import List, Optional, Literal, Dict, Any
-from pydantic import BaseModel, Field
+from typing import List, Optional, Literal, Dict, Any, Union
+from pydantic import BaseModel, Field, model_validator
 from app.core.constants import UNIVERSAL_DISCLAIMER
 
 
@@ -29,7 +29,8 @@ class SymptomContext(BaseModel):
     """
     Comprehensive self-reported patient symptom parameters and lifestyle context.
     Captures multi-angle orientation, demographic age, pollution, helmet usage,
-    metabolic/dietary markers, sensations, and shedding dynamics.
+    metabolic/dietary markers, multi-select sensations, and shedding dynamics.
+    Supports healthy preventative baseline checkups as well as active symptoms.
     """
     # 1. Demographics & Concern Zone
     age_group: Literal["under_18", "18_25", "26_35", "36_50", "over_50"] = Field(
@@ -41,18 +42,23 @@ class SymptomContext(BaseModel):
         description="Biological sex for hormonal pattern mapping (Norwood vs Ludwig)"
     )
     primary_concern_zone: Literal[
+        "routine_healthy_check",
         "crown_vertex",
         "hairline_temples",
         "central_parting",
         "diffuse_all_over",
         "patchy_spots"
-    ] = Field(default="crown_vertex", description="Primary anatomical area of concern")
+    ] = Field(default="crown_vertex", description="Primary anatomical area of concern or routine check")
     scan_angle: str = Field(default="crown_vertex", description="Targeted anatomical scalp angle")
 
-    # 2. Sensations & Trichodynia
-    sensation: Literal["itching", "burning", "painful", "painless", "mixed"] = Field(
+    # 2. Multi-Select Sensations & Trichodynia
+    sensation: str = Field(
         default="painless",
-        description="Predominant scalp sensation (pruritus, tenderness, dysesthesia)"
+        description="Primary scalp sensation string (comma-separated if multiple)"
+    )
+    sensations: List[str] = Field(
+        default_factory=lambda: ["painless"],
+        description="List of multi-select scalp sensations (e.g. ['itching', 'burning_or_tender'])"
     )
     itching: bool = Field(default=False, description="Reported scalp itching or pruritus")
     burning_or_pain: bool = Field(default=False, description="Reported burning sensation, tenderness, or painful bumps")
@@ -99,11 +105,11 @@ class SymptomContext(BaseModel):
     )
     recent_exam_work_stress: bool = Field(
         default=False,
-        description="Severe academic/exam/work stress within the preceding 3 months"
+        description="Intense exam pressure, academic deadlines, or work stress in past 3 months"
     )
     family_history_hair_loss: bool = Field(
         default=False,
-        description="Family history of androgenetic hair thinning in parents/grandparents"
+        description="Parental or sibling history of androgenetic alopecia / thinning"
     )
     deficiency_flags: List[str] = Field(
         default_factory=list,
@@ -123,8 +129,67 @@ class SymptomContext(BaseModel):
         default="gradual_chronic",
         description="Acute shedding (telogen effluvium pattern) vs gradual chronic miniaturization"
     )
-    duration_weeks: int = Field(default=2, ge=0, description="Duration of symptoms in weeks")
+    duration_weeks: int = Field(default=2, ge=0, description="Duration of symptoms in weeks (0 for routine healthy check)")
     symptom_notes: Optional[str] = Field(default=None, description="Free-text notes on past products or treatments tried")
+
+    @model_validator(mode="before")
+    @classmethod
+    def synchronize_sensations_and_context(cls, data: Any) -> Any:
+        """
+        Automatically reconciles multi-select sensations with legacy single-string fields
+        and boolean clinical flags.
+        """
+        if isinstance(data, dict):
+            explicit_itching = str(data.get("itching", "")).lower() in ["true", "1"] or data.get("itching") is True
+            explicit_pain = str(data.get("burning_or_pain", "")).lower() in ["true", "1"] or data.get("burning_or_pain") is True
+            explicit_trichodynia = str(data.get("scalp_pain_trichodynia", "")).lower() in ["true", "1"] or data.get("scalp_pain_trichodynia") is True
+
+            sens_list = []
+            if "sensations" in data and isinstance(data["sensations"], list):
+                sens_list.extend(data["sensations"])
+            elif "sensations" in data and isinstance(data["sensations"], str):
+                sens_list.extend([s.strip() for s in data["sensations"].split(",") if s.strip()])
+
+            if "sensation" in data and isinstance(data["sensation"], str):
+                for item in data["sensation"].split(","):
+                    item_clean = item.strip()
+                    if item_clean and item_clean not in sens_list:
+                        sens_list.append(item_clean)
+
+            if explicit_itching and "itching" not in sens_list:
+                sens_list.append("itching")
+            if explicit_pain and not any(s in sens_list for s in ["burning", "burning_or_tender", "painful", "painful_bumps"]):
+                sens_list.append("burning")
+            if explicit_trichodynia and "burning_or_tender" not in sens_list:
+                sens_list.append("burning_or_tender")
+
+            has_active_symptoms = explicit_itching or explicit_pain or explicit_trichodynia or any(
+                s in sens_list for s in ["itching", "pruritus", "burning", "burning_or_tender", "painful", "painful_bumps", "tightness"]
+            )
+            if has_active_symptoms and "painless" in sens_list:
+                sens_list = [s for s in sens_list if s != "painless"]
+
+            if not sens_list:
+                sens_list = ["painless"]
+
+            data["sensations"] = sens_list
+            data["sensation"] = ",".join(sens_list)
+
+            sens_set = set(sens_list)
+            data["itching"] = "itching" in sens_set or "pruritus" in sens_set or explicit_itching
+            data["burning_or_pain"] = any(s in sens_set for s in ["burning", "burning_or_tender", "tenderness", "painful", "painful_bumps"]) or explicit_pain
+            data["scalp_pain_trichodynia"] = "burning_or_tender" in sens_set or "tenderness" in sens_set or explicit_trichodynia
+
+            if not has_active_symptoms and "painless" in sens_set:
+                data["itching"] = False
+                data["burning_or_pain"] = False
+                data["scalp_pain_trichodynia"] = False
+
+            if data.get("water_environment") == "hard_borewell" or str(data.get("hard_water_exposure", "")).lower() in ["true", "1"] or data.get("hard_water_exposure") is True:
+                data["hard_water_exposure"] = True
+
+        return data
+
 
 
 # ---------------------------------------------------------------------------

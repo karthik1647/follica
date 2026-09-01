@@ -106,3 +106,41 @@ def test_derma_iq_modular_domains_endpoint():
     assert "scalp" in domain_ids
     assert "facial_acne" in domain_ids
     assert "eczema_rashes" in domain_ids
+
+
+def test_multi_select_sensations_and_correlation():
+    """Verify that multiple simultaneous sensations (e.g. itching + burning) are ingested and correlated."""
+    img_bytes = make_sharp_scalp_image()
+    files = {"image": ("scalp_multi_sensation.jpg", img_bytes, "image/jpeg")}
+    data = {
+        "sensation": "itching,burning,painful_bumps",
+        "duration_weeks": "5",
+        "primary_concern_zone": "crown_vertex"
+    }
+    response = client.post("/api/v1/analyze", files=files, data=data)
+    assert response.status_code == 200
+    res = response.json()
+    assert 0.0 <= res["scalp_health_score"] <= 100.0
+    assert len(res["clinical_correlations"]) > 0
+
+
+def test_healthy_individual_routine_checkup():
+    """Verify that a healthy person conducting a routine scan receives optimal preventative care guidance."""
+    img_bytes = make_sharp_scalp_image()
+    files = {"image": ("healthy_scalp.jpg", img_bytes, "image/jpeg")}
+    data = {
+        "primary_concern_zone": "routine_healthy_check",
+        "sensation": "painless",
+        "hair_pull_test": "negative_under_3",
+        "flake_type": "none",
+        "duration_weeks": "0",
+        "water_environment": "normal",
+        "washing_frequency": "2_3_per_week"
+    }
+    response = client.post("/api/v1/analyze", files=files, data=data)
+    assert response.status_code == 200
+    res = response.json()
+    assert res["triage_level"] == "Level 1: Minor Home Routine"
+    assert "Balanced" in res["suggested_condition"] or "Healthy" in res["suggested_condition"] or "Normal" in res["suggested_condition"]
+    assert any("pH-Balanced" in ing["name"] or "Panthenol" in ing["name"] for ing in res["recommended_ingredients"])
+

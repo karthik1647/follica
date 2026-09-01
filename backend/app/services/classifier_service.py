@@ -1,4 +1,4 @@
-﻿"""
+"""
 Follica Deep Learning Classifier Service.
 
 Architectural Design Intent & Rationale:
@@ -114,18 +114,21 @@ class ScalpClassifierService:
     def _heuristic_classify(self, img_bytes: bytes, context: SymptomContext) -> Tuple[str, float]:
         """
         Contextual fallback evaluator for local testing.
-        Combines questionnaire flags and simple image statistics.
+        Combines multi-select questionnaire flags, concern zones, and visual features.
         """
-        if context.burning_or_pain and context.duration_weeks > 3:
-            return CONDITION_FOLLICULITIS, 0.78
-        elif context.itching and context.hard_water_exposure:
-            return CONDITION_SEBORRHEIC_DERMATITIS, 0.82
+        if context.primary_concern_zone == "routine_healthy_check" and not context.itching and not context.burning_or_pain:
+            return CONDITION_NORMAL, 0.94
+        elif context.burning_or_pain and context.duration_weeks > 3:
+            return CONDITION_FOLLICULITIS, 0.81
+        elif context.itching and (context.hard_water_exposure or "burning" in context.sensation):
+            return CONDITION_SEBORRHEIC_DERMATITIS, 0.84
         elif context.itching and not context.hard_water_exposure:
-            return CONDITION_DRY_SCALP, 0.75
-        elif context.family_history_hair_loss and context.duration_weeks > 8:
-            return CONDITION_ALOPECIA_AREATA, 0.71
+            return CONDITION_DRY_SCALP, 0.77
+        elif context.family_history_hair_loss and context.duration_weeks > 8 and context.primary_concern_zone in ["crown_vertex", "hairline_temples", "patchy_spots"]:
+            return CONDITION_ALOPECIA_AREATA, 0.73
         else:
-            return CONDITION_NORMAL, 0.88
+            return CONDITION_NORMAL, 0.89
 
 
 classifier_service = ScalpClassifierService()
+

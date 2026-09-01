@@ -1,4 +1,4 @@
-﻿"""
+"""
 Follica Core Constants and Non-Diagnostic Terminology.
 
 Architectural Design Intent & Safety Compliance:
@@ -40,13 +40,14 @@ UNIVERSAL_DISCLAIMER: str = (
 GENERIC_DERMATOLOGIST_SEARCH_URL: str = "https://www.google.com/maps/search/dermatologist+near+me"
 
 # Standard Non-Diagnostic Condition Taxonomy
-CONDITION_NORMAL = "Normal / Balanced Scalp"
-CONDITION_DRY_SCALP = "Dry Scalp / Mild Flaking"
+CONDITION_NORMAL = "Pattern Consistent with Balanced / Healthy Scalp"
+CONDITION_DRY_SCALP = "Pattern Suggestive of Dry Scalp / Mild Flaking"
 CONDITION_SEBORRHEIC_DERMATITIS = "Pattern Suggestive of Seborrheic Dermatitis"
 CONDITION_ALOPECIA_AREATA = "Pattern Suggestive of Alopecia Areata / Patchy Loss"
 CONDITION_FOLLICULITIS = "Pattern Suggestive of Folliculitis / Scalp Bumps"
 CONDITION_SCALP_PSORIASIS = "Pattern Suggestive of Scalp Plaque / Scaling"
 CONDITION_UNVERIFIED_MONITORED = "Indeterminate Pattern / Requires Verification"
+
 
 # Triage Categories
 TRIAGE_LEVEL_1_MINOR = "Level 1: Minor Home Routine"
@@ -56,22 +57,28 @@ TRIAGE_LEVEL_3_ESCALATION = "Level 3: Escalation (Consult a Dermatologist)"
 # Molecule-First Ingredient Guides (Scientific OTC Actives)
 INGREDIENT_GUIDES = {
     CONDITION_NORMAL: {
-        "summary": "Maintains balanced scalp biome and protective lipid barrier.",
+        "summary": "Visual analysis and clinical correlation indicate a healthy, balanced scalp barrier. Preventive maintenance recommended.",
         "ingredients": [
             {
-                "name": "Gentle Sulfate-Free Cleanser",
+                "name": "Gentle pH-Balanced (5.5) Scalp Cleanser",
                 "frequency": "2-3x per week",
-                "purpose": "Removes environmental pollutants without stripping protective sebum lipids."
+                "purpose": "Maintains natural acid mantle and protects beneficial scalp microbiome without stripping essential lipids."
             },
             {
-                "name": "Hydrating Scalp Serum (Panthenol / Hyaluronic Acid)",
-                "frequency": "As needed",
-                "purpose": "Maintains stratum corneum hydration."
+                "name": "Hyaluronic Acid & Panthenol Hydration Serum",
+                "frequency": "As needed after wash",
+                "purpose": "Delivers lightweight humectant hydration to support hair follicle vitality and stratum corneum elasticity."
+            },
+            {
+                "name": "Niacinamide (2%) Scalp Antioxidant Tonic",
+                "frequency": "1-2x per week",
+                "purpose": "Strengthens epidermal barrier ceramides and defends against urban PM2.5 particulate oxidants."
             }
         ],
         "lifestyle": [
-            "Avoid excessively hot water during hair washing.",
-            "Cleanse promptly following intense physical workouts or excessive perspiration."
+            "Maintain current balanced hair care cadence and adequate dietary hydration and protein.",
+            "Perform a routine 30-day baseline scan to track longitudinal follicle density and seasonal shifts.",
+            "Use a shower filter if traveling through hard borewell water regions to prevent mineral deposit buildup."
         ]
     },
     CONDITION_DRY_SCALP: {
