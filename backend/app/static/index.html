@@ -6,34 +6,38 @@
     <title>Follica - Clinical Scalp Health Intelligence</title>
     <style>
         :root {
-            --bg-base: #070b14;
-            --bg-surface: #0f172a;
-            --bg-card: #131c31;
-            --bg-card-hover: #18233d;
-            --border-subtle: #1e293b;
-            --border-highlight: #334155;
-            --border-glow: rgba(6, 182, 212, 0.4);
+            /* Clinical Light Mode Design System */
+            --bg-base: #f8fafc;
+            --bg-surface: #ffffff;
+            --bg-subtle: #f1f5f9;
+            --bg-card: #ffffff;
+            --bg-card-hover: #fafafa;
             
-            --text-main: #f8fafc;
-            --text-secondary: #94a3b8;
-            --text-muted: #64748b;
+            --border-subtle: #e2e8f0;
+            --border-highlight: #cbd5e1;
+            --border-focus: #0891b2;
             
-            --brand-cyan: #06b6d4;
-            --brand-blue: #3b82f6;
-            --brand-indigo: #6366f1;
-            --brand-emerald: #10b981;
-            --brand-amber: #f59e0b;
-            --brand-rose: #f43f5e;
+            --text-main: #0f172a;
+            --text-body: #334155;
+            --text-secondary: #64748b;
+            --text-muted: #94a3b8;
+            
+            /* Professional Clinical Palette */
+            --brand-primary: #0891b2;
+            --brand-secondary: #2563eb;
+            --brand-indigo: #4f46e5;
+            --brand-emerald: #059669;
+            --brand-amber: #d97706;
+            --brand-rose: #e11d48;
             
             --radius-sm: 6px;
             --radius-md: 10px;
             --radius-lg: 16px;
             --radius-full: 9999px;
             
-            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
-            --shadow-glow: 0 0 20px rgba(6, 182, 212, 0.15);
+            --shadow-subtle: 0 1px 3px 0 rgba(15, 23, 42, 0.06), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
+            --shadow-card: 0 4px 16px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
+            --shadow-hover: 0 10px 25px -3px rgba(15, 23, 42, 0.08), 0 4px 10px -2px rgba(15, 23, 42, 0.04);
             
             --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
@@ -46,14 +50,14 @@
 
         body {
             background-color: var(--bg-base);
-            color: var(--text-main);
+            color: var(--text-body);
             font-family: var(--font-stack);
             line-height: 1.5;
             padding: 24px 16px;
             min-height: 100vh;
             background-image: 
-                radial-gradient(circle at 15% 10%, rgba(6, 182, 212, 0.08) 0%, transparent 40%),
-                radial-gradient(circle at 85% 90%, rgba(99, 102, 241, 0.08) 0%, transparent 40%);
+                radial-gradient(circle at 10% 5%, rgba(8, 145, 178, 0.04) 0%, transparent 45%),
+                radial-gradient(circle at 90% 95%, rgba(37, 99, 235, 0.04) 0%, transparent 45%);
             background-attachment: fixed;
         }
 
@@ -67,16 +71,14 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 16px 24px;
-            background: rgba(15, 23, 42, 0.75);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            padding: 16px 28px;
+            background: var(--bg-surface);
             border: 1px solid var(--border-subtle);
             border-radius: var(--radius-lg);
             margin-bottom: 24px;
             flex-wrap: wrap;
             gap: 16px;
-            box-shadow: var(--shadow-md);
+            box-shadow: var(--shadow-card);
         }
 
         .brand-container {
@@ -86,22 +88,20 @@
         }
 
         .brand-logo-svg {
-            width: 42px;
-            height: 42px;
-            filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.5));
+            width: 44px;
+            height: 44px;
+            filter: drop-shadow(0 2px 6px rgba(8, 145, 178, 0.25));
         }
 
         .brand-text h1 {
-            font-size: 1.45rem;
+            font-size: 1.5rem;
             font-weight: 800;
             letter-spacing: -0.5px;
-            background: linear-gradient(135deg, #ffffff 30%, var(--brand-cyan) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: var(--text-main);
         }
 
         .brand-text p {
-            font-size: 0.8rem;
+            font-size: 0.82rem;
             color: var(--text-secondary);
             font-weight: 500;
         }
@@ -121,9 +121,9 @@
             border-radius: var(--radius-full);
             font-size: 0.78rem;
             font-weight: 600;
-            background-color: rgba(16, 185, 129, 0.12);
-            color: #6ee7b7;
-            border: 1px solid rgba(16, 185, 129, 0.3);
+            background-color: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
         }
 
         .status-pulse {
@@ -131,40 +131,40 @@
             height: 8px;
             border-radius: 50%;
             background-color: var(--brand-emerald);
-            box-shadow: 0 0 8px var(--brand-emerald);
         }
 
         .demo-pill-btn {
-            background: rgba(59, 130, 246, 0.12);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            color: #93c5fd;
-            padding: 6px 14px;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            color: #1d4ed8;
+            padding: 7px 16px;
             border-radius: var(--radius-full);
             font-size: 0.78rem;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.2s ease;
         }
 
         .demo-pill-btn:hover {
-            background: rgba(59, 130, 246, 0.22);
-            border-color: var(--brand-blue);
+            background: #dbeafe;
+            border-color: #93c5fd;
         }
 
-        /* Navigation Tabs */
+        /* Navigation Tab Bar */
         .tab-bar {
             display: flex;
             gap: 8px;
             padding: 6px;
-            background: rgba(15, 23, 42, 0.6);
+            background: var(--bg-surface);
             border: 1px solid var(--border-subtle);
             border-radius: var(--radius-md);
             margin-bottom: 24px;
+            box-shadow: var(--shadow-subtle);
             overflow-x: auto;
         }
 
         .tab-button {
-            padding: 10px 20px;
+            padding: 10px 22px;
             background: transparent;
             border: none;
             border-radius: var(--radius-sm);
@@ -178,14 +178,13 @@
 
         .tab-button:hover {
             color: var(--text-main);
-            background: rgba(255, 255, 255, 0.04);
+            background: var(--bg-subtle);
         }
 
         .tab-button.active {
             color: #ffffff;
-            background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(59, 130, 246, 0.2));
-            border: 1px solid rgba(6, 182, 212, 0.4);
-            box-shadow: var(--shadow-sm);
+            background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-secondary) 100%);
+            box-shadow: 0 2px 8px rgba(8, 145, 178, 0.25);
         }
 
         .tab-content {
@@ -222,12 +221,13 @@
             border-radius: var(--radius-lg);
             padding: 24px;
             margin-bottom: 24px;
-            box-shadow: var(--shadow-md);
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: var(--shadow-card);
+            transition: box-shadow 0.2s ease, border-color 0.2s ease;
         }
 
         .app-card:hover {
             border-color: var(--border-highlight);
+            box-shadow: var(--shadow-hover);
         }
 
         .app-card-title {
@@ -237,26 +237,25 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 16px;
+            margin-bottom: 8px;
         }
 
         .app-card-subtitle {
             font-size: 0.82rem;
             color: var(--text-secondary);
-            margin-top: -10px;
-            margin-bottom: 16px;
+            margin-bottom: 18px;
         }
 
-        /* Multi-Angle Selector */
+        /* Multi-Angle Segmented Control */
         .angle-segmented-control {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
             gap: 6px;
-            background: var(--bg-base);
+            background: var(--bg-subtle);
             padding: 6px;
             border-radius: var(--radius-md);
             border: 1px solid var(--border-subtle);
-            margin-bottom: 16px;
+            margin-bottom: 18px;
         }
 
         .angle-chip {
@@ -274,27 +273,27 @@
 
         .angle-chip:hover {
             color: var(--text-main);
-            background: rgba(255, 255, 255, 0.03);
+            background: rgba(255, 255, 255, 0.7);
         }
 
         .angle-chip.active {
-            background: var(--bg-card);
-            border-color: var(--brand-cyan);
-            color: var(--brand-cyan);
-            box-shadow: var(--shadow-sm);
+            background: #ffffff;
+            border-color: #cbd5e1;
+            color: var(--brand-primary);
+            box-shadow: var(--shadow-subtle);
         }
 
         /* Viewfinder Upload Area */
         .viewfinder-box {
             position: relative;
-            border: 2px dashed var(--border-highlight);
+            border: 2px dashed #cbd5e1;
             border-radius: var(--radius-md);
             min-height: 240px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            background: rgba(7, 11, 20, 0.6);
+            background: #f8fafc;
             overflow: hidden;
             cursor: pointer;
             transition: all 0.25s ease;
@@ -303,9 +302,8 @@
         }
 
         .viewfinder-box:hover, .viewfinder-box.dragover {
-            border-color: var(--brand-cyan);
-            background: rgba(6, 182, 212, 0.04);
-            box-shadow: var(--shadow-glow);
+            border-color: var(--brand-primary);
+            background: #f0fdfa;
         }
 
         .viewfinder-box input[type="file"] {
@@ -335,7 +333,7 @@
         .reticle-ring {
             width: 170px;
             height: 170px;
-            border: 2px dashed rgba(6, 182, 212, 0.4);
+            border: 2px dashed rgba(8, 145, 178, 0.45);
             border-radius: 50%;
             position: relative;
             animation: rotateSlow 40s linear infinite;
@@ -352,7 +350,7 @@
             left: -20px;
             right: -20px;
             height: 1px;
-            background: rgba(6, 182, 212, 0.3);
+            background: rgba(8, 145, 178, 0.35);
         }
 
         .reticle-cross-v {
@@ -361,7 +359,7 @@
             top: -20px;
             bottom: -20px;
             width: 1px;
-            background: rgba(6, 182, 212, 0.3);
+            background: rgba(8, 145, 178, 0.35);
         }
 
         .viewfinder-prompt {
@@ -378,7 +376,7 @@
 
         .viewfinder-prompt-sub {
             font-size: 0.8rem;
-            color: var(--text-muted);
+            color: var(--text-secondary);
         }
 
         .preview-image-element {
@@ -400,25 +398,25 @@
         }
 
         .quality-status-bar.passed {
-            background: rgba(16, 185, 129, 0.1);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            color: #6ee7b7;
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            color: #065f46;
         }
 
         .quality-status-bar.failed {
-            background: rgba(244, 63, 94, 0.1);
-            border: 1px solid rgba(244, 63, 94, 0.3);
-            color: #fda4af;
+            background: #fff1f2;
+            border: 1px solid #fecdd3;
+            color: #9f1239;
         }
 
-        /* Clinical Questionnaire Chips & Form */
+        /* Form Controls & Chips */
         .form-section-title {
-            font-size: 0.84rem;
+            font-size: 0.82rem;
             font-weight: 700;
             color: var(--text-secondary);
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .chip-grid {
@@ -441,10 +439,10 @@
         .chip-label {
             display: block;
             padding: 10px 8px;
-            background: var(--bg-base);
+            background: var(--bg-subtle);
             border: 1px solid var(--border-subtle);
             border-radius: var(--radius-md);
-            color: var(--text-secondary);
+            color: var(--text-body);
             font-size: 0.82rem;
             font-weight: 600;
             text-align: center;
@@ -454,10 +452,10 @@
         }
 
         .chip-option input:checked + .chip-label {
-            background: rgba(6, 182, 212, 0.12);
-            border-color: var(--brand-cyan);
-            color: var(--brand-cyan);
-            box-shadow: 0 0 10px rgba(6, 182, 212, 0.15);
+            background: #e0f2fe;
+            border-color: #0284c7;
+            color: #0369a1;
+            font-weight: 700;
         }
 
         .form-row {
@@ -476,19 +474,19 @@
         .input-control {
             width: 100%;
             padding: 10px 14px;
-            background-color: var(--bg-base);
+            background-color: #ffffff;
             border: 1px solid var(--border-subtle);
             border-radius: var(--radius-md);
             color: var(--text-main);
             font-family: inherit;
             font-size: 0.88rem;
-            transition: border-color 0.2s ease;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
         .input-control:focus {
             outline: none;
-            border-color: var(--brand-cyan);
-            box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.15);
+            border-color: var(--brand-primary);
+            box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.12);
         }
 
         .checkbox-container {
@@ -497,13 +495,13 @@
             gap: 10px;
             padding: 8px 0;
             cursor: pointer;
-            margin-bottom: 16px;
+            margin-bottom: 18px;
         }
 
         .checkbox-container input[type="checkbox"] {
             width: 18px;
             height: 18px;
-            accent-color: var(--brand-cyan);
+            accent-color: var(--brand-primary);
             cursor: pointer;
         }
 
@@ -516,7 +514,7 @@
         .btn-submit-glow {
             width: 100%;
             padding: 14px;
-            background: linear-gradient(135deg, var(--brand-cyan) 0%, var(--brand-blue) 100%);
+            background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-secondary) 100%);
             color: #ffffff;
             border: none;
             border-radius: var(--radius-md);
@@ -525,12 +523,12 @@
             letter-spacing: 0.3px;
             cursor: pointer;
             transition: transform 0.15s ease, box-shadow 0.2s ease, opacity 0.2s ease;
-            box-shadow: 0 4px 14px rgba(6, 182, 212, 0.3);
+            box-shadow: 0 4px 12px rgba(8, 145, 178, 0.25);
         }
 
         .btn-submit-glow:hover {
             transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(6, 182, 212, 0.45);
+            box-shadow: 0 6px 18px rgba(8, 145, 178, 0.35);
         }
 
         .btn-submit-glow:active {
@@ -548,8 +546,8 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            padding: 8px 14px;
-            background: rgba(255, 255, 255, 0.05);
+            padding: 8px 16px;
+            background: #ffffff;
             border: 1px solid var(--border-subtle);
             border-radius: var(--radius-md);
             color: var(--text-main);
@@ -558,26 +556,27 @@
             cursor: pointer;
             text-decoration: none;
             transition: all 0.2s ease;
+            box-shadow: var(--shadow-subtle);
         }
 
         .btn-action-subtle:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: var(--brand-cyan);
-            color: var(--brand-cyan);
+            border-color: var(--brand-primary);
+            color: var(--brand-primary);
+            background: #f0fdfa;
         }
 
-        /* Results Overview & Metrics */
+        /* Results Display */
         .results-empty-state {
             text-align: center;
             padding: 64px 24px;
-            color: var(--text-muted);
+            color: var(--text-secondary);
         }
 
         .results-empty-icon {
             width: 56px;
             height: 56px;
             margin: 0 auto 16px;
-            opacity: 0.4;
+            color: var(--text-muted);
         }
 
         .results-panel {
@@ -589,12 +588,11 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 20px 24px;
-            background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(19, 28, 49, 0.9));
-            border: 1px solid var(--border-highlight);
+            padding: 22px 24px;
+            background: linear-gradient(135deg, #f0fdfa 0%, #eff6ff 100%);
+            border: 1px solid #ccfbf1;
             border-radius: var(--radius-lg);
             margin-bottom: 20px;
-            box-shadow: var(--shadow-sm);
         }
 
         .gauge-metric-value {
@@ -602,9 +600,7 @@
             font-weight: 900;
             line-height: 1;
             letter-spacing: -1px;
-            background: linear-gradient(135deg, #ffffff 40%, var(--brand-cyan) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: var(--brand-primary);
         }
 
         .gauge-metric-label {
@@ -613,7 +609,7 @@
             text-transform: uppercase;
             letter-spacing: 0.8px;
             margin-top: 4px;
-            font-weight: 600;
+            font-weight: 700;
         }
 
         .triage-badge-pill {
@@ -625,21 +621,21 @@
         }
 
         .triage-level-1 {
-            background: rgba(16, 185, 129, 0.15);
-            color: #6ee7b7;
-            border: 1px solid rgba(16, 185, 129, 0.4);
+            background: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
         }
 
         .triage-level-2 {
-            background: rgba(245, 158, 11, 0.15);
-            color: #fcd34d;
-            border: 1px solid rgba(245, 158, 11, 0.4);
+            background: #fffbeb;
+            color: #92400e;
+            border: 1px solid #fde68a;
         }
 
         .triage-level-3 {
-            background: rgba(244, 63, 94, 0.15);
-            color: #fda4af;
-            border: 1px solid rgba(244, 63, 94, 0.4);
+            background: #fff1f2;
+            color: #9f1239;
+            border: 1px solid #fecdd3;
         }
 
         /* 4 Sub-Scores Grid */
@@ -657,7 +653,7 @@
         }
 
         .subscore-tile {
-            background: var(--bg-base);
+            background: var(--bg-subtle);
             padding: 14px;
             border-radius: var(--radius-md);
             border: 1px solid var(--border-subtle);
@@ -667,30 +663,30 @@
             display: flex;
             justify-content: space-between;
             font-size: 0.82rem;
-            font-weight: 600;
-            color: var(--text-secondary);
+            font-weight: 700;
+            color: var(--text-main);
             margin-bottom: 8px;
         }
 
         .subscore-progress-track {
             width: 100%;
             height: 6px;
-            background: #1e293b;
+            background: #e2e8f0;
             border-radius: 3px;
             overflow: hidden;
         }
 
         .subscore-progress-bar {
             height: 100%;
-            background: linear-gradient(90deg, var(--brand-cyan), var(--brand-blue));
+            background: linear-gradient(90deg, var(--brand-primary), var(--brand-secondary));
             border-radius: 3px;
             transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         /* Active Ingredient Cards */
         .ingredient-item-card {
-            background: var(--bg-base);
-            border-left: 4px solid var(--brand-cyan);
+            background: #f8fafc;
+            border-left: 4px solid var(--brand-primary);
             border-radius: 0 var(--radius-md) var(--radius-md) 0;
             padding: 12px 16px;
             margin-bottom: 10px;
@@ -707,47 +703,47 @@
 
         .ingredient-cadence {
             font-size: 0.8rem;
-            font-weight: 600;
+            font-weight: 700;
             color: var(--brand-amber);
             margin: 2px 0 4px;
         }
 
         .ingredient-mechanism {
             font-size: 0.8rem;
-            color: var(--text-secondary);
+            color: var(--text-body);
         }
 
         /* Referral Box */
         .referral-alert-box {
-            background: rgba(244, 63, 94, 0.08);
-            border: 1px solid rgba(244, 63, 94, 0.3);
+            background: #fff1f2;
+            border: 1px solid #fecdd3;
             border-radius: var(--radius-md);
             padding: 16px;
             margin-bottom: 20px;
         }
 
         .referral-alert-title {
-            font-weight: 700;
-            color: #fda4af;
+            font-weight: 800;
+            color: #9f1239;
             font-size: 0.92rem;
             margin-bottom: 6px;
         }
 
         .referral-alert-text {
             font-size: 0.82rem;
-            color: var(--text-secondary);
+            color: #881337;
             margin-bottom: 12px;
             line-height: 1.4;
         }
 
         /* Universal Disclaimer */
         .disclaimer-card {
-            background: rgba(7, 11, 20, 0.9);
+            background: #f8fafc;
             border: 1px solid var(--border-subtle);
             padding: 14px 18px;
             border-radius: var(--radius-md);
             font-size: 0.76rem;
-            color: var(--text-muted);
+            color: var(--text-secondary);
             line-height: 1.4;
             margin-top: 20px;
         }
@@ -760,7 +756,7 @@
             border-radius: var(--radius-md);
             border: 1px solid var(--border-highlight);
             overflow: hidden;
-            background: #000000;
+            background: #e2e8f0;
             margin-bottom: 20px;
             user-select: none;
         }
@@ -788,11 +784,11 @@
             top: 0;
             bottom: 0;
             left: 50%;
-            width: 2px;
+            width: 3px;
             background: #ffffff;
             z-index: 4;
             cursor: ew-resize;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
         }
 
         .slider-knob {
@@ -804,13 +800,14 @@
             height: 36px;
             border-radius: 50%;
             background: #ffffff;
-            color: #0b1120;
+            color: var(--text-main);
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 800;
             font-size: 0.72rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 2px 10px rgba(15, 23, 42, 0.2);
+            border: 1px solid var(--border-subtle);
         }
 
         .slider-tag {
@@ -818,22 +815,23 @@
             bottom: 14px;
             padding: 4px 12px;
             border-radius: var(--radius-sm);
-            background: rgba(11, 17, 32, 0.85);
+            background: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(4px);
             font-size: 0.75rem;
             font-weight: 700;
             z-index: 5;
             border: 1px solid var(--border-subtle);
+            box-shadow: var(--shadow-subtle);
         }
 
         .slider-tag.left {
             left: 14px;
-            color: #93c5fd;
+            color: #1d4ed8;
         }
 
         .slider-tag.right {
             right: 14px;
-            color: #6ee7b7;
+            color: #047857;
         }
 
         .delta-stats-row {
@@ -844,7 +842,7 @@
         }
 
         .delta-stat-card {
-            background: var(--bg-base);
+            background: var(--bg-subtle);
             border: 1px solid var(--border-subtle);
             border-radius: var(--radius-md);
             padding: 14px 10px;
@@ -854,7 +852,7 @@
         .delta-stat-num {
             font-size: 1.5rem;
             font-weight: 800;
-            color: var(--brand-cyan);
+            color: var(--brand-primary);
         }
 
         .delta-stat-label {
@@ -869,17 +867,17 @@
             text-align: center;
             padding: 18px;
             font-size: 0.88rem;
-            color: var(--brand-cyan);
-            font-weight: 600;
+            color: var(--brand-primary);
+            font-weight: 700;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Professional Brand Header -->
+        <!-- Professional Clinical Light Header -->
         <header>
             <div class="brand-container">
-                <!-- Custom Geometric Scalp Diagnostic Logo (SVG) -->
+                <!-- Custom Geometric Scalp Diagnostic Logo (Light Palette) -->
                 <svg class="brand-logo-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <circle cx="50" cy="50" r="46" stroke="url(#logo-grad-1)" stroke-width="3" stroke-dasharray="6 3"/>
                     <circle cx="50" cy="50" r="36" fill="url(#logo-grad-bg)"/>
@@ -888,16 +886,16 @@
                     <path d="M50 35 L50 68" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
                     <defs>
                         <linearGradient id="logo-grad-1" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-                            <stop stop-color="#06b6d4"/>
-                            <stop offset="1" stop-color="#3b82f6"/>
+                            <stop stop-color="#0891b2"/>
+                            <stop offset="1" stop-color="#2563eb"/>
                         </linearGradient>
                         <linearGradient id="logo-grad-bg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-                            <stop stop-color="#0f172a"/>
-                            <stop offset="1" stop-color="#1e293b"/>
+                            <stop stop-color="#ffffff"/>
+                            <stop offset="1" stop-color="#f0fdfa"/>
                         </linearGradient>
                         <linearGradient id="logo-grad-strand" x1="50" y1="20" x2="50" y2="80" gradientUnits="userSpaceOnUse">
-                            <stop stop-color="#22d3ee"/>
-                            <stop offset="0.6" stop-color="#06b6d4"/>
+                            <stop stop-color="#06b6d4"/>
+                            <stop offset="0.6" stop-color="#0891b2"/>
                             <stop offset="1" stop-color="#2563eb"/>
                         </linearGradient>
                     </defs>
@@ -919,7 +917,7 @@
             </div>
         </header>
 
-        <!-- Segmented Tab Navigation -->
+        <!-- Segmented Navigation Tab Bar -->
         <div class="tab-bar">
             <button type="button" class="tab-button active" onclick="navigateTab('tab-scanner', this)">
                 Scalp Diagnostic Assessment
@@ -941,7 +939,7 @@
                     <div class="app-card">
                         <div class="app-card-title">
                             <span>Step 1: Guided Scalp Capture</span>
-                            <span id="selected-angle-badge" style="font-size: 0.78rem; color: var(--brand-cyan);">Angle: Crown / Vertex</span>
+                            <span id="selected-angle-badge" style="font-size: 0.78rem; color: var(--brand-primary); font-weight: 700;">Angle: Crown / Vertex</span>
                         </div>
                         <p class="app-card-subtitle">Select anatomical region and align scalp parting inside the reticle.</p>
 
@@ -962,8 +960,8 @@
                                 </div>
                             </div>
                             <div class="viewfinder-prompt" id="viewfinder-instructions">
-                                <div class="viewfinder-prompt-title">Click to Select or Drop Photo</div>
-                                <div class="viewfinder-prompt-sub">JPEG, PNG, or WebP (Sharp optical focus, flash enabled)</div>
+                                <div class="viewfinder-prompt-title">Click to Select or Drop Scalp Photo</div>
+                                <div class="viewfinder-prompt-sub">JPEG, PNG, or WebP (Sharp focus, balanced lighting)</div>
                             </div>
                             <img id="scalp-preview-img" class="preview-image-element" alt="Scalp Capture Preview">
                         </div>
@@ -975,7 +973,7 @@
                     <div class="app-card">
                         <div class="app-card-title">
                             <span>Step 2: Clinical Context Engine</span>
-                            <span style="font-size: 0.78rem; color: var(--text-secondary);">5 Key Questions</span>
+                            <span style="font-size: 0.78rem; color: var(--text-secondary); font-weight: 600;">5 Questions</span>
                         </div>
                         <p class="app-card-subtitle">Contextual triggers that classical computer vision cannot detect from an image alone.</p>
 
@@ -1044,7 +1042,7 @@
 
                         <label class="checkbox-container">
                             <input type="checkbox" id="user-consent-checkbox" checked>
-                            <span>I consent to biometric image evaluation under encrypted-at-rest storage policies.</span>
+                            <span>I consent to biometric image evaluation under encrypted-at-rest data retention policies.</span>
                         </label>
 
                         <button type="button" id="btn-run-assessment" class="btn-submit-glow" onclick="executeScalpAssessment()">
@@ -1064,8 +1062,8 @@
                         <svg class="results-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
-                        <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--text-main); margin-bottom: 6px;">Assessment Results Pending</h3>
-                        <p style="font-size: 0.84rem; line-height: 1.4;">Capture or upload a scalp photograph and complete the clinical questionnaire to calculate the Scalp Health Score (SHS 0-100), sub-scores, and molecule-first care routine.</p>
+                        <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--text-main); margin-bottom: 6px;">Assessment Results Pending</h3>
+                        <p style="font-size: 0.86rem; line-height: 1.5; color: var(--text-secondary);">Capture or upload a scalp photograph and complete the clinical questionnaire to calculate the Scalp Health Score (SHS 0-100), sub-scores, and molecule-first care routine.</p>
                     </div>
 
                     <!-- Populated Results Panel -->
@@ -1089,9 +1087,9 @@
                         </div>
 
                         <div style="margin-bottom: 18px;">
-                            <div style="font-size: 0.76rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">Visual Assessment Pattern</div>
-                            <div id="display-condition-name" style="font-size: 1.1rem; font-weight: 800; color: var(--text-main); margin-top: 2px;">--</div>
-                            <div id="display-confidence-label" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;"></div>
+                            <div style="font-size: 0.76rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700;">Visual Assessment Pattern</div>
+                            <div id="display-condition-name" style="font-size: 1.15rem; font-weight: 800; color: var(--text-main); margin-top: 2px;">--</div>
+                            <div id="display-confidence-label" style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px;"></div>
                         </div>
 
                         <!-- 4 Sub-Scores Breakdown -->
@@ -1135,7 +1133,7 @@
                         </div>
 
                         <div id="display-stage-comparison" style="margin-bottom: 18px;">
-                            <span class="status-pill" id="stage-comparison-pill" style="font-size: 0.76rem; background: rgba(59, 130, 246, 0.1); color: #93c5fd; border-color: rgba(59, 130, 246, 0.3);">
+                            <span class="status-pill" id="stage-comparison-pill" style="font-size: 0.78rem; background: #eff6ff; color: #1e40af; border-color: #bfdbfe;">
                                 Baseline Follicle Density Boundary (Norwood 1-2 / Ludwig 1)
                             </span>
                         </div>
@@ -1144,14 +1142,14 @@
                         <div id="referral-alert-container" class="referral-alert-box" style="display: none;">
                             <div class="referral-alert-title">Clinical Hand-Off Recommended (Clinic Pass)</div>
                             <div id="referral-alert-notes" class="referral-alert-text"></div>
-                            <a id="referral-maps-link" href="#" target="_blank" class="btn-action-subtle" style="font-size: 0.78rem;">
+                            <a id="referral-maps-link" href="#" target="_blank" class="btn-action-subtle" style="font-size: 0.8rem; background: #ffffff; color: #9f1239; border-color: #fecdd3;">
                                 Locate Local Certified Dermatologists
                             </a>
                         </div>
 
                         <!-- Active Ingredient Schedule -->
                         <div style="margin-bottom: 18px;">
-                            <div style="font-size: 0.86rem; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">
+                            <div style="font-size: 0.88rem; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">
                                 Scientific Active Molecules (No Sponsored Brands)
                             </div>
                             <div id="active-ingredients-list"></div>
@@ -1159,10 +1157,10 @@
 
                         <!-- Supportive Environmental Care -->
                         <div style="margin-bottom: 18px;">
-                            <div style="font-size: 0.86rem; font-weight: 700; color: var(--text-main); margin-bottom: 8px;">
+                            <div style="font-size: 0.88rem; font-weight: 700; color: var(--text-main); margin-bottom: 8px;">
                                 Supportive Barrier & Environmental Care
                             </div>
-                            <ul id="lifestyle-guidance-list" style="font-size: 0.82rem; color: var(--text-secondary); padding-left: 18px; line-height: 1.5;"></ul>
+                            <ul id="lifestyle-guidance-list" style="font-size: 0.82rem; color: var(--text-body); padding-left: 18px; line-height: 1.5;"></ul>
                         </div>
 
                         <div class="disclaimer-card" id="display-universal-disclaimer"></div>
@@ -1232,10 +1230,10 @@
                                 </div>
                             </div>
 
-                            <div style="background: var(--bg-base); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); font-size: 0.84rem;">
+                            <div style="background: var(--bg-subtle); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); font-size: 0.84rem;">
                                 <strong style="color: var(--text-main); display: block; margin-bottom: 4px;" id="stat-trend-title">Trend: STABLE</strong>
-                                <p id="stat-interpretation-text" style="color: var(--text-secondary);"></p>
-                                <p id="stat-recommendation-text" style="color: var(--brand-cyan); margin-top: 6px; font-weight: 600;"></p>
+                                <p id="stat-interpretation-text" style="color: var(--text-body);"></p>
+                                <p id="stat-recommendation-text" style="color: var(--brand-primary); margin-top: 6px; font-weight: 700;"></p>
                             </div>
                         </div>
                     </div>
@@ -1253,43 +1251,43 @@
 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-top: 16px;">
                     <!-- Scalp Health -->
-                    <div style="background: var(--bg-base); border: 1px solid var(--brand-cyan); border-radius: var(--radius-md); padding: 18px;">
+                    <div style="background: #ffffff; border: 1px solid #0891b2; border-radius: var(--radius-md); padding: 18px; box-shadow: var(--shadow-subtle);">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                            <strong style="color: var(--brand-cyan); font-size: 0.98rem;">Module 1: Scalp & Trichoscopy</strong>
+                            <strong style="color: #0891b2; font-size: 0.98rem;">Module 1: Scalp & Trichoscopy</strong>
                             <span class="status-pill" style="font-size: 0.72rem; padding: 2px 8px;">PRODUCTION ACTIVE</span>
                         </div>
-                        <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.4;">
+                        <p style="font-size: 0.82rem; color: var(--text-body); margin-bottom: 12px; line-height: 1.4;">
                             Dual-pipeline trichoscopy evaluating dry flaking vs Malassezia seborrheic dermatitis, erythema inflammation, and hard-water mineral crust.
                         </p>
-                        <div style="font-size: 0.78rem; color: var(--text-muted);">
+                        <div style="font-size: 0.78rem; color: var(--text-secondary);">
                             Active Engine: MobileNetV4 ONNX + 4 Micro-Feature Classical CV Extractors
                         </div>
                     </div>
 
                     <!-- Facial Acne -->
-                    <div style="background: var(--bg-base); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 18px;">
+                    <div style="background: #ffffff; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 18px; box-shadow: var(--shadow-subtle);">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                             <strong style="color: var(--text-main); font-size: 0.98rem;">Module 2: Facial Acne & Barrier</strong>
-                            <span class="status-pill" style="font-size: 0.72rem; padding: 2px 8px; background: rgba(245, 158, 11, 0.1); color: #fcd34d; border-color: rgba(245, 158, 11, 0.3);">BETA MODULE</span>
+                            <span class="status-pill" style="font-size: 0.72rem; padding: 2px 8px; background: #fffbeb; color: #92400e; border-color: #fde68a;">BETA MODULE</span>
                         </div>
-                        <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.4;">
+                        <p style="font-size: 0.82rem; color: var(--text-body); margin-bottom: 12px; line-height: 1.4;">
                             Differentiates non-inflammatory comedones from inflammatory papulopustular lesions, measuring lipid barrier hydration and post-inflammatory erythema (PIE).
                         </p>
-                        <div style="font-size: 0.78rem; color: var(--text-muted);">
+                        <div style="font-size: 0.78rem; color: var(--text-secondary);">
                             Target Molecules: Salicylic Acid 2%, Benzoyl Peroxide, Niacinamide, Azelaic Acid
                         </div>
                     </div>
 
                     <!-- Eczema & Skin Rashes -->
-                    <div style="background: var(--bg-base); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 18px;">
+                    <div style="background: #ffffff; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 18px; box-shadow: var(--shadow-subtle);">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                             <strong style="color: var(--text-main); font-size: 0.98rem;">Module 3: Eczema & Dermatitis</strong>
-                            <span class="status-pill" style="font-size: 0.72rem; padding: 2px 8px; background: rgba(148, 163, 184, 0.1); color: #94a3b8; border-color: rgba(148, 163, 184, 0.3);">PLANNED ROADMAP</span>
+                            <span class="status-pill" style="font-size: 0.72rem; padding: 2px 8px; background: #f1f5f9; color: #475569; border-color: #cbd5e1;">PLANNED ROADMAP</span>
                         </div>
-                        <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.4;">
+                        <p style="font-size: 0.82rem; color: var(--text-body); margin-bottom: 12px; line-height: 1.4;">
                             Analyzes localized epidermal lichenification, barrier xerosis, and active circular erythematous margins for physician triage.
                         </p>
-                        <div style="font-size: 0.78rem; color: var(--text-muted);">
+                        <div style="font-size: 0.78rem; color: var(--text-secondary);">
                             Target Molecules: Colloidal Oatmeal, Ceramide NP/AP, Zinc Oxide, Clotrimazole
                         </div>
                     </div>
