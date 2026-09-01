@@ -1,4 +1,4 @@
-﻿"""
+"""
 Follica Backend Configuration Module.
 
 Architectural Design Intent & Operational Constraints:
@@ -49,8 +49,20 @@ class Settings(BaseModel):
     MODEL_ARCHITECTURE: str = "mobilenetv4"
     MODEL_WEIGHTS_PATH: str = os.getenv("FOLLICA_MODEL_PATH", "models/follica_mobilenetv4.onnx")
 
+    # Image Quality Pre-Inference Gate Configuration:
+    # Rationale: Scalp micro-feature extraction requires sharp focus and balanced illumination.
+    # A Laplacian variance below 60.0 indicates significant motion or optical blur.
+    # Luminance below 35.0 indicates severe underexposure, while luminance above 225.0 indicates
+    # blown-out specular highlights or flashlight wash.
+    QUALITY_GATE_ENABLED: bool = True
+    QUALITY_MIN_BLUR_SCORE: float = 60.0
+    QUALITY_MIN_BRIGHTNESS: float = 35.0
+    QUALITY_MAX_BRIGHTNESS: float = 225.0
+    QUALITY_MIN_DIMENSION: int = 150
+
     # Storage Bucket Name
     SUPABASE_STORAGE_BUCKET: str = "follica-scalp-scans-encrypted"
 
 
 settings = Settings()
+

@@ -1,4 +1,4 @@
-﻿# Follica: AI-Powered Scalp Health Diagnostic and Triage System
+# Follica: AI-Powered Scalp Health Diagnostic and Triage System
 
 Follica is an open-source, dual-pipeline scalp health assessment and clinical triage platform. It evaluates user-uploaded scalp photographs and contextual symptom questionnaires to provide objective health scoring, active ingredient care routines for minor issues, and structured clinical hand-off summaries when medical escalation is warranted.
 
@@ -43,29 +43,35 @@ Every engineering decision in Follica is governed by five strict principles:
 ```
                          [User Upload: Scalp Photo + Questionnaire]
                                              │
-                  ┌──────────────────────────┴──────────────────────────┐
-                  ▼                                                     ▼
-     [Pipeline 1: Deep Learning]                           [Pipeline 2: Classical CV]
-     MobileNetV4 / EfficientNet-B0                         OpenCV / NumPy Micro-Features
-                  │                                                     │
-                  ▼                                                     ▼
-     Raw Condition + Confidence (0.00-1.00)                4 Discrete Sub-Scores (0-25):
-                  │                                        - Flake & Scaling Score
-                  │                                        - Erythema / Redness Score
-                  │                                        - Sebum / Lipid Balance Score
-                  │                                        - Follicular Density Score
-                  │                                                     │
-                  └──────────────────────────┬──────────────────────────┘
                                              ▼
-                              [Server-Side Triage Engine]
+                             [Pre-Inference Image Quality Gate]
+                             - Laplacian Variance Focus / Blur Check
+                             - Luminance & Illumination Distribution Check
+                             - Dimension Integrity Check (>=150x150px)
                                              │
-                  ┌──────────────────────────┴──────────────────────────┐
-                  ▼                                                     ▼
-         [Confidence < 0.65]                                   [Confidence >= 0.65]
-     Strict Server Reroute:                                Evaluate Severity:
-     Level 2: Monitored Routine                            - Level 1: Minor Home Routine
-     (Inconclusive visual signals)                         - Level 2: Monitored Active Routine
-                                                           - Level 3: Escalation (Dermatologist)
+                       ┌─────────────────────┴─────────────────────┐
+                       ▼ (Failed Quality Gate)                     ▼ (Passed Quality Gate)
+             [HTTP 400 Bad Request]                      [Dual-Pipeline Assessment]
+             Actionable Guidance:                                  │
+             - Blur / Retake Focus              ┌──────────────────┴──────────────────┐
+             - Dark / Flash Required            ▼                                     ▼
+             - Overexposure / Glare    [Pipeline 1: Deep Learning]           [Pipeline 2: Classical CV]
+                                       MobileNetV4 / EfficientNet-B0         OpenCV / NumPy Micro-Features
+                                                │                                     │
+                                                ▼                                     ▼
+                                       Raw Condition + Conf (0.0-1.0)        4 Discrete Sub-Scores (0-25)
+                                                │                                     │
+                                                └──────────────────┬──────────────────┘
+                                                                   ▼
+                                                     [Server-Side Triage Engine]
+                                                                   │
+                                        ┌──────────────────────────┴──────────────────────────┐
+                                        ▼                                                     ▼
+                               [Confidence < 0.65]                                   [Confidence >= 0.65]
+                           Strict Server Reroute:                                Evaluate Severity:
+                           Level 2: Monitored Routine                            - Level 1: Minor Home Routine
+                           (Inconclusive visual signals)                         - Level 2: Monitored Active Routine
+                                                                                 - Level 3: Escalation (Dermatologist)
 ```
 
 ---
@@ -76,7 +82,8 @@ To help new contributors navigate the codebase without ambiguity:
 
 | Component / File | Implementation Status | Description & Notes |
 | :--- | :--- | :--- |
-| `backend/app/api/endpoints.py` | **Fully Implemented** | Exposes `/analyze`, `/consent`, `/system/status`, `/report/pdf`. |
+| `backend/app/api/endpoints.py` | **Fully Implemented** | Exposes `/analyze`, `/consent`, `/system/status`, `/report/pdf`, `/quality/check`. |
+| `backend/app/services/quality_gate.py` | **Fully Implemented** | Pre-inference gate with Laplacian variance blur check, luminance distribution, and dual OpenCV/NumPy fallback. |
 | `backend/app/services/cv_pipeline.py` | **Fully Implemented** | Production-ready classical CV micro-feature extractors with pure NumPy fallback. |
 | `backend/app/services/triage_engine.py` | **Fully Implemented** | Enforces 0.65 confidence gate, non-diagnostic phrasing, and sub-score summation. |
 | `backend/app/services/pdf_service.py` | **Fully Implemented** | Generates generic 1-page clinical PDF hand-off report using ReportLab. |
@@ -94,18 +101,16 @@ To help new contributors navigate the codebase without ambiguity:
 
 If you are joining this repository, pick up the following tasks in priority order:
 
-1. **Task 1: Image Quality Pre-Inference Gate** (`backend/app/services/quality_gate.py`):
-   - Implement server-side Laplacian variance blur detection and illumination distribution checks before running inference. If an image is severely blurred or under-exposed, return a structured 400 error asking the user to retake the photo with flash.
-2. **Task 2: Progress-Tracking Image Registration** (`backend/app/services/registration.py`):
+1. **Task 1: Progress-Tracking Image Registration** (`backend/app/services/registration.py`):
    - Build an image alignment/homography service using ORB/SIFT feature matching to align photos taken 14–30 days apart, enabling exact spot-by-spot follicle density delta calculations.
-3. **Task 3: Mobile UI (React Native / Expo)** (`mobile/`):
+2. **Task 2: Mobile UI (React Native / Expo)** (`mobile/`):
    - Initialize the Expo app.
    - Build the camera capture interface with crosshair/quadrant overlays for Crown, Hairline, and Parting.
    - Build the Consent Screen adhering to the `/api/v1/consent` contract.
-   - Build the interactive Scalp Health Score visualization dashboard.
-4. **Task 4: Volunteer Calibration Dataset Collection**:
+   - Build the interactive Scalp Health Score visualization dashboard with discrete sub-scores.
+3. **Task 3: Volunteer Calibration Dataset Collection**:
    - Collect and organize 100–200 consented scalp photos across Fitzpatrick skin types into `data/calibration/` and execute training via `follica_training_colab.ipynb`.
-5. **Task 5: Push Notification Adherence Reminders**:
+4. **Task 4: Push Notification Adherence Reminders**:
    - Add local push notification hooks in the mobile app for wash schedules (e.g. Ketoconazole 2x/week) and 14-day re-scan reminders.
 
 ---

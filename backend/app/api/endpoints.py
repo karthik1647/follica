@@ -1,4 +1,4 @@
-﻿"""
+"""
 Follica REST API Endpoints.
 
 Routes:
@@ -26,6 +26,7 @@ from app.services.classifier_service import classifier_service
 from app.services.cv_pipeline import cv_pipeline
 from app.services.triage_engine import triage_engine
 from app.services.pdf_service import pdf_service
+from app.services.quality_gate import quality_gate
 
 router = APIRouter()
 
@@ -45,6 +46,42 @@ async def get_system_status():
         confidence_gate_threshold=settings.CONFIDENCE_GATE_THRESHOLD,
         server_time=datetime.now(timezone.utc).isoformat()
     )
+
+
+@router.post("/quality/check", tags=["Image Quality"])
+async def check_image_quality(
+    image: UploadFile = File(..., description="Scalp photo for pre-inference quality validation")
+):
+    """
+    Pre-inference image validation endpoint.
+    Tests focus sharpness (Laplacian variance) and illumination (luminance distribution)
+    before initiating heavier dual-pipeline evaluation.
+    """
+    try:
+        contents = await image.read()
+        if len(contents) == 0:
+            raise HTTPException(status_code=400, detail="Uploaded image is empty.")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to read image upload: {str(e)}")
+
+    is_valid, report = quality_gate.evaluate(contents)
+    if not is_valid:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "IMAGE_QUALITY_CHECK_FAILED",
+                "error_code": report.get("error_code"),
+                "rejection_reason": report.get("rejection_reason"),
+                "user_guidance": report.get("user_guidance"),
+                "metrics": report.get("metrics", {})
+            }
+        )
+
+    return {
+        "status": "passed",
+        "message": "Image quality satisfies trichoscopy requirements.",
+        "metrics": report.get("metrics", {})
+    }
 
 
 @router.post("/consent", response_model=ConsentResponse, tags=["Consent & Privacy"])
@@ -82,6 +119,7 @@ async def analyze_scalp(
 ):
     """
     Dual-Pipeline Scalp Assessment:
+    0. Pre-inference quality gate validates blur, exposure, and dimensions.
     1. Deep Learning Classifier predicts condition pattern and confidence score.
     2. Classical Computer Vision extracts 4 discrete sub-scores (0-25 each).
     3. Server-side confidence gate reroutes low-confidence (<0.65) cases to Level 2.
@@ -96,6 +134,22 @@ async def analyze_scalp(
             raise HTTPException(status_code=413, detail="Image exceeds 10MB limit.")
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to read image upload: {str(e)}")
+
+    # 0. Pre-Inference Image Quality Gate
+    # Intercepts blurry, underexposed, or overexposed captures before wasting inference compute.
+    if settings.QUALITY_GATE_ENABLED:
+        is_valid, quality_report = quality_gate.evaluate(contents)
+        if not is_valid:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": "IMAGE_QUALITY_CHECK_FAILED",
+                    "error_code": quality_report.get("error_code"),
+                    "rejection_reason": quality_report.get("rejection_reason"),
+                    "user_guidance": quality_report.get("user_guidance"),
+                    "metrics": quality_report.get("metrics", {})
+                }
+            )
 
     # Assemble symptom context
     context = SymptomContext(
@@ -123,6 +177,7 @@ async def analyze_scalp(
     )
 
     return analysis_result
+
 
 
 @router.post("/report/pdf", tags=["Clinical Export"])

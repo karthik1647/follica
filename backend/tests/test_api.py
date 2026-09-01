@@ -1,4 +1,4 @@
-﻿"""
+"""
 Follica Backend API Test Suite.
 
 Verifies:
@@ -14,6 +14,7 @@ Verifies:
 
 import io
 import pytest
+import numpy as np
 from fastapi.testclient import TestClient
 from PIL import Image
 
@@ -31,12 +32,18 @@ from app.services.triage_engine import triage_engine
 client = TestClient(app)
 
 
-def create_dummy_image_bytes(color=(180, 140, 120), size=(224, 224)) -> bytes:
-    """Helper to generate in-memory synthetic image bytes."""
-    img = Image.new("RGB", size, color=color)
+def create_dummy_image_bytes(color=(180, 140, 120), size=(250, 250)) -> bytes:
+    """Helper to generate in-memory synthetic image bytes with micro-texture for quality gate passing."""
+    arr = np.zeros((size[1], size[0], 3), dtype=np.uint8)
+    arr[:, :] = list(color)
+    # Add high-frequency simulated hair fibers to satisfy Laplacian variance thresholds
+    arr[::4, :, :] = [40, 30, 20]
+    arr[:, ::6, :] = [200, 160, 140]
+    img = Image.fromarray(arr)
     buf = io.BytesIO()
     img.save(buf, format="JPEG")
     return buf.getvalue()
+
 
 
 def test_system_status_and_health_check():
