@@ -266,9 +266,9 @@
                                 </div>
                             </div>
                             <div class="form-row">
-                                <span class="field-label">Duration of Symptoms</span>
+                                <span class="field-label">Duration of Symptoms (0 to 100 Weeks)</span>
                                 <div class="slider-wrapper">
-                                    <input type="range" id="duration-slider" class="slider-range" min="1" max="52" value="4" oninput="document.getElementById('duration-val-badge').innerText = this.value + ' Weeks'">
+                                    <input type="range" id="duration-slider" class="slider-range" min="0" max="100" value="4" oninput="updateDurationBadge(this.value)">
                                     <span id="duration-val-badge" class="slider-badge">4 Weeks</span>
                                 </div>
                             </div>
@@ -412,7 +412,21 @@
             reader.readAsDataURL(file);
         }
 
+        function updateDurationBadge(val) {
+            const num = parseInt(val, 10);
+            const badge = document.getElementById('duration-val-badge');
+            if (num === 0) {
+                badge.innerText = '0 Weeks (Routine Scan)';
+            } else if (num >= 52) {
+                const years = (num / 52).toFixed(1);
+                badge.innerText = `${num} Weeks (~${years} Yrs)`;
+            } else {
+                badge.innerText = `${num} Weeks`;
+            }
+        }
+
         function handleSensationChange(el) {
+
             const painlessEl = document.getElementById('sens-1');
             const otherSens = document.querySelectorAll('input[name="sensation_opt"]:not(#sens-1)');
             if (el.id === 'sens-1' && el.checked) {
