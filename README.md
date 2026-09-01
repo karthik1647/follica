@@ -90,7 +90,9 @@ To help new contributors navigate the codebase without ambiguity:
 | `backend/app/core/constants.py` | **Fully Implemented** | Active ingredient guides, non-diagnostic terms, and mandatory universal disclaimer. |
 | `backend/app/models/schemas.py` | **Fully Implemented** | Pydantic data contracts for separate sub-scores, symptoms, and consent. |
 | `backend/app/services/classifier_service.py` | **Functional / Heuristic Stub** | Ready to load `.onnx` weights from `models/`. Runs an embedded heuristic classifier when local model weights are not present. |
+| `backend/app/static/index.html` | **Fully Implemented** | Interactive single-page web UI for photo upload, live quality checks, and PDF downloads. |
 | `training/follica_training_colab.ipynb` | **Fully Implemented** | Cloud training notebook with Google Drive checkpointing to survive disconnects. |
+
 | `training/calibration_loader.py` | **Fully Implemented / Data Placeholder** | Pipeline logic ready; awaiting physical addition of 100-200 volunteer photos. |
 | `docs/supabase_storage_security.sql` | **Fully Implemented** | SQL schema for AES-256 encrypted bucket and automated 30-day retention purge. |
 | `mobile/` | **Not Started** | Reserved for React Native / Expo cross-platform mobile frontend. |

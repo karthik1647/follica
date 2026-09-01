@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Follica - Scalp Health Assessment and Triage System</title>
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-card: #1e293b;
+            --border-color: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-cyan: #06b6d4;
+            --accent-blue: #3b82f6;
+            --accent-emerald: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-rose: #f43f5e;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-family);
+            line-height: 1.5;
+            padding: 24px 16px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .brand h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: var(--text-primary);
+        }
+
+        .brand p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background-color: #064e3b;
+            color: #6ee7b7;
+            border: 1px solid #059669;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #34d399;
+        }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 840px) {
+            .grid-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .card-header {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .upload-zone {
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background-color: rgba(15, 23, 42, 0.5);
+            position: relative;
+        }
+
+        .upload-zone:hover {
+            border-color: var(--accent-cyan);
+            background-color: rgba(6, 182, 212, 0.05);
+        }
+
+        .upload-zone input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .preview-img {
+            max-width: 100%;
+            max-height: 220px;
+            border-radius: 6px;
+            margin-top: 12px;
+            display: none;
+            object-fit: contain;
+            border: 1px solid var(--border-color);
+        }
+
+        .quality-feedback {
+            margin-top: 14px;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            display: none;
+        }
+
+        .quality-feedback.passed {
+            background-color: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #6ee7b7;
+        }
+
+        .quality-feedback.failed {
+            background-color: rgba(244, 63, 94, 0.1);
+            border: 1px solid rgba(244, 63, 94, 0.3);
+            color: #fda4af;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            cursor: pointer;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--accent-cyan);
+            cursor: pointer;
+        }
+
+        .checkbox-group span {
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+
+        select, input[type="number"], textarea {
+            width: 100%;
+            padding: 8px 12px;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.9rem;
+        }
+
+        select:focus, input[type="number"]:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.92;
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            display: inline-block;
+            padding: 8px 16px;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent-cyan);
+        }
+
+        .results-container {
+            display: none;
+        }
+
+        .score-hero {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            background-color: rgba(15, 23, 42, 0.7);
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .score-display {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--accent-cyan);
+        }
+
+        .score-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .triage-tag {
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+        }
+
+        .triage-level-1 {
+            background-color: rgba(16, 185, 129, 0.15);
+            color: #6ee7b7;
+            border: 1px solid rgba(16, 185, 129, 0.4);
+        }
+
+        .triage-level-2 {
+            background-color: rgba(245, 158, 11, 0.15);
+            color: #fcd34d;
+            border: 1px solid rgba(245, 158, 11, 0.4);
+        }
+
+        .triage-level-3 {
+            background-color: rgba(244, 63, 94, 0.15);
+            color: #fda4af;
+            border: 1px solid rgba(244, 63, 94, 0.4);
+        }
+
+        .sub-score-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .sub-score-item {
+            background-color: var(--bg-primary);
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        .sub-score-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .sub-score-bar-bg {
+            width: 100%;
+            height: 6px;
+            background-color: #334155;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .sub-score-bar-fill {
+            height: 100%;
+            background-color: var(--accent-cyan);
+            border-radius: 3px;
+            transition: width 0.4s ease;
+        }
+
+        .ingredient-card {
+            background-color: var(--bg-primary);
+            border-left: 3px solid var(--accent-cyan);
+            padding: 10px 14px;
+            border-radius: 0 6px 6px 0;
+            margin-bottom: 10px;
+        }
+
+        .ingredient-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+
+        .ingredient-meta {
+            font-size: 0.8rem;
+            color: var(--accent-amber);
+            margin: 2px 0;
+        }
+
+        .ingredient-purpose {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .disclaimer-box {
+            background-color: rgba(15, 23, 42, 0.9);
+            border: 1px solid var(--border-color);
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+            margin-top: 16px;
+        }
+
+        .referral-box {
+            background-color: rgba(244, 63, 94, 0.08);
+            border: 1px solid rgba(244, 63, 94, 0.3);
+            border-radius: 6px;
+            padding: 14px;
+            margin-bottom: 16px;
+        }
+
+        .referral-title {
+            font-weight: 700;
+            color: #fda4af;
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+        }
+
+        .referral-text {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9rem;
+            color: var(--accent-cyan);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="brand">
+                <h1>Follica Scalp Assessment</h1>
+                <p>AI-Powered Dual-Pipeline Diagnostics, Triage, and Care Routines</p>
+            </div>
+            <div id="system-status" class="status-badge">
+                <span class="status-dot"></span>
+                <span id="status-text">Checking System Status...</span>
+            </div>
+        </header>
+
+        <div class="grid-layout">
+            <!-- Left Column: Input Form -->
+            <div>
+                <div class="card">
+                    <div class="card-header">1. Scalp Photograph & Quality Gate</div>
+                    <div class="upload-zone" id="drop-zone">
+                        <input type="file" id="image-input" accept="image/jpeg,image/png,image/webp">
+                        <div id="upload-prompt">
+                            <p style="font-weight: 600; margin-bottom: 4px;">Click to select or drag and drop scalp photo</p>
+                            <p style="font-size: 0.8rem; color: var(--text-secondary);">JPEG, PNG, or WebP (Max 10 MB)</p>
+                        </div>
+                        <img id="image-preview" class="preview-img" alt="Scalp Preview">
+                    </div>
+                    <div id="quality-feedback" class="quality-feedback"></div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">2. Contextual Symptoms Questionnaire</div>
+                    
+                    <div class="form-group">
+                        <label class="checkbox-group">
+                            <input type="checkbox" id="itching">
+                            <span>Scalp Itching or Pruritus</span>
+                        </label>
+                        <label class="checkbox-group">
+                            <input type="checkbox" id="burning-or-pain">
+                            <span>Burning Sensation, Tenderness, or Painful Bumps</span>
+                        </label>
+                        <label class="checkbox-group">
+                            <input type="checkbox" id="hard-water">
+                            <span>Borewell / Hard Tap Water Exposure</span>
+                        </label>
+                        <label class="checkbox-group">
+                            <input type="checkbox" id="family-history">
+                            <span>Family History of Pattern Hair Thinning</span>
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="stress-level">Self-Reported Stress Level</label>
+                        <select id="stress-level">
+                            <option value="low">Low</option>
+                            <option value="moderate" selected>Moderate</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="duration-weeks">Symptom Duration (Weeks)</label>
+                        <input type="number" id="duration-weeks" value="2" min="0" max="100">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="symptom-notes">Previous Treatments or Products Tried</label>
+                        <textarea id="symptom-notes" rows="2" placeholder="e.g. Zinc pyrithione shampoo, coconut oil, minoxidil..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="checkbox-group">
+                            <input type="checkbox" id="consent-check" checked>
+                            <span style="font-size: 0.82rem; color: var(--text-secondary);">
+                                I consent to processing this photograph under standard encrypted-at-rest storage policies.
+                            </span>
+                        </label>
+                    </div>
+
+                    <button id="analyze-btn" class="btn-primary" onclick="submitAnalysis()">
+                        Analyze Scalp & Generate Care Routine
+                    </button>
+                    
+                    <div id="loading" class="loading-spinner">
+                        Running Dual-Pipeline Analysis (Classical CV + Classifier)...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Results & Clinical Summary -->
+            <div>
+                <div id="results-empty" class="card" style="text-align: center; padding: 48px 24px; color: var(--text-muted);">
+                    <p style="font-weight: 500; margin-bottom: 8px;">No Assessment Generated Yet</p>
+                    <p style="font-size: 0.85rem;">Upload a scalp photograph and complete the symptom questionnaire to view the composite score, sub-scores, and care routine.</p>
+                </div>
+
+                <div id="results-card" class="card results-container">
+                    <div class="card-header">
+                        <span>Assessment Results</span>
+                        <button id="download-pdf-btn" class="btn-secondary" onclick="downloadPdfReport()">
+                            Download Clinical PDF
+                        </button>
+                    </div>
+
+                    <div class="score-hero">
+                        <div>
+                            <div class="score-label">Scalp Health Score</div>
+                            <div id="health-score" class="score-display">--/100</div>
+                        </div>
+                        <div>
+                            <div id="triage-badge" class="triage-tag triage-level-1">Level 1</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 16px;">
+                        <div style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Visual Assessment Pattern</div>
+                        <div id="condition-name" style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin-top: 2px;">--</div>
+                        <div id="confidence-text" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;"></div>
+                    </div>
+
+                    <div class="sub-score-grid">
+                        <div class="sub-score-item">
+                            <div class="sub-score-header">
+                                <span>Flake & Scaling</span>
+                                <span id="flake-val">--/25</span>
+                            </div>
+                            <div class="sub-score-bar-bg">
+                                <div id="flake-bar" class="sub-score-bar-fill" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                        <div class="sub-score-item">
+                            <div class="sub-score-header">
+                                <span>Erythema / Redness</span>
+                                <span id="redness-val">--/25</span>
+                            </div>
+                            <div class="sub-score-bar-bg">
+                                <div id="redness-bar" class="sub-score-bar-fill" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                        <div class="sub-score-item">
+                            <div class="sub-score-header">
+                                <span>Sebum & Lipids</span>
+                                <span id="sebum-val">--/25</span>
+                            </div>
+                            <div class="sub-score-bar-bg">
+                                <div id="sebum-bar" class="sub-score-bar-fill" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                        <div class="sub-score-item">
+                            <div class="sub-score-header">
+                                <span>Follicle Density</span>
+                                <span id="density-val">--/25</span>
+                            </div>
+                            <div class="sub-score-bar-bg">
+                                <div id="density-bar" class="sub-score-bar-fill" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="referral-container" class="referral-box" style="display: none;">
+                        <div class="referral-title">Clinical Referral Recommended</div>
+                        <div id="referral-notes" class="referral-text"></div>
+                        <a id="referral-link" href="#" target="_blank" class="btn-secondary" style="font-size: 0.8rem;">
+                            Find Local Certified Dermatologists
+                        </a>
+                    </div>
+
+                    <div style="margin-bottom: 16px;">
+                        <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">
+                            Active Ingredient Routine
+                        </div>
+                        <div id="ingredients-list"></div>
+                    </div>
+
+                    <div style="margin-bottom: 16px;">
+                        <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">
+                            Supportive Lifestyle Guidance
+                        </div>
+                        <ul id="lifestyle-list" style="font-size: 0.82rem; color: var(--text-secondary); padding-left: 18px;"></ul>
+                    </div>
+
+                    <div class="disclaimer-box" id="universal-disclaimer"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentAnalysisResult = null;
+        let currentContext = null;
+        let selectedFile = null;
+
+        // Poll system status on load
+        async function fetchSystemStatus() {
+            try {
+                const res = await fetch('/api/v1/system/status');
+                if (res.ok) {
+                    const data = await res.json();
+                    const statusText = document.getElementById('status-text');
+                    statusText.textContent = `Backend Ready (Confidence Gate: ${data.confidence_gate_threshold})`;
+                }
+            } catch (err) {
+                document.getElementById('status-text').textContent = 'Backend Offline';
+            }
+        }
+        fetchSystemStatus();
+
+        // Image input & preview handler
+        const imageInput = document.getElementById('image-input');
+        const imagePreview = document.getElementById('image-preview');
+        const uploadPrompt = document.getElementById('upload-prompt');
+        const qualityFeedback = document.getElementById('quality-feedback');
+
+        imageInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            selectedFile = file;
+
+            // Render Preview
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                imagePreview.src = evt.target.result;
+                imagePreview.style.display = 'block';
+                uploadPrompt.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+
+            // Pre-Inference Quality Gate Check
+            const formData = new FormData();
+            formData.append('image', file);
+
+            try {
+                qualityFeedback.style.display = 'block';
+                qualityFeedback.className = 'quality-feedback';
+                qualityFeedback.textContent = 'Validating photo sharpness and illumination...';
+
+                const res = await fetch('/api/v1/quality/check', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    qualityFeedback.className = 'quality-feedback passed';
+                    const m = data.metrics || {};
+                    qualityFeedback.textContent = `Quality Verified: Focus Score ${m.blur_score || 'OK'} | Brightness ${m.brightness_score || 'OK'}`;
+                } else {
+                    qualityFeedback.className = 'quality-feedback failed';
+                    const detail = data.detail || {};
+                    qualityFeedback.textContent = `Quality Warning: ${detail.rejection_reason || 'Photo quality check failed.'} ${detail.user_guidance || ''}`;
+                }
+            } catch (err) {
+                qualityFeedback.className = 'quality-feedback failed';
+                qualityFeedback.textContent = 'Unable to run pre-inference quality check.';
+            }
+        });
+
+        // Submit Full Dual-Pipeline Analysis
+        async function submitAnalysis() {
+            if (!selectedFile) {
+                alert('Please upload a scalp photograph first.');
+                return;
+            }
+
+            const consent = document.getElementById('consent-check').checked;
+            if (!consent) {
+                alert('Consent is required to process photographs.');
+                return;
+            }
+
+            const btn = document.getElementById('analyze-btn');
+            const loading = document.getElementById('loading');
+            btn.disabled = true;
+            loading.style.display = 'block';
+
+            const formData = new FormData();
+            formData.append('image', selectedFile);
+            formData.append('itching', document.getElementById('itching').checked);
+            formData.append('burning_or_pain', document.getElementById('burning-or-pain').checked);
+            formData.append('hard_water_exposure', document.getElementById('hard-water').checked);
+            formData.append('family_history_hair_loss', document.getElementById('family-history').checked);
+            formData.append('stress_level', document.getElementById('stress-level').value);
+            formData.append('duration_weeks', document.getElementById('duration-weeks').value);
+            formData.append('symptom_notes', document.getElementById('symptom-notes').value);
+
+            currentContext = {
+                itching: document.getElementById('itching').checked,
+                burning_or_pain: document.getElementById('burning-or-pain').checked,
+                hard_water_exposure: document.getElementById('hard-water').checked,
+                family_history_hair_loss: document.getElementById('family-history').checked,
+                stress_level: document.getElementById('stress-level').value,
+                duration_weeks: parseInt(document.getElementById('duration-weeks').value, 10),
+                symptom_notes: document.getElementById('symptom-notes').value
+            };
+
+            try {
+                const res = await fetch('/api/v1/analyze', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await res.json();
+                if (!res.ok) {
+                    const detail = data.detail;
+                    if (typeof detail === 'object') {
+                        alert(`Quality Check Error: ${detail.rejection_reason || detail.error}\n\n${detail.user_guidance || ''}`);
+                    } else {
+                        alert(`Analysis Error: ${detail}`);
+                    }
+                    btn.disabled = false;
+                    loading.style.display = 'none';
+                    return;
+                }
+
+                currentAnalysisResult = data;
+                renderResults(data);
+            } catch (err) {
+                alert('Failed to connect to backend server.');
+            } finally {
+                btn.disabled = false;
+                loading.style.display = 'none';
+            }
+        }
+
+        function renderResults(data) {
+            document.getElementById('results-empty').style.display = 'none';
+            const card = document.getElementById('results-card');
+            card.style.display = 'block';
+
+            // Composite Score & Triage
+            document.getElementById('health-score').textContent = `${data.scalp_health_score}/100`;
+            const badge = document.getElementById('triage-badge');
+            badge.textContent = data.triage_level;
+            badge.className = 'triage-tag';
+            if (data.triage_level.includes('Level 1')) {
+                badge.classList.add('triage-level-1');
+            } else if (data.triage_level.includes('Level 2')) {
+                badge.classList.add('triage-level-2');
+            } else {
+                badge.classList.add('triage-level-3');
+            }
+
+            // Condition & Confidence
+            document.getElementById('condition-name').textContent = data.suggested_condition;
+            const confPct = Math.round(data.confidence_score * 100);
+            const gatedNote = data.confidence_gated ? ' (Re-routed by 0.65 Confidence Gate)' : '';
+            document.getElementById('confidence-text').textContent = `Pattern Confidence: ${confPct}%${gatedNote}`;
+
+            // Sub-scores
+            const sub = data.sub_scores;
+            document.getElementById('flake-val').textContent = `${sub.flake_score}/25`;
+            document.getElementById('flake-bar').style.width = `${(sub.flake_score / 25) * 100}%`;
+
+            document.getElementById('redness-val').textContent = `${sub.redness_score}/25`;
+            document.getElementById('redness-bar').style.width = `${(sub.redness_score / 25) * 100}%`;
+
+            document.getElementById('sebum-val').textContent = `${sub.sebum_score}/25`;
+            document.getElementById('sebum-bar').style.width = `${(sub.sebum_score / 25) * 100}%`;
+
+            document.getElementById('density-val').textContent = `${sub.density_score}/25`;
+            document.getElementById('density-bar').style.width = `${(sub.density_score / 25) * 100}%`;
+
+            // Clinical Referral
+            const refBox = document.getElementById('referral-container');
+            if (data.consultation_referral && data.consultation_referral.required) {
+                refBox.style.display = 'block';
+                document.getElementById('referral-notes').textContent = data.consultation_referral.clinical_hand_off_notes || 'Evaluation by a certified dermatologist recommended.';
+                document.getElementById('referral-link').href = data.consultation_referral.search_url || 'https://www.google.com/maps/search/dermatologist+near+me';
+            } else {
+                refBox.style.display = 'none';
+            }
+
+            // Active Ingredients
+            const ingList = document.getElementById('ingredients-list');
+            ingList.innerHTML = '';
+            if (data.recommended_ingredients && data.recommended_ingredients.length > 0) {
+                data.recommended_ingredients.forEach(ing => {
+                    const div = document.createElement('div');
+                    div.className = 'ingredient-card';
+                    div.innerHTML = `
+                        <div class="ingredient-name">${ing.name}</div>
+                        <div class="ingredient-meta">Cadence: ${ing.frequency}</div>
+                        <div class="ingredient-purpose">${ing.purpose}</div>
+                    `;
+                    ingList.appendChild(div);
+                });
+            } else {
+                ingList.innerHTML = '<p style="font-size:0.8rem; color:var(--text-secondary);">No active chemical interventions required.</p>';
+            }
+
+            // Lifestyle List
+            const lifeList = document.getElementById('lifestyle-list');
+            lifeList.innerHTML = '';
+            (data.lifestyle_guidance || []).forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = item;
+                lifeList.appendChild(li);
+            });
+
+            // Disclaimer
+            document.getElementById('universal-disclaimer').textContent = data.disclaimer;
+        }
+
+        // Export PDF Report
+        async function downloadPdfReport() {
+            if (!currentAnalysisResult || !currentContext) return;
+
+            const payload = {
+                analysis_data: currentAnalysisResult,
+                context: currentContext,
+                patient_ref_id: 'LOCAL-PATIENT-01'
+            };
+
+            try {
+                const res = await fetch('/api/v1/report/pdf', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!res.ok) {
+                    alert('Failed to generate clinical PDF.');
+                    return;
+                }
+
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'follica_clinical_summary.pdf';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+            } catch (err) {
+                alert('Error downloading report.');
+            }
+        }
+    </script>
+</body>
+</html>

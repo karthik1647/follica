@@ -1,11 +1,8 @@
-﻿"""
-Follica FastAPI Main Application Entrypoint.
-
-Starts the REST API server on localhost:8000 or cloud container.
-"""
-
+import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
@@ -42,13 +39,38 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Static directory path
+STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
+if os.path.exists(STATIC_DIR):
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
 # Register API Router
 app.include_router(api_router, prefix=settings.API_PREFIX)
 app.include_router(api_router)  # Also expose directly for /health
 
 
-@app.get("/")
+@app.get("/", response_class=FileResponse)
 def root():
+    """
+    Serves the interactive single-page web interface for browser users.
+    Enables immediate local testing of photo uploads, pre-inference quality checks,
+    symptom forms, and clinical PDF downloads.
+    """
+    index_path = os.path.join(STATIC_DIR, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    return {
+        "app": settings.APP_NAME,
+        "version": settings.APP_VERSION,
+        "status": "running",
+        "docs_url": "/docs",
+        "health_check": "/api/v1/system/status"
+    }
+
+
+@app.get("/api")
+def api_root():
+    """Lightweight API metadata discovery endpoint."""
     return {
         "app": settings.APP_NAME,
         "version": settings.APP_VERSION,
@@ -61,3 +83,4 @@ def root():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
+
