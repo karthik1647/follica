@@ -408,7 +408,7 @@
             reader.readAsDataURL(file);
         }
 
-        function loadDemoScenario() {
+        async function loadDemoScenario() {
             document.getElementById('helmet-check').checked = true;
             document.getElementById('def-stress').checked = true;
             document.getElementById('sens-2').checked = true;
@@ -418,28 +418,22 @@
             document.getElementById('duration-val-badge').innerText = '6 Weeks';
             updateRiskCounter();
 
-            const canvas = document.createElement('canvas');
-            canvas.width = 224;
-            canvas.height = 224;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#c8a28c';
-            ctx.fillRect(0, 0, 224, 224);
-            ctx.strokeStyle = '#2b1d14';
-            ctx.lineWidth = 1.5;
-            for (let i = 0; i < 40; i++) {
-                ctx.beginPath();
-                ctx.moveTo(Math.random() * 224, 0);
-                ctx.lineTo(Math.random() * 224, 224);
-                ctx.stroke();
-            }
-
-            canvas.toBlob(function(blob) {
-                selectedFile = new File([blob], 'demo_scan.jpg', { type: 'image/jpeg' });
-                document.getElementById('preview-image').src = canvas.toDataURL('image/jpeg');
+            try {
+                const response = await fetch('/static/sample_scalp_demo.jpg');
+                const blob = await response.blob();
+                selectedFile = new File([blob], 'sample_scalp_demo.jpg', { type: 'image/jpeg' });
+                
+                const previewImg = document.getElementById('preview-image');
+                previewImg.src = '/static/sample_scalp_demo.jpg';
                 document.getElementById('preview-holder').style.display = 'block';
-                submitAssessment();
-            }, 'image/jpeg');
+                
+                await submitAssessment();
+            } catch (err) {
+                console.error('Failed to load realistic sample scalp asset:', err);
+                alert('Unable to load sample scalp image from server.');
+            }
         }
+
 
         async function submitAssessment() {
             if (!selectedFile) {
