@@ -76,48 +76,89 @@ Every engineering decision in Follica is governed by five strict principles:
 
 ---
 
-## 4. Current Status: What Is Built vs. Stubbed
+---
+
+## 4. Core Features & User Journey
+
+### A. Multi-Angle Photo Scanner
+- **Guided Capture Mode**: Viewfinder UI overlays for Crown/Vertex, Frontal Hairline, Left/Right Temples, and Parting Line.
+- **Pre-Inference Quality Validation**: Real-time flash, focus distance, and Laplacian blur gating (`/api/v1/quality/check`) preventing blurry or poorly illuminated uploads from skewing scores.
+
+### B. Clinical Questionnaire (Context Engine)
+- **Sensation**: Itching / pruritus, burning, painful bumps, or painless.
+- **Water & Environment**: Hostel borewell hard water, treated tap, or recent city/campus relocation.
+- **Family History & Stress**: Genetic hair thinning in parents/siblings, intense exam/work stress in past 3 months.
+- **Progression & Duration**: Sudden acute shedding (telogen effluvium pattern) vs gradual chronic thinning.
+
+### C. The "Scalp Health Score" (SHS: 0–100)
+- **Transparent Composite Index** calculated across 4 discrete sub-scores (0–25 each):
+  - **Flake & Scaling Index (0–25)**: Stratum corneum flake density and spread.
+  - **Redness & Erythema Index (0–25)**: Micro-vascular inflammation and irritation.
+  - **Sebum & Oiliness Balance (0–25)**: Lipid overproduction vs barrier dehydration.
+  - **Follicular Density Index (0–25)**: Hairline and parting coverage comparison against Norwood/Ludwig baseline boundaries.
+
+### D. Ingredient-First Care Schedule (No Random Brands)
+- Recommends scientific active molecules with explicit biochemical mechanisms and application cadences rather than sponsored product branding:
+  - *Oily Fungal Scaling*: Ketoconazole 2% wash 2x/week (5-min leave-on) + Zinc Pyrithione alternate wash + Salicylic Acid 2% solution.
+  - *Hard Water Mineral Buildup*: EDTA chelating wash + Salicylic Acid exfoliant + Ceramide lipid replenishment.
+
+### E. Progress Tracker & Comparison Split Slider (Hair Diary)
+- 14-day and 30-day longitudinal re-scan comparison.
+- Homography keypoint alignment engine (`backend/app/services/registration.py`) calculating spot-by-spot follicle coverage deltas and erythema reduction.
+- Interactive before/after split comparison slider in the web interface.
+
+### F. Clinical Doctor Hand-off (Clinic Pass)
+- For Level 3 escalations or unresolving symptoms:
+- 1-Click generation of a standardized, 1-page clinical summary PDF (`/api/v1/report/pdf`) detailing images, timeline, duration, attempted washes, and AI suspicion for seamless physician/dermatologist consultation.
+
+### G. Future Scalability: DermaIQ Multi-Domain Architecture
+- Modular domain registry (`backend/app/core/domains.py`) enabling pluggable expansion from Scalp Health to Facial Acne and Eczema/Skin Rashes with zero breaking changes to the core engine.
+
+---
+
+## 5. Current Status: What Is Built vs. Stubbed
 
 To help new contributors navigate the codebase without ambiguity:
 
 | Component / File | Implementation Status | Description & Notes |
 | :--- | :--- | :--- |
-| `backend/app/api/endpoints.py` | **Fully Implemented** | Exposes `/analyze`, `/consent`, `/system/status`, `/report/pdf`, `/quality/check`. |
+| `backend/app/api/endpoints.py` | **Fully Implemented** | Exposes `/analyze`, `/consent`, `/system/status`, `/report/pdf`, `/quality/check`, `/progress/compare`, `/domains`. |
 | `backend/app/services/quality_gate.py` | **Fully Implemented** | Pre-inference gate with Laplacian variance blur check, luminance distribution, and dual OpenCV/NumPy fallback. |
+| `backend/app/services/registration.py` | **Fully Implemented** | Longitudinal ORB keypoint homography alignment and spot-by-spot delta calculations. |
+| `backend/app/core/domains.py` | **Fully Implemented** | DermaIQ modular domain architecture registry (Scalp, Facial Acne, Eczema). |
+| `backend/app/static/index.html` | **Fully Implemented** | Interactive single-page web UI with guided viewfinder, symptom form, before/after slider, and PDF export. |
 | `backend/app/services/cv_pipeline.py` | **Fully Implemented** | Production-ready classical CV micro-feature extractors with pure NumPy fallback. |
 | `backend/app/services/triage_engine.py` | **Fully Implemented** | Enforces 0.65 confidence gate, non-diagnostic phrasing, and sub-score summation. |
 | `backend/app/services/pdf_service.py` | **Fully Implemented** | Generates generic 1-page clinical PDF hand-off report using ReportLab. |
 | `backend/app/core/constants.py` | **Fully Implemented** | Active ingredient guides, non-diagnostic terms, and mandatory universal disclaimer. |
-| `backend/app/models/schemas.py` | **Fully Implemented** | Pydantic data contracts for separate sub-scores, symptoms, and consent. |
+| `backend/app/models/schemas.py` | **Fully Implemented** | Pydantic data contracts for separate sub-scores, symptoms, progress comparison, and consent. |
 | `backend/app/services/classifier_service.py` | **Functional / Heuristic Stub** | Ready to load `.onnx` weights from `models/`. Runs an embedded heuristic classifier when local model weights are not present. |
-| `backend/app/static/index.html` | **Fully Implemented** | Interactive single-page web UI for photo upload, live quality checks, and PDF downloads. |
 | `training/follica_training_colab.ipynb` | **Fully Implemented** | Cloud training notebook with Google Drive checkpointing to survive disconnects. |
-
 | `training/calibration_loader.py` | **Fully Implemented / Data Placeholder** | Pipeline logic ready; awaiting physical addition of 100-200 volunteer photos. |
 | `docs/supabase_storage_security.sql` | **Fully Implemented** | SQL schema for AES-256 encrypted bucket and automated 30-day retention purge. |
 | `mobile/` | **Not Started** | Reserved for React Native / Expo cross-platform mobile frontend. |
 
 ---
 
-## 5. Next Steps for Contributors
+## 6. Next Steps for Contributors
 
 If you are joining this repository, pick up the following tasks in priority order:
 
-1. **Task 1: Progress-Tracking Image Registration** (`backend/app/services/registration.py`):
-   - Build an image alignment/homography service using ORB/SIFT feature matching to align photos taken 14–30 days apart, enabling exact spot-by-spot follicle density delta calculations.
-2. **Task 2: Mobile UI (React Native / Expo)** (`mobile/`):
-   - Initialize the Expo app.
+1. **Task 1: Mobile UI (React Native / Expo)** (`mobile/`):
+   - Initialize the Expo application.
    - Build the camera capture interface with crosshair/quadrant overlays for Crown, Hairline, and Parting.
    - Build the Consent Screen adhering to the `/api/v1/consent` contract.
-   - Build the interactive Scalp Health Score visualization dashboard with discrete sub-scores.
-3. **Task 3: Volunteer Calibration Dataset Collection**:
+   - Build the interactive Scalp Health Score visualization dashboard with discrete sub-scores and before/after slider.
+2. **Task 2: Volunteer Calibration Dataset Collection**:
    - Collect and organize 100–200 consented scalp photos across Fitzpatrick skin types into `data/calibration/` and execute training via `follica_training_colab.ipynb`.
-4. **Task 4: Push Notification Adherence Reminders**:
+3. **Task 3: Push Notification Adherence Reminders**:
    - Add local push notification hooks in the mobile app for wash schedules (e.g. Ketoconazole 2x/week) and 14-day re-scan reminders.
+
 
 ---
 
-## 6. How to Run Locally
+## 7. How to Run Locally
+
 
 ### Setup and Start Backend Server
 ```bash

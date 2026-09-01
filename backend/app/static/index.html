@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Follica - Scalp Health Assessment and Triage System</title>
+    <title>Follica - Scalp Health Diagnostics & Clinical Triage System</title>
     <style>
         :root {
-            --bg-primary: #0f172a;
+            --bg-primary: #0b1120;
             --bg-secondary: #1e293b;
-            --bg-card: #1e293b;
+            --bg-card: #172033;
+            --bg-card-hover: #1e2942;
             --border-color: #334155;
             --text-primary: #f8fafc;
             --text-secondary: #94a3b8;
@@ -36,7 +37,7 @@
         }
 
         .container {
-            max-width: 1100px;
+            max-width: 1200px;
             margin: 0 auto;
         }
 
@@ -59,8 +60,25 @@
         }
 
         .brand p {
-            font-size: 0.9rem;
+            font-size: 0.88rem;
             color: var(--text-secondary);
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .domain-badge {
+            background-color: #1e293b;
+            border: 1px solid var(--border-color);
+            color: var(--accent-cyan);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
         }
 
         .status-badge {
@@ -83,13 +101,51 @@
             background-color: #34d399;
         }
 
+        /* Nav Tabs */
+        .tab-nav {
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 24px;
+        }
+
+        .tab-btn {
+            padding: 10px 18px;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .tab-btn.active {
+            color: var(--accent-cyan);
+            border-bottom-color: var(--accent-cyan);
+        }
+
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        /* Layout */
         .grid-layout {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 24px;
         }
 
-        @media (max-width: 840px) {
+        @media (max-width: 900px) {
             .grid-layout {
                 grid-template-columns: 1fr;
             }
@@ -104,7 +160,7 @@
         }
 
         .card-header {
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             font-weight: 600;
             margin-bottom: 16px;
             color: var(--text-primary);
@@ -113,23 +169,63 @@
             justify-content: space-between;
         }
 
-        .upload-zone {
+        /* Angle Selector */
+        .angle-btn-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .angle-btn {
+            padding: 8px 10px;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .angle-btn:hover {
+            border-color: var(--accent-cyan);
+            color: var(--text-primary);
+        }
+
+        .angle-btn.active {
+            background-color: rgba(6, 182, 212, 0.15);
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+            font-weight: 600;
+        }
+
+        /* Viewfinder Upload Zone */
+        .viewfinder-zone {
             border: 2px dashed var(--border-color);
             border-radius: 8px;
-            padding: 24px;
+            padding: 20px;
             text-align: center;
             cursor: pointer;
             transition: all 0.2s ease;
-            background-color: rgba(15, 23, 42, 0.5);
+            background-color: rgba(11, 17, 32, 0.6);
             position: relative;
+            min-height: 220px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
         }
 
-        .upload-zone:hover {
+        .viewfinder-zone:hover {
             border-color: var(--accent-cyan);
             background-color: rgba(6, 182, 212, 0.05);
         }
 
-        .upload-zone input[type="file"] {
+        .viewfinder-zone input[type="file"] {
             position: absolute;
             top: 0;
             left: 0;
@@ -137,23 +233,62 @@
             height: 100%;
             opacity: 0;
             cursor: pointer;
+            z-index: 5;
+        }
+
+        .viewfinder-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+        }
+
+        .reticle-circle {
+            width: 160px;
+            height: 160px;
+            border: 2px dashed rgba(6, 182, 212, 0.5);
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .reticle-crosshair-h {
+            position: absolute;
+            top: 50%;
+            left: -15px;
+            right: -15px;
+            height: 1px;
+            background-color: rgba(6, 182, 212, 0.4);
+        }
+
+        .reticle-crosshair-v {
+            position: absolute;
+            left: 50%;
+            top: -15px;
+            bottom: -15px;
+            width: 1px;
+            background-color: rgba(6, 182, 212, 0.4);
         }
 
         .preview-img {
             max-width: 100%;
-            max-height: 220px;
+            max-height: 240px;
             border-radius: 6px;
-            margin-top: 12px;
-            display: none;
             object-fit: contain;
-            border: 1px solid var(--border-color);
+            display: none;
+            z-index: 1;
         }
 
         .quality-feedback {
-            margin-top: 14px;
-            padding: 12px;
+            margin-top: 12px;
+            padding: 10px 14px;
             border-radius: 6px;
-            font-size: 0.85rem;
+            font-size: 0.84rem;
             display: none;
         }
 
@@ -169,35 +304,71 @@
             color: #fda4af;
         }
 
+        /* Form Inputs */
         .form-group {
             margin-bottom: 14px;
         }
 
         .form-group label {
             display: block;
-            font-size: 0.85rem;
+            font-size: 0.84rem;
             font-weight: 500;
             color: var(--text-secondary);
             margin-bottom: 6px;
         }
 
-        .checkbox-group {
+        .radio-tile-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 8px;
+        }
+
+        .radio-tile {
+            position: relative;
+        }
+
+        .radio-tile input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+        }
+
+        .radio-tile label {
+            display: block;
+            padding: 8px 10px;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .radio-tile input[type="radio"]:checked + label {
+            background-color: rgba(6, 182, 212, 0.15);
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+            font-weight: 600;
+        }
+
+        .checkbox-row {
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 8px 0;
+            padding: 6px 0;
             cursor: pointer;
         }
 
-        .checkbox-group input[type="checkbox"] {
+        .checkbox-row input[type="checkbox"] {
             width: 16px;
             height: 16px;
             accent-color: var(--accent-cyan);
             cursor: pointer;
         }
 
-        .checkbox-group span {
-            font-size: 0.9rem;
+        .checkbox-row span {
+            font-size: 0.88rem;
             color: var(--text-primary);
         }
 
@@ -209,7 +380,7 @@
             border-radius: 6px;
             color: var(--text-primary);
             font-family: inherit;
-            font-size: 0.9rem;
+            font-size: 0.88rem;
         }
 
         select:focus, input[type="number"]:focus, textarea:focus {
@@ -241,12 +412,12 @@
 
         .btn-secondary {
             display: inline-block;
-            padding: 8px 16px;
+            padding: 8px 14px;
             background-color: var(--bg-primary);
             border: 1px solid var(--border-color);
             border-radius: 6px;
             color: var(--text-primary);
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             font-weight: 500;
             cursor: pointer;
             text-decoration: none;
@@ -257,6 +428,7 @@
             border-color: var(--accent-cyan);
         }
 
+        /* Results Display */
         .results-container {
             display: none;
         }
@@ -266,7 +438,7 @@
             align-items: center;
             justify-content: space-between;
             padding: 16px;
-            background-color: rgba(15, 23, 42, 0.7);
+            background-color: rgba(11, 17, 32, 0.8);
             border-radius: 8px;
             margin-bottom: 20px;
         }
@@ -278,7 +450,7 @@
         }
 
         .score-label {
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             color: var(--text-secondary);
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -289,7 +461,6 @@
             border-radius: 6px;
             font-size: 0.85rem;
             font-weight: 700;
-            letter-spacing: 0.2px;
         }
 
         .triage-level-1 {
@@ -347,6 +518,17 @@
             transition: width 0.4s ease;
         }
 
+        .stage-badge {
+            display: inline-block;
+            background-color: rgba(59, 130, 246, 0.12);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #93c5fd;
+            font-size: 0.78rem;
+            padding: 4px 10px;
+            border-radius: 4px;
+            margin-top: 6px;
+        }
+
         .ingredient-card {
             background-color: var(--bg-primary);
             border-left: 3px solid var(--accent-cyan);
@@ -372,17 +554,6 @@
             color: var(--text-secondary);
         }
 
-        .disclaimer-box {
-            background-color: rgba(15, 23, 42, 0.9);
-            border: 1px solid var(--border-color);
-            padding: 12px 16px;
-            border-radius: 6px;
-            font-size: 0.78rem;
-            color: var(--text-muted);
-            line-height: 1.4;
-            margin-top: 16px;
-        }
-
         .referral-box {
             background-color: rgba(244, 63, 94, 0.08);
             border: 1px solid rgba(244, 63, 94, 0.3);
@@ -404,197 +575,520 @@
             margin-bottom: 10px;
         }
 
+        .disclaimer-box {
+            background-color: rgba(11, 17, 32, 0.95);
+            border: 1px solid var(--border-color);
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+            margin-top: 16px;
+        }
+
         .loading-spinner {
             display: none;
             text-align: center;
-            padding: 20px;
-            font-size: 0.9rem;
+            padding: 16px;
+            font-size: 0.88rem;
             color: var(--accent-cyan);
+        }
+
+        /* Before / After Slider */
+        .slider-container {
+            position: relative;
+            width: 100%;
+            height: 320px;
+            overflow: hidden;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+            background-color: #0b1120;
+        }
+
+        .slider-img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .slider-before {
+            clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%);
+            z-index: 2;
+        }
+
+        .slider-after {
+            z-index: 1;
+        }
+
+        .slider-handle {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 3px;
+            background-color: var(--accent-cyan);
+            z-index: 3;
+            cursor: ew-resize;
+        }
+
+        .slider-handle-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--accent-cyan);
+            color: #0b1120;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.75rem;
+            user-select: none;
+        }
+
+        .slider-label {
+            position: absolute;
+            bottom: 12px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            background-color: rgba(11, 17, 32, 0.8);
+            font-size: 0.75rem;
+            font-weight: 600;
+            z-index: 4;
+        }
+
+        .slider-label.before-label {
+            left: 12px;
+            color: #93c5fd;
+        }
+
+        .slider-label.after-label {
+            right: 12px;
+            color: #6ee7b7;
+        }
+
+        .delta-metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .delta-card {
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .delta-val {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--accent-cyan);
+        }
+
+        .delta-lbl {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- Header with System Status & DermaIQ Domain Module Switcher -->
         <header>
             <div class="brand">
-                <h1>Follica Scalp Assessment</h1>
-                <p>AI-Powered Dual-Pipeline Diagnostics, Triage, and Care Routines</p>
+                <h1>Follica Scalp Assessment & Triage</h1>
+                <p>AI-Powered Dual-Pipeline Diagnostics & Clinical Hand-Off Engine</p>
             </div>
-            <div id="system-status" class="status-badge">
-                <span class="status-dot"></span>
-                <span id="status-text">Checking System Status...</span>
+            <div class="header-controls">
+                <div class="domain-badge" id="domain-indicator">Module: Scalp Health</div>
+                <div id="system-status" class="status-badge">
+                    <span class="status-dot"></span>
+                    <span id="status-text">Checking System Status...</span>
+                </div>
             </div>
         </header>
 
-        <div class="grid-layout">
-            <!-- Left Column: Input Form -->
-            <div>
-                <div class="card">
-                    <div class="card-header">1. Scalp Photograph & Quality Gate</div>
-                    <div class="upload-zone" id="drop-zone">
-                        <input type="file" id="image-input" accept="image/jpeg,image/png,image/webp">
-                        <div id="upload-prompt">
-                            <p style="font-weight: 600; margin-bottom: 4px;">Click to select or drag and drop scalp photo</p>
-                            <p style="font-size: 0.8rem; color: var(--text-secondary);">JPEG, PNG, or WebP (Max 10 MB)</p>
+        <!-- Navigation Tabs -->
+        <div class="tab-nav">
+            <button class="tab-btn active" onclick="switchTab('assess-tab', this)">A-D. Scalp Diagnostic Scanner</button>
+            <button class="tab-btn" onclick="switchTab('progress-tab', this)">E. Hair Diary & Progress Slider</button>
+            <button class="tab-btn" onclick="switchTab('dermaiq-tab', this)">G. DermaIQ Modular Architecture</button>
+        </div>
+
+        <!-- TAB 1: Scalp Diagnostic Scanner (Features A, B, C, D, F) -->
+        <div id="assess-tab" class="tab-pane active">
+            <div class="grid-layout">
+                <!-- Left: Guided Multi-Angle Scanner & Context Engine -->
+                <div>
+                    <!-- Feature A: Multi-Angle Photo Scanner -->
+                    <div class="card">
+                        <div class="card-header">
+                            <span>A. Guided Multi-Angle Capture</span>
+                            <span id="angle-display" style="font-size: 0.8rem; color: var(--accent-cyan); font-weight: 500;">Target: Crown / Vertex</span>
                         </div>
-                        <img id="image-preview" class="preview-img" alt="Scalp Preview">
+
+                        <label style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 6px; display: block;">Select Anatomical Scan Angle:</label>
+                        <div class="angle-btn-group">
+                            <button type="button" class="angle-btn active" onclick="selectScanAngle('crown_vertex', 'Crown / Vertex', this)">Crown / Vertex</button>
+                            <button type="button" class="angle-btn" onclick="selectScanAngle('frontal_hairline', 'Frontal Hairline', this)">Frontal Hairline</button>
+                            <button type="button" class="angle-btn" onclick="selectScanAngle('left_temple', 'Left Temple', this)">Left Temple</button>
+                            <button type="button" class="angle-btn" onclick="selectScanAngle('right_temple', 'Right Temple', this)">Right Temple</button>
+                            <button type="button" class="angle-btn" onclick="selectScanAngle('parting_line', 'Parting Line', this)">Parting Line</button>
+                        </div>
+
+                        <div class="viewfinder-zone" id="viewfinder">
+                            <input type="file" id="image-input" accept="image/jpeg,image/png,image/webp">
+                            <div class="viewfinder-overlay" id="viewfinder-reticle">
+                                <div class="reticle-circle">
+                                    <div class="reticle-crosshair-h"></div>
+                                    <div class="reticle-crosshair-v"></div>
+                                </div>
+                            </div>
+                            <div id="upload-prompt" style="z-index: 3;">
+                                <p style="font-weight: 600; margin-bottom: 4px;">Click to Select or Drop Scalp Photo</p>
+                                <p style="font-size: 0.8rem; color: var(--text-secondary);">Center parting inside reticle with clear lighting / flash</p>
+                            </div>
+                            <img id="image-preview" class="preview-img" alt="Scalp Preview">
+                        </div>
+                        <div id="quality-feedback" class="quality-feedback"></div>
                     </div>
-                    <div id="quality-feedback" class="quality-feedback"></div>
+
+                    <!-- Feature B: Clinical Questionnaire (Context Engine) -->
+                    <div class="card">
+                        <div class="card-header">B. Clinical Context Engine (5 Questions)</div>
+
+                        <!-- Question 1: Sensation -->
+                        <div class="form-group">
+                            <label>1. Sensation: What does your scalp feel like?</label>
+                            <div class="radio-tile-group">
+                                <div class="radio-tile">
+                                    <input type="radio" id="sens-itching" name="sensation" value="itching">
+                                    <label for="sens-itching">Itching</label>
+                                </div>
+                                <div class="radio-tile">
+                                    <input type="radio" id="sens-burning" name="sensation" value="burning">
+                                    <label for="sens-burning">Burning</label>
+                                </div>
+                                <div class="radio-tile">
+                                    <input type="radio" id="sens-painful" name="sensation" value="painful">
+                                    <label for="sens-painful">Painful Bumps</label>
+                                </div>
+                                <div class="radio-tile">
+                                    <input type="radio" id="sens-painless" name="sensation" value="painless" checked>
+                                    <label for="sens-painless">Painless</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Question 2: Water & Environment -->
+                        <div class="form-group">
+                            <label>2. Water & Environment: Water supply in living quarters?</label>
+                            <select id="water-env">
+                                <option value="hard_borewell">Hostel Borewell / Hard Tap Water</option>
+                                <option value="recent_relocation">Recent Relocation to New City/Campus</option>
+                                <option value="treated_tap">Treated / Soft Tap Water</option>
+                                <option value="normal" selected>Normal Municipal Tap Water</option>
+                            </select>
+                        </div>
+
+                        <!-- Question 3: Family History & Stress -->
+                        <div class="form-group">
+                            <label>3. Family History & Stress Context</label>
+                            <label class="checkbox-row">
+                                <input type="checkbox" id="family-history">
+                                <span>Genetic hair loss or pattern thinning in parents/siblings</span>
+                            </label>
+                            <label class="checkbox-row">
+                                <input type="checkbox" id="exam-stress">
+                                <span>Intense exam, academic, or work stress in past 3 months</span>
+                            </label>
+                        </div>
+
+                        <!-- Question 4: Shedding Pattern & Duration -->
+                        <div class="form-group">
+                            <label>4. Progression & Duration</label>
+                            <div class="radio-tile-group" style="margin-bottom: 8px;">
+                                <div class="radio-tile">
+                                    <input type="radio" id="shed-acute" name="shedding" value="sudden_acute">
+                                    <label for="shed-acute">Sudden Shedding</label>
+                                </div>
+                                <div class="radio-tile">
+                                    <input type="radio" id="shed-chronic" name="shedding" value="gradual_chronic" checked>
+                                    <label for="shed-chronic">Gradual Thinning</label>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 0.84rem; color: var(--text-secondary); white-space: nowrap;">Duration (Weeks):</span>
+                                <input type="number" id="duration-weeks" value="2" min="0" max="100">
+                            </div>
+                        </div>
+
+                        <!-- Question 5: Previous Products Tried -->
+                        <div class="form-group">
+                            <label for="symptom-notes">5. Products or treatments tried previously</label>
+                            <textarea id="symptom-notes" rows="2" placeholder="e.g. Zinc pyrithione shampoo, coconut oil, minoxidil 5%..."></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="checkbox-row">
+                                <input type="checkbox" id="consent-check" checked>
+                                <span style="font-size: 0.8rem; color: var(--text-secondary);">
+                                    I consent to biometric image processing under encrypted-at-rest data policies.
+                                </span>
+                            </label>
+                        </div>
+
+                        <button id="analyze-btn" class="btn-primary" onclick="submitAnalysis()">
+                            Analyze Scalp & Generate Care Routine
+                        </button>
+                        
+                        <div id="loading" class="loading-spinner">
+                            Running Dual-Pipeline Assessment (CV Micro-Features + Classifier)...
+                        </div>
+                    </div>
                 </div>
 
-                <div class="card">
-                    <div class="card-header">2. Contextual Symptoms Questionnaire</div>
-                    
-                    <div class="form-group">
-                        <label class="checkbox-group">
-                            <input type="checkbox" id="itching">
-                            <span>Scalp Itching or Pruritus</span>
-                        </label>
-                        <label class="checkbox-group">
-                            <input type="checkbox" id="burning-or-pain">
-                            <span>Burning Sensation, Tenderness, or Painful Bumps</span>
-                        </label>
-                        <label class="checkbox-group">
-                            <input type="checkbox" id="hard-water">
-                            <span>Borewell / Hard Tap Water Exposure</span>
-                        </label>
-                        <label class="checkbox-group">
-                            <input type="checkbox" id="family-history">
-                            <span>Family History of Pattern Hair Thinning</span>
-                        </label>
+                <!-- Right: Scalp Health Score (SHS), Sub-Scores, Ingredients & Clinical Pass -->
+                <div>
+                    <div id="results-empty" class="card" style="text-align: center; padding: 56px 24px; color: var(--text-muted);">
+                        <p style="font-weight: 600; font-size: 1.05rem; margin-bottom: 8px;">No Assessment Generated Yet</p>
+                        <p style="font-size: 0.85rem;">Capture a scalp photo through the guided viewfinder and answer the 5 clinical questions to view the Scalp Health Score (0-100), sub-scores, and molecule-first care routine.</p>
                     </div>
 
-                    <div class="form-group">
-                        <label for="stress-level">Self-Reported Stress Level</label>
-                        <select id="stress-level">
-                            <option value="low">Low</option>
-                            <option value="moderate" selected>Moderate</option>
-                            <option value="high">High</option>
-                        </select>
-                    </div>
+                    <div id="results-card" class="card results-container">
+                        <!-- Feature F: Clinical Doctor Hand-off (Clinic Pass) -->
+                        <div class="card-header">
+                            <span>Clinical Diagnostic Assessment</span>
+                            <button id="download-pdf-btn" class="btn-secondary" onclick="downloadPdfReport()">
+                                Export Clinical Pass (PDF)
+                            </button>
+                        </div>
 
-                    <div class="form-group">
-                        <label for="duration-weeks">Symptom Duration (Weeks)</label>
-                        <input type="number" id="duration-weeks" value="2" min="0" max="100">
-                    </div>
+                        <!-- Feature C: The Scalp Health Score (SHS 0-100) -->
+                        <div class="score-hero">
+                            <div>
+                                <div class="score-label">The Scalp Health Score (SHS)</div>
+                                <div id="health-score" class="score-display">--/100</div>
+                            </div>
+                            <div>
+                                <div id="triage-badge" class="triage-tag triage-level-1">Level 1</div>
+                            </div>
+                        </div>
 
-                    <div class="form-group">
-                        <label for="symptom-notes">Previous Treatments or Products Tried</label>
-                        <textarea id="symptom-notes" rows="2" placeholder="e.g. Zinc pyrithione shampoo, coconut oil, minoxidil..."></textarea>
-                    </div>
+                        <div style="margin-bottom: 16px;">
+                            <div style="font-size: 0.78rem; color: var(--text-secondary); text-transform: uppercase;">Visual Pattern Indication</div>
+                            <div id="condition-name" style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin-top: 2px;">--</div>
+                            <div id="confidence-text" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;"></div>
+                        </div>
 
-                    <div class="form-group">
-                        <label class="checkbox-group">
-                            <input type="checkbox" id="consent-check" checked>
-                            <span style="font-size: 0.82rem; color: var(--text-secondary);">
-                                I consent to processing this photograph under standard encrypted-at-rest storage policies.
-                            </span>
-                        </label>
-                    </div>
+                        <!-- 4 Discrete Sub-Scores (0-25 each) -->
+                        <div class="sub-score-grid">
+                            <div class="sub-score-item">
+                                <div class="sub-score-header">
+                                    <span>Flake & Scaling Index</span>
+                                    <span id="flake-val">--/25</span>
+                                </div>
+                                <div class="sub-score-bar-bg">
+                                    <div id="flake-bar" class="sub-score-bar-fill" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                            <div class="sub-score-item">
+                                <div class="sub-score-header">
+                                    <span>Redness & Erythema Index</span>
+                                    <span id="redness-val">--/25</span>
+                                </div>
+                                <div class="sub-score-bar-bg">
+                                    <div id="redness-bar" class="sub-score-bar-fill" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                            <div class="sub-score-item">
+                                <div class="sub-score-header">
+                                    <span>Sebum & Oiliness Balance</span>
+                                    <span id="sebum-val">--/25</span>
+                                </div>
+                                <div class="sub-score-bar-bg">
+                                    <div id="sebum-bar" class="sub-score-bar-fill" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                            <div class="sub-score-item">
+                                <div class="sub-score-header">
+                                    <span>Follicular Density Index</span>
+                                    <span id="density-val">--/25</span>
+                                </div>
+                                <div class="sub-score-bar-bg">
+                                    <div id="density-bar" class="sub-score-bar-fill" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                        </div>
 
-                    <button id="analyze-btn" class="btn-primary" onclick="submitAnalysis()">
-                        Analyze Scalp & Generate Care Routine
-                    </button>
-                    
-                    <div id="loading" class="loading-spinner">
-                        Running Dual-Pipeline Analysis (Classical CV + Classifier)...
+                        <div id="stage-comparison-box" style="margin-bottom: 16px;">
+                            <span class="stage-badge" id="stage-badge-text">Norwood/Ludwig Baseline Density Match</span>
+                        </div>
+
+                        <!-- Clinical Doctor Escalation (Clinic Pass) -->
+                        <div id="referral-container" class="referral-box" style="display: none;">
+                            <div class="referral-title">Clinical Doctor Hand-Off Required (Clinic Pass)</div>
+                            <div id="referral-notes" class="referral-text"></div>
+                            <a id="referral-link" href="#" target="_blank" class="btn-secondary" style="font-size: 0.8rem;">
+                                Locate Certified Dermatologists
+                            </a>
+                        </div>
+
+                        <!-- Feature D: Ingredient-First Recommendation (No Random Brands) -->
+                        <div style="margin-bottom: 16px;">
+                            <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">
+                                D. Ingredient-First Care Schedule (Active Molecules)
+                            </div>
+                            <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 10px;">Scientific active molecules recommended for direct bio-action, without sponsored branding.</p>
+                            <div id="ingredients-list"></div>
+                        </div>
+
+                        <!-- Supportive Lifestyle Guidance -->
+                        <div style="margin-bottom: 16px;">
+                            <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">
+                                Environmental & Barrier Guidance
+                            </div>
+                            <ul id="lifestyle-list" style="font-size: 0.82rem; color: var(--text-secondary); padding-left: 18px;"></ul>
+                        </div>
+
+                        <div class="disclaimer-box" id="universal-disclaimer"></div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Right Column: Results & Clinical Summary -->
-            <div>
-                <div id="results-empty" class="card" style="text-align: center; padding: 48px 24px; color: var(--text-muted);">
-                    <p style="font-weight: 500; margin-bottom: 8px;">No Assessment Generated Yet</p>
-                    <p style="font-size: 0.85rem;">Upload a scalp photograph and complete the symptom questionnaire to view the composite score, sub-scores, and care routine.</p>
-                </div>
+        <!-- TAB 2: Progress Tracker & Before/After Comparison Slider (Feature E) -->
+        <div id="progress-tab" class="tab-pane">
+            <div class="grid-layout">
+                <div>
+                    <div class="card">
+                        <div class="card-header">E. Hair Diary & Longitudinal Scan Input</div>
+                        <p style="font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 14px;">
+                            Compare scalp captures taken 14 to 30 days apart. The homography engine aligns invariant anatomical keypoints to calculate spot-by-spot follicle density and erythema reduction.
+                        </p>
 
-                <div id="results-card" class="card results-container">
-                    <div class="card-header">
-                        <span>Assessment Results</span>
-                        <button id="download-pdf-btn" class="btn-secondary" onclick="downloadPdfReport()">
-                            Download Clinical PDF
+                        <div class="form-group">
+                            <label>Baseline Capture (Day 0):</label>
+                            <input type="file" id="base-image-input" accept="image/*">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Follow-up Capture (Day 14 or 30):</label>
+                            <input type="file" id="follow-image-input" accept="image/*">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="days-elapsed">Days Elapsed:</label>
+                            <input type="number" id="days-elapsed" value="14" min="1" max="365">
+                        </div>
+
+                        <button class="btn-primary" onclick="submitLongitudinalComparison()">
+                            Align Scans & Compute Delta Metrics
                         </button>
                     </div>
+                </div>
 
-                    <div class="score-hero">
-                        <div>
-                            <div class="score-label">Scalp Health Score</div>
-                            <div id="health-score" class="score-display">--/100</div>
+                <div>
+                    <div class="card">
+                        <div class="card-header">Interactive Before/After Split Comparison Slider</div>
+                        
+                        <div class="slider-container" id="split-slider">
+                            <img id="slider-img-after" class="slider-img slider-after" src="" alt="Follow-up Capture">
+                            <img id="slider-img-before" class="slider-img slider-before" src="" alt="Baseline Capture">
+                            <div class="slider-handle" id="slider-handle">
+                                <div class="slider-handle-btn"><></div>
+                            </div>
+                            <div class="slider-label before-label">Day 0 (Baseline)</div>
+                            <div class="slider-label after-label">Day 14+ (Follow-up)</div>
                         </div>
-                        <div>
-                            <div id="triage-badge" class="triage-tag triage-level-1">Level 1</div>
-                        </div>
-                    </div>
 
-                    <div style="margin-bottom: 16px;">
-                        <div style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Visual Assessment Pattern</div>
-                        <div id="condition-name" style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin-top: 2px;">--</div>
-                        <div id="confidence-text" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;"></div>
-                    </div>
+                        <div id="comparison-results" style="display: none;">
+                            <div class="delta-metrics-grid">
+                                <div class="delta-card">
+                                    <div class="delta-val" id="density-delta">+0.0%</div>
+                                    <div class="delta-lbl">Follicle Coverage Delta</div>
+                                </div>
+                                <div class="delta-card">
+                                    <div class="delta-val" id="redness-delta">+0.0%</div>
+                                    <div class="delta-lbl">Erythema Reduction</div>
+                                </div>
+                                <div class="delta-card">
+                                    <div class="delta-val" id="flake-delta">+0.0%</div>
+                                    <div class="delta-lbl">Scaling Reduction</div>
+                                </div>
+                            </div>
 
-                    <div class="sub-score-grid">
-                        <div class="sub-score-item">
-                            <div class="sub-score-header">
-                                <span>Flake & Scaling</span>
-                                <span id="flake-val">--/25</span>
-                            </div>
-                            <div class="sub-score-bar-bg">
-                                <div id="flake-bar" class="sub-score-bar-fill" style="width: 0%;"></div>
-                            </div>
-                        </div>
-                        <div class="sub-score-item">
-                            <div class="sub-score-header">
-                                <span>Erythema / Redness</span>
-                                <span id="redness-val">--/25</span>
-                            </div>
-                            <div class="sub-score-bar-bg">
-                                <div id="redness-bar" class="sub-score-bar-fill" style="width: 0%;"></div>
-                            </div>
-                        </div>
-                        <div class="sub-score-item">
-                            <div class="sub-score-header">
-                                <span>Sebum & Lipids</span>
-                                <span id="sebum-val">--/25</span>
-                            </div>
-                            <div class="sub-score-bar-bg">
-                                <div id="sebum-bar" class="sub-score-bar-fill" style="width: 0%;"></div>
-                            </div>
-                        </div>
-                        <div class="sub-score-item">
-                            <div class="sub-score-header">
-                                <span>Follicle Density</span>
-                                <span id="density-val">--/25</span>
-                            </div>
-                            <div class="sub-score-bar-bg">
-                                <div id="density-bar" class="sub-score-bar-fill" style="width: 0%;"></div>
+                            <div style="background-color: var(--bg-primary); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); font-size: 0.84rem; color: var(--text-secondary);">
+                                <strong style="color: var(--text-primary); display: block; margin-bottom: 4px;" id="trend-summary-title">Trend Summary</strong>
+                                <p id="trend-summary-text"></p>
+                                <p id="trend-recommendation-text" style="color: var(--accent-cyan); margin-top: 6px;"></p>
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
 
-                    <div id="referral-container" class="referral-box" style="display: none;">
-                        <div class="referral-title">Clinical Referral Recommended</div>
-                        <div id="referral-notes" class="referral-text"></div>
-                        <a id="referral-link" href="#" target="_blank" class="btn-secondary" style="font-size: 0.8rem;">
-                            Find Local Certified Dermatologists
-                        </a>
-                    </div>
+        <!-- TAB 3: DermaIQ Modular Scalability Architecture (Feature G) -->
+        <div id="dermaiq-tab" class="tab-pane">
+            <div class="card">
+                <div class="card-header">G. Future Scalability: DermaIQ Multi-Domain Architecture</div>
+                <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 16px;">
+                    Follica is architected as the foundational module of the DermaIQ clinical intelligence platform. The unified pipeline cleanly extends across multiple dermatological sub-disciplines:
+                </p>
 
-                    <div style="margin-bottom: 16px;">
-                        <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">
-                            Active Ingredient Routine
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+                    <!-- Module 1: Scalp -->
+                    <div style="background-color: var(--bg-primary); border: 1px solid var(--accent-cyan); border-radius: 8px; padding: 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <strong style="color: var(--accent-cyan); font-size: 0.95rem;">Module 1: Scalp & Hair Diagnostics</strong>
+                            <span style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan); font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 4px;">PRODUCTION</span>
                         </div>
-                        <div id="ingredients-list"></div>
-                    </div>
-
-                    <div style="margin-bottom: 16px;">
-                        <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">
-                            Supportive Lifestyle Guidance
+                        <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 10px;">
+                            Dual-pipeline trichoscopy evaluating dry flaking vs Malassezia seborrheic dermatitis, follicular density, and borehole hard-water mineral buildup.
+                        </p>
+                        <div style="font-size: 0.78rem; color: var(--text-muted);">
+                            Active Models: MobileNetV4 ONNX | 4 Micro-Feature CV Sub-Scores
                         </div>
-                        <ul id="lifestyle-list" style="font-size: 0.82rem; color: var(--text-secondary); padding-left: 18px;"></ul>
                     </div>
 
-                    <div class="disclaimer-box" id="universal-disclaimer"></div>
+                    <!-- Module 2: Facial Acne -->
+                    <div style="background-color: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <strong style="color: var(--text-primary); font-size: 0.95rem;">Module 2: Facial Acne & Barrier</strong>
+                            <span style="background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 4px;">BETA READY</span>
+                        </div>
+                        <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 10px;">
+                            Differentiates comedonal acne from inflammatory papulopustular lesions, measuring lipid barrier integrity and post-inflammatory erythema (PIE).
+                        </p>
+                        <div style="font-size: 0.78rem; color: var(--text-muted);">
+                            Target Actives: Salicylic Acid 2%, Benzoyl Peroxide, Niacinamide, Azelaic Acid
+                        </div>
+                    </div>
+
+                    <!-- Module 3: Eczema & Rashes -->
+                    <div style="background-color: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <strong style="color: var(--text-primary); font-size: 0.95rem;">Module 3: Eczema & Skin Rashes</strong>
+                            <span style="background: rgba(148, 163, 184, 0.15); color: var(--text-muted); font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 4px;">PLANNED</span>
+                        </div>
+                        <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 10px;">
+                            Analyzes localized lichenification roughness, contact dermatitis margin spreads, and superficial fungal ring patterns for physician triage.
+                        </p>
+                        <div style="font-size: 0.78rem; color: var(--text-muted);">
+                            Target Actives: Colloidal Oatmeal, Ceramide NP/AP, Zinc Oxide, Clotrimazole
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -604,6 +1098,23 @@
         let currentAnalysisResult = null;
         let currentContext = null;
         let selectedFile = null;
+        let selectedAngle = 'crown_vertex';
+
+        // Tab Switcher
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        // Angle Selector
+        function selectScanAngle(angleId, label, btn) {
+            selectedAngle = angleId;
+            document.querySelectorAll('.angle-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('angle-display').textContent = `Target: ${label}`;
+        }
 
         // Poll system status on load
         async function fetchSystemStatus() {
@@ -611,8 +1122,7 @@
                 const res = await fetch('/api/v1/system/status');
                 if (res.ok) {
                     const data = await res.json();
-                    const statusText = document.getElementById('status-text');
-                    statusText.textContent = `Backend Ready (Confidence Gate: ${data.confidence_gate_threshold})`;
+                    document.getElementById('status-text').textContent = `Backend Ready (Gate: ${data.confidence_gate_threshold})`;
                 }
             } catch (err) {
                 document.getElementById('status-text').textContent = 'Backend Offline';
@@ -631,7 +1141,6 @@
             if (!file) return;
             selectedFile = file;
 
-            // Render Preview
             const reader = new FileReader();
             reader.onload = (evt) => {
                 imagePreview.src = evt.target.result;
@@ -647,7 +1156,7 @@
             try {
                 qualityFeedback.style.display = 'block';
                 qualityFeedback.className = 'quality-feedback';
-                qualityFeedback.textContent = 'Validating photo sharpness and illumination...';
+                qualityFeedback.textContent = 'Checking image sharpness, focus distance, and illumination...';
 
                 const res = await fetch('/api/v1/quality/check', {
                     method: 'POST',
@@ -673,7 +1182,7 @@
         // Submit Full Dual-Pipeline Analysis
         async function submitAnalysis() {
             if (!selectedFile) {
-                alert('Please upload a scalp photograph first.');
+                alert('Please select a scalp photograph first.');
                 return;
             }
 
@@ -688,24 +1197,36 @@
             btn.disabled = true;
             loading.style.display = 'block';
 
+            const sensationVal = document.querySelector('input[name="sensation"]:checked').value;
+            const sheddingVal = document.querySelector('input[name="shedding"]:checked').value;
+            const waterEnvVal = document.getElementById('water-env').value;
+            const famHist = document.getElementById('family-history').checked;
+            const examStress = document.getElementById('exam-stress').checked;
+            const duration = parseInt(document.getElementById('duration-weeks').value, 10);
+            const notes = document.getElementById('symptom-notes').value;
+
             const formData = new FormData();
             formData.append('image', selectedFile);
-            formData.append('itching', document.getElementById('itching').checked);
-            formData.append('burning_or_pain', document.getElementById('burning-or-pain').checked);
-            formData.append('hard_water_exposure', document.getElementById('hard-water').checked);
-            formData.append('family_history_hair_loss', document.getElementById('family-history').checked);
-            formData.append('stress_level', document.getElementById('stress-level').value);
-            formData.append('duration_weeks', document.getElementById('duration-weeks').value);
-            formData.append('symptom_notes', document.getElementById('symptom-notes').value);
+            formData.append('scan_angle', selectedAngle);
+            formData.append('sensation', sensationVal);
+            formData.append('water_environment', waterEnvVal);
+            formData.append('stress_level', examStress ? 'high' : 'moderate');
+            formData.append('recent_exam_work_stress', examStress);
+            formData.append('shedding_pattern', sheddingVal);
+            formData.append('duration_weeks', duration);
+            formData.append('family_history_hair_loss', famHist);
+            formData.append('symptom_notes', notes);
 
             currentContext = {
-                itching: document.getElementById('itching').checked,
-                burning_or_pain: document.getElementById('burning-or-pain').checked,
-                hard_water_exposure: document.getElementById('hard-water').checked,
-                family_history_hair_loss: document.getElementById('family-history').checked,
-                stress_level: document.getElementById('stress-level').value,
-                duration_weeks: parseInt(document.getElementById('duration-weeks').value, 10),
-                symptom_notes: document.getElementById('symptom-notes').value
+                scan_angle: selectedAngle,
+                sensation: sensationVal,
+                water_environment: waterEnvVal,
+                stress_level: examStress ? 'high' : 'moderate',
+                recent_exam_work_stress: examStress,
+                shedding_pattern: sheddingVal,
+                duration_weeks: duration,
+                family_history_hair_loss: famHist,
+                symptom_notes: notes
             };
 
             try {
@@ -718,7 +1239,7 @@
                 if (!res.ok) {
                     const detail = data.detail;
                     if (typeof detail === 'object') {
-                        alert(`Quality Check Error: ${detail.rejection_reason || detail.error}\n\n${detail.user_guidance || ''}`);
+                        alert(`Quality Gate Warning: ${detail.rejection_reason || detail.error}\n\n${detail.user_guidance || ''}`);
                     } else {
                         alert(`Analysis Error: ${detail}`);
                     }
@@ -742,7 +1263,7 @@
             const card = document.getElementById('results-card');
             card.style.display = 'block';
 
-            // Composite Score & Triage
+            // Feature C: Scalp Health Score (SHS) & Triage
             document.getElementById('health-score').textContent = `${data.scalp_health_score}/100`;
             const badge = document.getElementById('triage-badge');
             badge.textContent = data.triage_level;
@@ -761,7 +1282,7 @@
             const gatedNote = data.confidence_gated ? ' (Re-routed by 0.65 Confidence Gate)' : '';
             document.getElementById('confidence-text').textContent = `Pattern Confidence: ${confPct}%${gatedNote}`;
 
-            // Sub-scores
+            // 4 Discrete Sub-Scores
             const sub = data.sub_scores;
             document.getElementById('flake-val').textContent = `${sub.flake_score}/25`;
             document.getElementById('flake-bar').style.width = `${(sub.flake_score / 25) * 100}%`;
@@ -775,7 +1296,11 @@
             document.getElementById('density-val').textContent = `${sub.density_score}/25`;
             document.getElementById('density-bar').style.width = `${(sub.density_score / 25) * 100}%`;
 
-            // Clinical Referral
+            if (sub.stage_comparison) {
+                document.getElementById('stage-badge-text').textContent = sub.stage_comparison;
+            }
+
+            // Feature F: Clinical Referral (Clinic Pass)
             const refBox = document.getElementById('referral-container');
             if (data.consultation_referral && data.consultation_referral.required) {
                 refBox.style.display = 'block';
@@ -785,7 +1310,7 @@
                 refBox.style.display = 'none';
             }
 
-            // Active Ingredients
+            // Feature D: Active Ingredients
             const ingList = document.getElementById('ingredients-list');
             ingList.innerHTML = '';
             if (data.recommended_ingredients && data.recommended_ingredients.length > 0) {
@@ -794,8 +1319,8 @@
                     div.className = 'ingredient-card';
                     div.innerHTML = `
                         <div class="ingredient-name">${ing.name}</div>
-                        <div class="ingredient-meta">Cadence: ${ing.frequency}</div>
-                        <div class="ingredient-purpose">${ing.purpose}</div>
+                        <div class="ingredient-meta">Suggested Cadence: ${ing.frequency}</div>
+                        <div class="ingredient-purpose">Mechanism: ${ing.purpose}</div>
                     `;
                     ingList.appendChild(div);
                 });
@@ -816,14 +1341,14 @@
             document.getElementById('universal-disclaimer').textContent = data.disclaimer;
         }
 
-        // Export PDF Report
+        // Export Clinical PDF (Clinic Pass)
         async function downloadPdfReport() {
             if (!currentAnalysisResult || !currentContext) return;
 
             const payload = {
                 analysis_data: currentAnalysisResult,
                 context: currentContext,
-                patient_ref_id: 'LOCAL-PATIENT-01'
+                patient_ref_id: 'LOCAL-STUDENT-01'
             };
 
             try {
@@ -849,6 +1374,82 @@
                 a.remove();
             } catch (err) {
                 alert('Error downloading report.');
+            }
+        }
+
+        // Feature E: Before / After Split Slider Interaction
+        const splitSlider = document.getElementById('split-slider');
+        const sliderBefore = document.getElementById('slider-img-before');
+        const sliderHandle = document.getElementById('slider-handle');
+
+        let isDragging = false;
+
+        function setSliderPosition(x) {
+            const rect = splitSlider.getBoundingClientRect();
+            let pos = ((x - rect.left) / rect.width) * 100;
+            pos = Math.max(0, Math.min(100, pos));
+            sliderBefore.style.clipPath = `polygon(0 0, ${pos}% 0, ${pos}% 100%, 0 100%)`;
+            sliderHandle.style.left = `${pos}%`;
+        }
+
+        splitSlider.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            setSliderPosition(e.clientX);
+        });
+
+        window.addEventListener('mouseup', () => { isDragging = false; });
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            setSliderPosition(e.clientX);
+        });
+
+        // Longitudinal Comparison Submission
+        async function submitLongitudinalComparison() {
+            const baseInput = document.getElementById('base-image-input');
+            const followInput = document.getElementById('follow-image-input');
+            const daysElapsed = document.getElementById('days-elapsed').value;
+
+            if (!baseInput.files[0] || !followInput.files[0]) {
+                alert('Please select both Baseline (Day 0) and Follow-up photos.');
+                return;
+            }
+
+            // Update split slider image sources
+            const r1 = new FileReader();
+            r1.onload = (e) => { document.getElementById('slider-img-before').src = e.target.result; };
+            r1.readAsDataURL(baseInput.files[0]);
+
+            const r2 = new FileReader();
+            r2.onload = (e) => { document.getElementById('slider-img-after').src = e.target.result; };
+            r2.readAsDataURL(followInput.files[0]);
+
+            const formData = new FormData();
+            formData.append('baseline_image', baseInput.files[0]);
+            formData.append('followup_image', followInput.files[0]);
+            formData.append('days_elapsed', daysElapsed);
+
+            try {
+                const res = await fetch('/api/v1/progress/compare', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await res.json();
+                if (!res.ok) {
+                    alert(`Comparison Error: ${data.detail || 'Failed to compare scans.'}`);
+                    return;
+                }
+
+                document.getElementById('comparison-results').style.display = 'block';
+                document.getElementById('density-delta').textContent = `${data.follicle_density_delta_pct > 0 ? '+' : ''}${data.follicle_density_delta_pct}%`;
+                document.getElementById('redness-delta').textContent = `${data.redness_reduction_delta_pct > 0 ? '+' : ''}${data.redness_reduction_delta_pct}%`;
+                document.getElementById('flake-delta').textContent = `${data.flake_reduction_delta_pct > 0 ? '+' : ''}${data.flake_reduction_delta_pct}%`;
+
+                document.getElementById('trend-summary-title').textContent = `Status: ${data.overall_trend.toUpperCase().replace('_', ' ')} (Alignment: ${data.alignment_quality})`;
+                document.getElementById('trend-summary-text').textContent = data.clinical_interpretation;
+                document.getElementById('trend-recommendation-text').textContent = data.recommendation;
+            } catch (err) {
+                alert('Failed to connect to longitudinal comparison endpoint.');
             }
         }
     </script>

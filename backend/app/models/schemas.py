@@ -1,4 +1,4 @@
-﻿"""
+"""
 Follica Pydantic Data Models and API Contracts.
 
 Architectural Design Intent & Rationale:
@@ -28,16 +28,49 @@ from app.core.constants import UNIVERSAL_DISCLAIMER
 # ---------------------------------------------------------------------------
 class SymptomContext(BaseModel):
     """
-    Self-reported patient symptom parameters.
-    Captures contextual triggers (water quality, duration, mechanical sensations)
-    that computer vision cannot detect from an image alone.
+    Self-reported patient symptom parameters and clinical context.
+    Captures multi-angle orientation, mechanical sensations, water/hostel environment,
+    stress history, and shedding timelines.
     """
+    # Angle Orientation
+    scan_angle: Literal[
+        "crown_vertex",
+        "frontal_hairline",
+        "left_temple",
+        "right_temple",
+        "parting_line",
+        "unspecified"
+    ] = Field(default="unspecified", description="Targeted anatomical scalp region")
+
+    # Sensation
+    sensation: Literal["itching", "burning", "painful", "painless", "mixed"] = Field(
+        default="painless",
+        description="Predominant scalp sensation (pruritus, tenderness, dysesthesia)"
+    )
     itching: bool = Field(default=False, description="Reported scalp itching or pruritus")
     burning_or_pain: bool = Field(default=False, description="Reported burning sensation, tenderness, or painful bumps")
+
+    # Water & Environment
+    water_environment: Literal["hard_borewell", "treated_tap", "recent_relocation", "normal"] = Field(
+        default="normal",
+        description="Hostel or residence water supply and environmental changes"
+    )
     hard_water_exposure: bool = Field(default=False, description="Exposure to hard borewell/tap water in living quarters")
+
+    # Stress & Genetics
     stress_level: Literal["low", "moderate", "high"] = Field(default="moderate", description="Self-reported stress level")
-    duration_weeks: int = Field(default=2, ge=0, description="Duration of symptoms in weeks")
+    recent_exam_work_stress: bool = Field(
+        default=False,
+        description="Severe academic/exam/work stress within the preceding 3 months"
+    )
     family_history_hair_loss: bool = Field(default=False, description="Family history of androgenetic hair thinning")
+
+    # Progression Timeline
+    shedding_pattern: Literal["sudden_acute", "gradual_chronic", "stable_no_shedding"] = Field(
+        default="gradual_chronic",
+        description="Acute shedding (telogen effluvium pattern) vs gradual chronic miniaturization"
+    )
+    duration_weeks: int = Field(default=2, ge=0, description="Duration of symptoms in weeks")
     symptom_notes: Optional[str] = Field(default=None, description="Free-text notes on past products or treatments tried")
 
 
@@ -72,6 +105,10 @@ class SubScores(BaseModel):
         ge=0.0,
         le=25.0,
         description="Hair Follicle & Density Score (0=significant thinning/spacing, 25=dense follicular coverage)"
+    )
+    stage_comparison: Optional[str] = Field(
+        default="Within baseline density boundaries (Norwood 1-2 / Ludwig 1)",
+        description="Pattern stage reference against standardized hair loss progression scales"
     )
 
 
@@ -160,6 +197,48 @@ class AnalysisResponse(BaseModel):
         description="Universal medical disclaimer mandatory across all response payloads"
     )
     analysis_timestamp: str = Field(..., description="ISO 8601 UTC timestamp of analysis")
+
+
+# ---------------------------------------------------------------------------
+# Progress Tracking & Longitudinal Image Registration Models
+# ---------------------------------------------------------------------------
+class ProgressComparisonResponse(BaseModel):
+    """
+    Longitudinal comparison contract between baseline and follow-up scalp captures.
+    """
+    baseline_timestamp: Optional[str] = None
+    followup_timestamp: Optional[str] = None
+    days_elapsed: int = 14
+    alignment_quality: str = Field(..., description="Homography alignment confidence (high, moderate, low)")
+    follicle_density_delta_pct: float = Field(
+        ...,
+        description="Percentage change in follicular coverage between scans (+ improvement, - thinning)"
+    )
+    redness_reduction_delta_pct: float = Field(
+        ...,
+        description="Percentage reduction in vascular erythema surface area"
+    )
+    flake_reduction_delta_pct: float = Field(
+        ...,
+        description="Percentage reduction in stratum corneum flaking area"
+    )
+    overall_trend: Literal["improving", "stable", "monitoring_advised", "escalation_recommended"]
+    clinical_interpretation: str
+    recommendation: str
+
+
+# ---------------------------------------------------------------------------
+# DermaIQ Modular Domain Architecture Contracts
+# ---------------------------------------------------------------------------
+class DermaIQDomainInfo(BaseModel):
+    """Module definition for DermaIQ multi-condition scalability."""
+    domain_id: str
+    display_name: str
+    description: str
+    status: Literal["production", "beta", "planned"]
+    supported_models: List[str]
+    active_sub_scores: List[str]
+
 
 
 # ---------------------------------------------------------------------------
