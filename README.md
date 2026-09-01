@@ -76,9 +76,8 @@ Every engineering decision in Follica is governed by five strict principles:
 
 ---
 
----
-
 ## 4. Core Features & User Journey
+
 
 ### A. Multi-Angle Photo Scanner
 - **Guided Capture Mode**: Viewfinder UI overlays for Crown/Vertex, Frontal Hairline, Left/Right Temples, and Parting Line.
@@ -187,5 +186,6 @@ python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 
 ### Run Automated Tests
 ```bash
-pytest backend/tests/test_api.py
+pytest tests/ -v
 ```
+
