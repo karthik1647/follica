@@ -118,13 +118,13 @@ class ScalpClassifierService:
         """
         if context.primary_concern_zone == "routine_healthy_check" and not context.itching and not context.burning_or_pain:
             return CONDITION_NORMAL, 0.94
-        elif context.burning_or_pain and context.duration_weeks > 3:
+        elif context.burning_or_pain and (context.duration_months >= 1 or context.duration_weeks > 3):
             return CONDITION_FOLLICULITIS, 0.81
         elif context.itching and (context.hard_water_exposure or "burning" in context.sensation):
             return CONDITION_SEBORRHEIC_DERMATITIS, 0.84
         elif context.itching and not context.hard_water_exposure:
             return CONDITION_DRY_SCALP, 0.77
-        elif context.family_history_hair_loss and context.duration_weeks > 8 and context.primary_concern_zone in ["crown_vertex", "hairline_temples", "patchy_spots"]:
+        elif context.family_history_hair_loss and (context.duration_months >= 2 or context.duration_weeks > 8) and context.primary_concern_zone in ["crown_vertex", "hairline_temples", "patchy_spots"]:
             return CONDITION_ALOPECIA_AREATA, 0.73
         else:
             return CONDITION_NORMAL, 0.89

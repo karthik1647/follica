@@ -1,4 +1,4 @@
-﻿"""
+"""
 Follica Generic Clinical Summary PDF Service.
 
 Architectural Design Intent & Rationale:
@@ -131,7 +131,7 @@ class ClinicalPDFService:
             # Self-Reported Context
             story.append(Paragraph("Patient-Reported Context", heading_style))
             context_text = (
-                f"<b>Symptom Duration:</b> {context.duration_weeks} weeks | "
+                f"<b>Symptom Duration:</b> {context.duration_months} Months ({context.duration_weeks} Weeks) | "
                 f"<b>Itching:</b> {'Yes' if context.itching else 'No'} | "
                 f"<b>Burning/Pain:</b> {'Yes' if context.burning_or_pain else 'No'} | "
                 f"<b>Hard Water Exposure:</b> {'Yes' if context.hard_water_exposure else 'No'} | "

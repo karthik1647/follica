@@ -148,7 +148,8 @@ async def analyze_scalp(
     hair_pull_test: str = Form(default="negative_under_3"),
     flake_type: str = Form(default="none"),
     shedding_pattern: str = Form(default="gradual_chronic"),
-    duration_weeks: int = Form(default=2),
+    duration_months: Optional[int] = Form(default=None, description="Duration in months (0-72 months)"),
+    duration_weeks: Optional[int] = Form(default=None, description="Optional legacy duration in weeks"),
     symptom_notes: Optional[str] = Form(default=None)
 ):
     """
@@ -194,6 +195,18 @@ async def analyze_scalp(
 
     # Assemble comprehensive symptom context
     valid_zones = ["routine_healthy_check", "crown_vertex", "hairline_temples", "central_parting", "diffuse_all_over", "patchy_spots"]
+    
+    # Calculate reconciled duration
+    if duration_months is not None:
+        dur_m_final = max(0, min(72, duration_months))
+        dur_w_final = round(dur_m_final * 4.33)
+    elif duration_weeks is not None:
+        dur_w_final = max(0, duration_weeks)
+        dur_m_final = max(0, min(72, round(dur_w_final / 4.33)))
+    else:
+        dur_m_final = 1
+        dur_w_final = 4
+
     context = SymptomContext(
         age_group=age_group if age_group in ["under_18", "18_25", "26_35", "36_50", "over_50"] else "18_25",
         biological_sex=biological_sex if biological_sex in ["male", "female", "other"] else "male",
@@ -219,7 +232,8 @@ async def analyze_scalp(
         hair_pull_test=hair_pull_test if hair_pull_test in ["negative_under_3", "borderline_3_5", "positive_over_5"] else "negative_under_3",
         flake_type=flake_type if flake_type in ["none", "dry_white_fine", "greasy_yellow_thick", "plaque_crusty"] else "none",
         shedding_pattern=shedding_pattern if shedding_pattern in ["sudden_acute", "gradual_chronic", "stable_no_shedding"] else "gradual_chronic",
-        duration_weeks=max(0, duration_weeks),
+        duration_months=dur_m_final,
+        duration_weeks=dur_w_final,
         symptom_notes=symptom_notes
     )
 

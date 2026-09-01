@@ -129,17 +129,40 @@ class SymptomContext(BaseModel):
         default="gradual_chronic",
         description="Acute shedding (telogen effluvium pattern) vs gradual chronic miniaturization"
     )
-    duration_weeks: int = Field(default=2, ge=0, description="Duration of symptoms in weeks (0 for routine healthy check)")
+    duration_months: int = Field(default=1, ge=0, le=72, description="Duration of symptoms in months (0 for routine healthy check, max 72 months / 6 years)")
+    duration_weeks: int = Field(default=4, ge=0, description="Duration of symptoms in weeks (0 for routine check)")
     symptom_notes: Optional[str] = Field(default=None, description="Free-text notes on past products or treatments tried")
 
     @model_validator(mode="before")
     @classmethod
     def synchronize_sensations_and_context(cls, data: Any) -> Any:
         """
-        Automatically reconciles multi-select sensations with legacy single-string fields
-        and boolean clinical flags.
+        Automatically reconciles multi-select sensations with legacy single-string fields,
+        boolean clinical flags, and month-week duration conversions.
         """
         if isinstance(data, dict):
+            # 1. Reconcile duration_months and duration_weeks (Max 72 months / 6 years)
+            dur_m = data.get("duration_months")
+            dur_w = data.get("duration_weeks")
+            if dur_m is not None:
+                try:
+                    dur_m_int = max(0, min(72, int(dur_m)))
+                except (ValueError, TypeError):
+                    dur_m_int = 1
+                data["duration_months"] = dur_m_int
+                data["duration_weeks"] = round(dur_m_int * 4.33)
+            elif dur_w is not None:
+                try:
+                    dur_w_int = max(0, int(dur_w))
+                except (ValueError, TypeError):
+                    dur_w_int = 4
+                data["duration_weeks"] = dur_w_int
+                data["duration_months"] = max(0, min(72, round(dur_w_int / 4.33)))
+            else:
+                data["duration_months"] = 1
+                data["duration_weeks"] = 4
+
+            # 2. Multi-select sensation synchronization
             explicit_itching = str(data.get("itching", "")).lower() in ["true", "1"] or data.get("itching") is True
             explicit_pain = str(data.get("burning_or_pain", "")).lower() in ["true", "1"] or data.get("burning_or_pain") is True
             explicit_trichodynia = str(data.get("scalp_pain_trichodynia", "")).lower() in ["true", "1"] or data.get("scalp_pain_trichodynia") is True

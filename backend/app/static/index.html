@@ -266,10 +266,10 @@
                                 </div>
                             </div>
                             <div class="form-row">
-                                <span class="field-label">Duration of Symptoms (0 to 100 Weeks)</span>
+                                <span class="field-label">Duration of Symptoms (0 to 72 Months)</span>
                                 <div class="slider-wrapper">
-                                    <input type="range" id="duration-slider" class="slider-range" min="0" max="100" value="4" oninput="updateDurationBadge(this.value)">
-                                    <span id="duration-val-badge" class="slider-badge">4 Weeks</span>
+                                    <input type="range" id="duration-slider" class="slider-range" min="0" max="72" value="1" oninput="updateDurationBadge(this.value)">
+                                    <span id="duration-val-badge" class="slider-badge">1 Month</span>
                                 </div>
                             </div>
                         </div>
@@ -416,12 +416,14 @@
             const num = parseInt(val, 10);
             const badge = document.getElementById('duration-val-badge');
             if (num === 0) {
-                badge.innerText = '0 Weeks (Routine Scan)';
-            } else if (num >= 52) {
-                const years = (num / 52).toFixed(1);
-                badge.innerText = `${num} Weeks (~${years} Yrs)`;
+                badge.innerText = '0 Months (Routine Baseline Scan)';
+            } else if (num === 1) {
+                badge.innerText = '1 Month';
+            } else if (num < 12) {
+                badge.innerText = `${num} Months`;
             } else {
-                badge.innerText = `${num} Weeks`;
+                const years = (num / 12).toFixed(1);
+                badge.innerText = `${num} Months (~${years} Years)`;
             }
         }
 
@@ -458,7 +460,7 @@
             document.getElementById('pull-1').checked = true;
             document.getElementById('flake-1').checked = true;
             document.getElementById('duration-slider').value = 0;
-            document.getElementById('duration-val-badge').innerText = '0 Weeks (Routine Scan)';
+            document.getElementById('duration-val-badge').innerText = '0 Months (Routine Baseline Scan)';
             updateRiskCounter();
 
             try {
@@ -489,8 +491,8 @@
             
             document.getElementById('flake-3').checked = true;
             document.getElementById('pull-2').checked = true;
-            document.getElementById('duration-slider').value = 6;
-            document.getElementById('duration-val-badge').innerText = '6 Weeks';
+            document.getElementById('duration-slider').value = 2;
+            document.getElementById('duration-val-badge').innerText = '2 Months';
             updateRiskCounter();
 
             try {
@@ -536,9 +538,14 @@
             
             formData.append('hair_pull_test', document.querySelector('input[name="hair_pull_test"]:checked').value);
             formData.append('flake_type', document.querySelector('input[name="flake_type"]:checked').value);
-            formData.append('duration_weeks', parseInt(document.getElementById('duration-slider').value));
+            
+            const durMonths = parseInt(document.getElementById('duration-slider').value, 10) || 0;
+            formData.append('duration_months', durMonths);
+            formData.append('duration_weeks', Math.round(durMonths * 4.33));
+            
             formData.append('family_history_hair_loss', document.getElementById('def-family').checked);
             formData.append('recent_exam_work_stress', document.getElementById('def-stress').checked);
+
 
             const defs = [];
             if (document.getElementById('def-d3').checked) defs.push('vitamin_d3');

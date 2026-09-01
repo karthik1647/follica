@@ -87,8 +87,8 @@ Every engineering decision in Follica is governed by five strict principles:
 - **Primary Goal & Concern Zone**: Supports both **Routine Baseline / Healthy Checkups** and targeted concern zones (Crown/Vertex, Hairline/Temples, Parting Line, Diffuse Thinning).
 - **Multi-Select Sensations**: Allows selecting multiple concurrent sensations (e.g., both itching and burning/tenderness, painful pustules, or calm/painless).
 - **Water & Environment**: Hostel borewell hard water, treated tap, or recent city/campus relocation.
-- **Family History & Stress**: Genetic hair thinning in parents/siblings, intense exam/work stress in past 3 months.
-- **Progression & Duration**: Sudden acute shedding (telogen effluvium pattern) vs gradual chronic thinning (or 0 weeks for routine baseline scans).
+- **Progression & Duration**: 0 to 72 Months slider (up to 6 years) differentiating sudden acute shedding (<1-3 months) from chronic androgenetic miniaturization, with 0 months indicating routine healthy baseline scans.
+
 
 
 ### C. The "Scalp Health Score" (SHS: 0–100)

@@ -223,12 +223,13 @@ class TriageEngine:
                         f"Visual analysis suggests {raw_condition}. "
                         f"Reported symptoms: Burning/Pain={context.burning_or_pain}, "
                         f"Trichodynia={context.scalp_pain_trichodynia}, "
-                        f"Duration={context.duration_weeks} weeks. Scalp Health Score={total_shs}/100."
+                        f"Duration={context.duration_months} months ({context.duration_weeks} weeks). Scalp Health Score={total_shs}/100."
                     )
                 )
 
-            elif raw_condition == CONDITION_SEBORRHEIC_DERMATITIS or context.duration_weeks > 4 or context.flake_type == "greasy_yellow_thick":
+            elif raw_condition == CONDITION_SEBORRHEIC_DERMATITIS or context.flake_type == "greasy_yellow_thick" or (context.itching and (context.duration_months >= 1 or context.duration_weeks > 4)):
                 triage_level = TRIAGE_LEVEL_2_MONITORED
+
                 triage_reason = (
                     "Visual indications suggest active sebum/microbial flaking. Recommends an "
                     "active ingredient schedule and structured 14-day progress tracking."
