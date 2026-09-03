@@ -4,7 +4,12 @@ Follica is an open-source, dual-pipeline scalp health assessment and clinical tr
 
 ---
 
-## 1. Need Scoping (Asking the Right Questions)
+## 1. Need Scoping & Clinical Need Statement
+
+### The Formal Need Statement
+> **A way to objectively evaluate, quantify, and triage scalp pathology and follicular density in young adults and student populations, which provides explainable sub-score telemetry and generic molecule-first care guidance for mild conditions while generating standardized clinical hand-off summaries for dermatologist escalation, without requiring expensive clinic hardware, invasive data monetization, or commercial product subscription lock-ins.**
+
+---
 
 Following the standard medical device and clinical engineering need scoping methodology, Follica addresses the problem of neglected scalp disorders through seven structured dimensions:
 
@@ -37,12 +42,7 @@ Following the standard medical device and clinical engineering need scoping meth
 - **Non-Diagnostic Linguistic Governance**: Hardcoded architectural constraints enforce probabilistic, non-diagnostic terminology (*"suggests visual pattern of"*, never *"diagnoses"* or *"prescribes"*).
 - **Clinical Safety Protocols**: Mandatory universal medical disclaimers across all API payloads and automated generation of a 1-page structured clinical hand-off pass (PDF) for licensed physician review.
 
-### f. Competitive Landscape and Architectural Differentiation
-- **Existing Solutions**: Expensive clinic-bound dermascopes ($2,000+ hardware), high-friction telemedicine paywalls ($50-$100 per appointment), and proprietary commercial "hair quiz" funnels that market private-label supplement bundles.
-- **Current Limitations**: Closed-source black-box AI models lacking sub-score explainability, complete omission of environmental and lifestyle context (hard water minerals, helmet friction, nutritional gaps), high user costs, and invasive data monetization.
-- **Follica's Architectural Advantage**: 100% open-source, zero-cost cloud infrastructure, transparent 4-axis sub-scores (0-25 each, summing to 0-100 SHS), molecule-first OTC guidance (generic active compounds), and longitudinal ORB keypoint image registration.
-
-### g. Implementation and Clinical Adoption Strategy
+### f. Implementation and Clinical Adoption Strategy
 - **Smartphone-Native Capture**: Direct camera integration with forced flash guidance and 4-rule visual capture instructions (Clean Lens, Flash ON, Expose Parting, 10-15 cm Distance).
 - **Multi-Platform Deployment**: Zero-install responsive web application + cross-platform React Native / Expo mobile architecture.
 - **Zero-Cost Footprint**: Ultra-low latency and zero local storage burden (<15 MB compressed ONNX model footprint, serverless/free-tier execution).
@@ -50,7 +50,127 @@ Following the standard medical device and clinical engineering need scoping meth
 
 ---
 
-## 2. Core Design Principles
+## 2. Market Landscape: Existing Solutions vs. What We Are Building
+
+### Market Solutions Breakdown & Systemic Shortcomings
+
+The current scalp care and trichology market is bifurcated into three distinct categories, each characterized by critical structural deficiencies:
+
+```
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                CURRENT MARKET SOLUTIONS & FAILURE MODES                         │
+├───────────────────────────────┬──────────────────────────────────┬───────────────────────────────┤
+│ 1. D2C E-Commerce Funnels     │ 2. Consumer AI Chatbots/Apps     │ 3. Specialized Dermascopes    │
+│ (Traya, Man Matters, Hims)    │ (SkinVision, GPT Wrappers)       │ (FotoFinder, Dino-Lite)       │
+├───────────────────────────────┼──────────────────────────────────┼───────────────────────────────┤
+│ - Primary Goal: Sell private- │ - Primary Goal: User engagement  │ - Primary Goal: In-clinic Rx  │
+│   label kits (Rs 2500-3500/mo)│   via opaque text generation     │   by private specialists      │
+│ - Zero Computer Vision triage │ - Black-box single class output  │ - Prohibitive cost ($2k-$15k) │
+│ - Cannot prescribe cheap OTC  │ - Zero optical white-balancing   │ - Locked behind clinic walls  │
+│   generic active molecules    │ - No clinical doctor hand-off    │ - Inaccessible to students    │
+└───────────────────────────────┴──────────────────────────────────┴───────────────────────────────┘
+```
+
+### Comparative Analysis Matrix
+
+| Feature / Dimension | D2C Commercial Funnels (e.g. Traya) | Consumer AI Wrappers / Apps | In-Clinic Hardware (FotoFinder) | Follica (What We Are Building) |
+| :--- | :--- | :--- | :--- | :--- |
+| **Primary Financial Alignment** | E-commerce sales of proprietary subscription product bundles (Rs 2,000-3,500/month). | Advertising or recurring app subscription paywalls ($10-30/month). | High-fee specialist consultations ($50-150/visit) and hardware leasing. | **100% Free & Open-Source**: Zero-cost cloud footprint; no brand sponsorships or monetized kits. |
+| **Visual Analysis Engine** | Form questionnaire; photo uploads are optional, non-standardized marketing attachments. | Single-pass Black-Box CNN or generic Multimodal Vision LLM without telemetry. | Multi-spectral polarized optical magnification (50x-200x) hardware sensor. | **Dual-Pipeline**: MobileNetV4 / EfficientNet-B0 + OpenCV Classical CV micro-feature extraction. |
+| **Optical Invariance & Quality Gate** | None: Blurry, dark, or warm yellow room lighting photos are ingested without validation. | None: High vulnerability to color temperature shifts (2700K yellow light -> false erythema). | Controlled polarized ring-light hardware enclosure. | **Rigorous Pre-Inference & EXIF Gate**: Laplacian blur check, ISO sensor noise evaluation, and Gray-World White Balance normalization. |
+| **Scoring Explainability** | Marketing categorizations ("Root Cause: Gut/Stress", "Stage 2 Thinning") without math. | Opaque text generation without numeric sub-score telemetry. | Proprietary physician metrics (hair count/cm2) requiring specialized training. | **Transparent Composite Index (0-100 SHS)** derived from 4 discrete sub-scores (0-25 each for Flake, Redness, Sebum, Density). |
+| **Treatment Guidance Strategy** | Mandates purchase of private-label proprietary serums, ayurvedic oils, and internal supplements. | Generic lifestyle tips or general advisory text without chemical specificity. | Prescription-only pharmaceutical compounds (Oral Finasteride, Spironolactone). | **Molecule-First Generic Guidance**: Evidence-based active chemical molecules (Ketoconazole 2%, Salicylic Acid 2%, Zinc Pyrithione 1%, EDTA chelators) available at any pharmacy for Rs 100-200. |
+| **Medical Safety & Triage Escalation** | Tries to retain high-risk presentations within the supplement purchasing funnel. | Disclaimers embedded in text, but no structured physician hand-off mechanism. | Direct in-person physician management. | **Strict Confidence Gate (<0.65) & Clinic Pass (PDF)**: Automatically halts consumer self-care and generates a standardized 1-page clinical hand-off report for certified dermatologists. |
+| **Longitudinal Tracking Rigor** | Uncalibrated gallery photos subject to distance, angle, and lighting shifts. | Basic photo logging without pixel-level registration. | Automated serial dermatoscopy with fixed mechanical camera arm. | **ORB Homography Keypoint Registration**: Algorithmic perspective warping of Day 14/30 follow-up onto Day 0 coordinates for spot-by-spot delta analysis. |
+| **Hyper-Local Context Modeling** | Generic questionnaires ignoring hostel and campus environmental realities. | Global generic prompts. | Clinical anamnesis recorded in electronic medical record (EMR). | **Multi-Factor Correlation Engine**: Models hard borewell water mineral crusting, motorcycle helmet sweat/friction occlusion, exam stress, and student protein deficits. |
+
+---
+
+### What We Are Building: The 5 Strategic Pillars
+
+Follica bridges the chasm between inaccessible high-cost clinical hardware and commercialized D2C product sales funnels through five core engineering pillars:
+
+```
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                THE 5 STRATEGIC PILLARS OF FOLLICA                                │
+├───────────────────────────────┬──────────────────────────────────┬───────────────────────────────┤
+│ 1. Dual-Pipeline CV Engine    │ 2. Optical Normalization & EXIF  │ 3. Molecule-First Regimens    │
+│ - Parallel DL Classifier      │ - Pre-inference Laplacian gate   │ - Pure chemical actives       │
+│ - 4 Deterministic Sub-Scores  │ - EXIF sensor noise evaluation   │ - No commercial brand bias    │
+│ - Explainable 0-100 SHS score │ - Gray-World White Balance       │ - Rs 100-200 generic options  │
+├───────────────────────────────┼──────────────────────────────────┼───────────────────────────────┤
+│ 4. Multi-Factor Correlations  │ 5. Clinical Safety & Clinic Pass                                 │
+│ - Hard water mineral crust    │ - Server-side confidence gate (<0.65 reroutes to Level 2)        │
+│ - Daily helmet sweat trap     │ - 1-Click standardized Clinical Summary PDF for dermatologist    │
+│ - Pull test & shedding rate   │ - ORB homography longitudinal tracking (Day 0 vs Day 14/30)      │
+└───────────────────────────────┴──────────────────────────────────────────────────────────────────┘
+```
+
+1. **Dual-Pipeline Computer Vision Engine (DL + Classical CV)**:
+   - Eliminates the black-box opacity of standard AI. The Deep Learning classifier (MobileNetV4 / EfficientNet-B0) identifies broader pathological visual patterns, while classical computer vision algorithms extract four discrete, mathematically bounded micro-feature sub-scores (0.0 to 25.0 each):
+     - `flake_score` (Stratum corneum cluster density)
+     - `redness_score` (Vascular erythema intensity)
+     - `sebum_score` (Surface lipid distribution)
+     - `density_score` (Follicular unit spacing index)
+   - The arithmetic sum forms the **Scalp Health Score (0-100 SHS)**.
+
+2. **Optical Invariance and Sensor-Noise Normalization**:
+   - Consumer smartphone photography is notoriously prone to optical corruption. Follica executes a pre-inference quality gate that intercepts blurred photos (Laplacian variance < 80.0) and uncalibrated lighting.
+   - Parses EXIF metadata (ISO rating, shutter speed, flash status) to compute an objective **Optical Quality Score (0-100)**.
+   - Applies **Gray-World White Balance color normalization** to ensure that warm yellow incandescent room lights (2700K) are neutralized before calculating erythema sub-scores.
+
+3. **Molecule-First Care Schedules (Zero Commercial Bias)**:
+   - Unlike commercial funnels that require proprietary subscriptions, Follica outputs pure active chemical molecules with exact concentrations, mechanisms of action, and leave-on application durations:
+     - *Seborrheic Dermatitis*: Ketoconazole 2% wash (5-minute contact time, 2x/week) + Zinc Pyrithione alternate wash + Salicylic Acid 2% exfoliant.
+     - *Hard Water Mineral Crust*: EDTA chelating wash + Salicylic Acid descaler + Ceramide barrier lipid serum.
+   - Enables users to obtain effective treatments from any generic pharmacy for Rs 100-200.
+
+4. **Multi-Factor Clinical & Environmental Correlation Matrix**:
+   - Synthesizes user lifestyle data with visual CV metrics to explain root drivers:
+     - *Hard Water + Sebum* -> Insoluble calcium-fatty acid soap scum deposition.
+     - *Daily Helmet Wear + Itching* -> Friction and sweat occlusion accelerating *Malassezia* fungal proliferation.
+     - *Positive Hair Pull Test (>5 hairs) + Sudden Shedding + Exam Stress* -> Acute Telogen Effluvium premature follicle transition.
+     - *Family History + Vertex Thinning* -> Androgenetic miniaturization predisposition.
+
+5. **Clinical Hand-Off Pass & Longitudinal ORB Registration**:
+   - For high-risk or unresolving cases (Level 3 Escalation), Follica generates a standardized **1-Page Clinical Summary PDF** containing macro/micro photos, sub-score telemetry, symptom duration, attempted treatments, and physician notes.
+   - For longitudinal tracking, the ORB keypoint registration engine aligns follow-up captures (Day 14/30) onto Day 0 coordinates via homography perspective transformations, providing objective delta tracking invariant to user camera movement.
+
+---
+
+## 3. Strategic Engineering Roadmap
+
+```
+==================================================================================================
+PHASE 1: DUAL-PIPELINE CORE & WEB STUDIO [COMPLETED]
+├── FastAPI dual-pipeline inference service (/api/v1/analyze)
+├── Pre-inference Laplacian quality gate and EXIF optical analyzer (/api/v1/quality/check)
+├── Classical CV micro-feature extractors with Gray-World white balancing
+├── Multi-factor clinical correlation matrix & server confidence gate (<0.65)
+├── Responsive web application with shimmering skeleton UI & 1-click clinical PDF pass
+└── 46-test automated integration and adversarial stress suite (pytest)
+
+PHASE 2: MOBILE APPLICATION WITH HARDWARE-LOCKED CAPTURE [IN PROGRESS]
+├── React Native (Expo) cross-platform iOS/Android mobile client (mobile/)
+├── Hardware camera viewfinder with locked flash and distance crosshair overlays
+├── Local SQLite encrypted scan diary with offline baseline caching
+└── Adherence push notifications for active wash leave-on schedules (e.g. 2x/week)
+
+PHASE 3: ADVANCED TRICHOSCOPIC BIOMARKERS [PLANNED]
+├── Hair Shaft Caliber Heterogeneity Ratio (OpenCV Hough/Gabor filter for miniaturization index)
+├── Total Dissolved Solids (TDS) regional hard water chelating cadence calculator
+└── Multi-angle composite stitching (Crown, Hairline, and Parting in unified 3D mesh)
+
+PHASE 4: CLINICIAN TELE-TRIAGE & QR INTEGRATION [PLANNED]
+├── Cryptographically signed QR code on Clinical Pass PDF for instant physician browser review
+├── Zero-install doctor view rendering high-resolution zoomable trichoscopy and sub-score metrics
+└── Anonymous federated learning pipeline for privacy-preserving model calibration
+==================================================================================================
+```
+
+---
+
+## 4. Core Design Principles
 
 Every engineering decision in Follica is governed by five strict principles:
 
@@ -67,7 +187,7 @@ Every engineering decision in Follica is governed by five strict principles:
 
 ---
 
-## 3. System Architecture at a Glance
+## 5. System Architecture at a Glance
 
 ```
                          [User Upload: Scalp Photo + Multi-Factor Clinical Intake]
@@ -120,7 +240,7 @@ Every engineering decision in Follica is governed by five strict principles:
 
 ---
 
-## 4. Core Features & User Journey
+## 6. Core Features & User Journey
 
 ### A. Multi-Angle Photo Scanner
 - **Guided Capture Mode**: Viewfinder overlays for Crown/Vertex, Frontal Hairline, Left/Right Temples, and Parting Line.
@@ -161,7 +281,7 @@ Captures physiological and environmental drivers through 4 progressive sections:
 
 ---
 
-## 5. Current Status: What Is Built vs. Stubbed
+## 7. Current Status: What Is Built vs. Stubbed
 
 To help new contributors navigate the codebase without ambiguity:
 
@@ -185,7 +305,7 @@ To help new contributors navigate the codebase without ambiguity:
 
 ---
 
-## 6. Next Steps for Contributors
+## 8. Next Steps for Contributors
 
 If you are joining this repository, pick up the following tasks in priority order:
 
@@ -201,7 +321,7 @@ If you are joining this repository, pick up the following tasks in priority orde
 
 ---
 
-## 7. How to Run Locally
+## 9. How to Run Locally
 
 ### Setup and Start Backend Server
 ```bash
