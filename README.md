@@ -1,23 +1,52 @@
-# Follica: AI-Powered Scalp Health Diagnostic and Triage System
+# Follica: AI-Powered Scalp Health Assessment and Clinical Triage System
 
-Follica is an open-source, dual-pipeline scalp health assessment and clinical triage platform. It evaluates user-uploaded scalp photographs and contextual symptom questionnaires to provide objective health scoring, active ingredient care routines for minor issues, and structured clinical hand-off summaries when medical escalation is warranted.
+Follica is an open-source, dual-pipeline scalp health assessment and clinical triage platform. It evaluates user-uploaded scalp photographs and contextual clinical questionnaires to generate objective health scoring (Scalp Health Score 0-100), recommend targeted active ingredient care routines for minor conditions, and produce standardized clinical hand-off summaries when medical escalation to a dermatologist is warranted.
 
 ---
 
-## 1. The Problem Being Solved
+## 1. Need Scoping (Asking the Right Questions)
 
-Hair thinning, dandruff, and scalp inflammation affect a large percentage of college students and young adults, yet early intervention is consistently hindered by three systemic issues:
+Following the standard medical device and clinical engineering need scoping methodology, Follica addresses the problem of neglected scalp disorders through seven structured dimensions:
 
-1. **The Over-The-Counter Guessing Trap**:
-   Dry scalp flaking, fungal *Seborrheic Dermatitis*, and *Scalp Psoriasis* all present superficially as "white flakes". When students or general clinic staff treat all flaking with generic commercial shampoos (or random anti-dandruff products), it frequently aggravates the underlying barrier damage or yeast proliferation. Each distinct condition requires specific active molecules (e.g., Ketoconazole 2% vs. Salicylic Acid vs. Barrier Lipids vs. Chelating washes).
+### a. Clinical Relevance
+- **Epidemic Scale and High Prevalence**: Scalp disorders (Seborrheic Dermatitis, Androgenetic Alopecia, Telogen Effluvium, Folliculitis, and Scalp Psoriasis) affect over 2 billion individuals globally and upwards of 50% to 70% of university students and young adults due to hormonal fluctuations, chronic academic stress, hard water exposure, and mechanical friction.
+- **Prevention of Irreversible Complications**: Early objective detection and continuous tracking prevent irreversible clinical outcomes, including permanent cicatricial (scarring) alopecia, advanced androgenetic follicular miniaturization (Norwood Stages IV-VII / Ludwig Stages II-III), secondary bacterial superinfections from excoriation, and severe psycho-dermatological morbidity (social anxiety, clinical depression).
+- **The Over-The-Counter Trial-and-Error Trap**: Patients frequently misidentify inflammatory or fungal flaking as simple dry scalp, using generic cosmetic shampoos that exacerbate stratum corneum barrier disruption. Non-adherence to condition-specific active molecules (e.g., Ketoconazole 2% for Malassezia yeast overgrowth vs. Salicylic Acid 2% for hyperkeratotic plaque descaling vs. chelating agents for mineral crust) worsens clinical trajectories.
 
-2. **Campus and Environmental Aggravators**:
-   Hostel borewell hard water (calcium and magnesium buildup), academic stress, irregular sleep, and nutritional changes accelerate scalp barrier disruption. Standard general health centers often lack specialized trichoscopy tools to differentiate benign flaking from active follicular inflammation.
+### b. Stakeholder Perspectives
+- **Patients (Students and General Public)**: Require accessible, private, non-judgmental, immediate, and zero-cost objective scoring. They need clear active-ingredient chemical schedules rather than commercial brand marketing, and transparent guidance on when self-care is safe versus when specialist consultation is imperative.
+- **Doctors (Dermatologists and Trichologists)**: Require standardized clinical pre-intake, high-resolution calibrated scalp photography (flash-illuminated, optical quality validated via EXIF metadata), and objective mathematical sub-scores (Flake, Erythema, Sebum, Follicular Density) to fast-track in-person differential diagnosis and eliminate patient recall bias.
+- **Healthcare Systems and Campus Clinics (e.g., Institutional Health Services)**: Require scalable, automated triage to filter out benign xerosis and mild dandruff from active autoimmune or infectious presentations (Alopecia Areata, dissecting cellulitis), reducing outpatient wait queues and preventing clinician burnout.
+- **Payers and Institutional Administrators**: Require low-overhead, evidence-based triage infrastructure that prevents unnecessary specialist referrals while ensuring timely escalation of complex dermatoses.
 
-3. **Delayed Escalation for High-Risk Conditions**:
-   Conditions such as *Alopecia Areata* (coin-shaped bald patches) or *Folliculitis* (painful follicular pustules) require prompt dermatological evaluation. Because booking a specialist can be intimidating, expensive, or delayed, students often wait until irreversible follicular miniaturization or scarring occurs.
+### c. Market and Population Potential
+- **Expanding Global Market**: The global scalp health, hair loss, and trichology care market exceeds $35 billion annually, with a compound annual growth rate (CAGR) exceeding 8.4%.
+- **High-Density Vulnerable Demographics**: High-density student and urban populations represent a high-friction demographic exposed to unique environmental aggravators: hard borewell water mineral crystallization, high atmospheric PM2.5 particulate deposition, daily motorcycle helmet friction and sweat occlusion, academic exam stress, and dietary micronutrient deficits (Iron/Ferritin, Vitamin D3, protein synthesis gaps).
 
-**Follica bridges this gap**: It acts as an objective, non-diagnostic triage layer that recommends science-backed active ingredient schedules for minor self-resolving cases, and immediately generates a standardized clinical hand-off document for dermatologists when red flags appear.
+### d. Technical Feasibility and Engineering Mitigations
+- **Dual-Pipeline Architectural Approach**: Combines lightweight Deep Learning classification (MobileNetV4 / EfficientNet-B0) with deterministic Classical Computer Vision micro-feature extractors (Laplacian variance focus filtering, CLAHE dehazing, Gray-World White Balance color temperature normalization, and HSV/Lab color space analysis for vascular erythema and sebum lipid clustering) alongside a Multi-Factor Clinical Correlation Matrix.
+- **Technical Challenges**: Smartphone optical variability, camera lens fingerprint oil and dust haze, ambient lighting color temperature shifts (2700K warm incandescent vs. 6500K daylight), diverse skin phototypes (Fitzpatrick I-VI), and lack of specialized polarizing dermascopes.
+- **Engineering Mitigations**:
+  - Pre-inference quality gate rejecting blurred captures (Laplacian variance < 80.0) and extreme exposure (brightness < 40 or > 225).
+  - EXIF metadata parser evaluating sensor ISO noise rating, shutter speed motion blur risk, and flash firing status to compute an objective Optical Quality Score (0-100).
+  - Gray-World White Balance color normalization to prevent warm ambient illumination from producing false-positive erythema readings.
+  - Server-side confidence gate (< 0.65) strictly rerouting low-confidence predictions to Level 2 (Monitored Routine).
+
+### e. Regulatory Position and Clinical Safety Governance
+- **Software as a Medical Device (SaMD) vs. Informational Triage**: Follica is engineered and positioned strictly as an **educational assessment and clinical triage system**, not a certified diagnostic medical device.
+- **Non-Diagnostic Linguistic Governance**: Hardcoded architectural constraints enforce probabilistic, non-diagnostic terminology (*"suggests visual pattern of"*, never *"diagnoses"* or *"prescribes"*).
+- **Clinical Safety Protocols**: Mandatory universal medical disclaimers across all API payloads and automated generation of a 1-page structured clinical hand-off pass (PDF) for licensed physician review.
+
+### f. Competitive Landscape and Architectural Differentiation
+- **Existing Solutions**: Expensive clinic-bound dermascopes ($2,000+ hardware), high-friction telemedicine paywalls ($50-$100 per appointment), and proprietary commercial "hair quiz" funnels that market private-label supplement bundles.
+- **Current Limitations**: Closed-source black-box AI models lacking sub-score explainability, complete omission of environmental and lifestyle context (hard water minerals, helmet friction, nutritional gaps), high user costs, and invasive data monetization.
+- **Follica's Architectural Advantage**: 100% open-source, zero-cost cloud infrastructure, transparent 4-axis sub-scores (0-25 each, summing to 0-100 SHS), molecule-first OTC guidance (generic active compounds), and longitudinal ORB keypoint image registration.
+
+### g. Implementation and Clinical Adoption Strategy
+- **Smartphone-Native Capture**: Direct camera integration with forced flash guidance and 4-rule visual capture instructions (Clean Lens, Flash ON, Expose Parting, 10-15 cm Distance).
+- **Multi-Platform Deployment**: Zero-install responsive web application + cross-platform React Native / Expo mobile architecture.
+- **Zero-Cost Footprint**: Ultra-low latency and zero local storage burden (<15 MB compressed ONNX model footprint, serverless/free-tier execution).
+- **Professional Clinical Interface**: High-contrast, accessible design with zero decorative emojis, formal clinical typography, and 1-click clinical pass PDF generation.
 
 ---
 
@@ -41,67 +70,82 @@ Every engineering decision in Follica is governed by five strict principles:
 ## 3. System Architecture at a Glance
 
 ```
-                         [User Upload: Scalp Photo + Questionnaire]
-                                             │
-                                             ▼
-                             [Pre-Inference Image Quality Gate]
-                             - Laplacian Variance Focus / Blur Check
-                             - Luminance & Illumination Distribution Check
-                             - Dimension Integrity Check (>=150x150px)
-                                             │
-                       ┌─────────────────────┴─────────────────────┐
-                       ▼ (Failed Quality Gate)                     ▼ (Passed Quality Gate)
-             [HTTP 400 Bad Request]                      [Dual-Pipeline Assessment]
-             Actionable Guidance:                                  │
-             - Blur / Retake Focus              ┌──────────────────┴──────────────────┐
-             - Dark / Flash Required            ▼                                     ▼
-             - Overexposure / Glare    [Pipeline 1: Deep Learning]           [Pipeline 2: Classical CV]
-                                       MobileNetV4 / EfficientNet-B0         OpenCV / NumPy Micro-Features
-                                                │                                     │
-                                                ▼                                     ▼
-                                       Raw Condition + Conf (0.0-1.0)        4 Discrete Sub-Scores (0-25)
-                                                │                                     │
-                                                └──────────────────┬──────────────────┘
-                                                                   ▼
-                                                     [Server-Side Triage Engine]
-                                                                   │
-                                        ┌──────────────────────────┴──────────────────────────┐
-                                        ▼                                                     ▼
-                               [Confidence < 0.65]                                   [Confidence >= 0.65]
-                           Strict Server Reroute:                                Evaluate Severity:
-                           Level 2: Monitored Routine                            - Level 1: Minor Home Routine
-                           (Inconclusive visual signals)                         - Level 2: Monitored Active Routine
-                                                                                 - Level 3: Escalation (Dermatologist)
+                         [User Upload: Scalp Photo + Multi-Factor Clinical Intake]
+                                                     │
+                                                     ▼
+                                     [Pre-Inference Image Quality Gate]
+                                     - Laplacian Variance Focus / Blur Check
+                                     - Luminance & Illumination Distribution Check
+                                     - EXIF Metadata Parser (ISO Noise, Shutter, Flash)
+                                     - Dimension Integrity Check (>=150x150px)
+                                                     │
+                               ┌─────────────────────┴─────────────────────┐
+                               ▼ (Failed Quality Gate)                     ▼ (Passed Quality Gate)
+                     [HTTP 400 Bad Request]                      [Dual-Pipeline Assessment]
+                     Actionable Guidance:                                  │
+                     - Blur / Retake Focus              ┌──────────────────┴──────────────────┐
+                     - Dark / Flash Required            ▼                                     ▼
+                     - Overexposure / Glare    [Pipeline 1: Deep Learning]           [Pipeline 2: Classical CV]
+                                               MobileNetV4 / EfficientNet-B0         OpenCV / NumPy Micro-Features
+                                                        │                            - Gray-World White Balance
+                                                        │                            - Flake & Scaling (0-25)
+                                                        │                            - Erythema Redness (0-25)
+                                                        │                            - Sebum & Lipids (0-25)
+                                                        │                            - Follicular Density (0-25)
+                                                        ▼                                     │
+                                               Raw Condition + Conf (0.0-1.0)                 ▼
+                                                        │                            4 Discrete Sub-Scores (0-25)
+                                                        │                                     │
+                                                        └──────────────────┬──────────────────┘
+                                                                           ▼
+                                                             [Multi-Factor Correlation Engine]
+                                                             - Hard Water Mineral Deposition
+                                                             - Helmet Friction / Sweat Occlusion
+                                                             - Acute Telogen Effluvium Risk
+                                                             - Androgenetic Miniaturization
+                                                             - Perifollicular Trichodynia
+                                                             - Nutritional Synthesis Deficits
+                                                                           │
+                                                                           ▼
+                                                             [Server-Side Triage Engine]
+                                                                           │
+                                                ┌──────────────────────────┴──────────────────────────┐
+                                                ▼                                                     ▼
+                                       [Confidence < 0.65]                                   [Confidence >= 0.65]
+                                   Strict Server Reroute:                                Evaluate Severity:
+                                   Level 2: Monitored Routine                            - Level 1: Minor Home Routine
+                                   (Inconclusive visual signals)                         - Level 2: Monitored Active Routine
+                                                                                         - Level 3: Escalation (Dermatologist)
 ```
 
 ---
 
 ## 4. Core Features & User Journey
 
-
 ### A. Multi-Angle Photo Scanner
-- **Guided Capture Mode**: Viewfinder UI overlays for Crown/Vertex, Frontal Hairline, Left/Right Temples, and Parting Line.
+- **Guided Capture Mode**: Viewfinder overlays for Crown/Vertex, Frontal Hairline, Left/Right Temples, and Parting Line.
 - **Pre-Inference Quality Validation**: Real-time flash, focus distance, and Laplacian blur gating (`/api/v1/quality/check`) preventing blurry or poorly illuminated uploads from skewing scores.
+- **Optical Invariance**: Gray-World White Balance normalization neutralizes warm incandescent room lighting (2700K) to prevent false-positive erythema readings.
 
-### B. Clinical Questionnaire (Context Engine)
-- **Primary Goal & Concern Zone**: Supports both **Routine Baseline / Healthy Checkups** and targeted concern zones (Crown/Vertex, Hairline/Temples, Parting Line, Diffuse Thinning).
-- **Multi-Select Sensations**: Allows selecting multiple concurrent sensations (e.g., both itching and burning/tenderness, painful pustules, or calm/painless).
-- **Water & Environment**: Hostel borewell hard water, treated tap, or recent city/campus relocation.
-- **Progression & Duration**: 0 to 72 Months slider (up to 6 years) differentiating sudden acute shedding (<1-3 months) from chronic androgenetic miniaturization, with 0 months indicating routine healthy baseline scans.
-
-
+### B. Multi-Section Clinical Context Engine
+Captures physiological and environmental drivers through 4 progressive sections:
+1. **Demographics & Concern Area**: Age bracket (<18 to 50+), biological sex model (Norwood vs. Ludwig), primary concern zone.
+2. **Environment, Friction & Habits**: Hard borewell vs. treated water, daily motorcycle helmet wear (sweat/friction occlusion), chemical/heat styling, washing cadence.
+3. **Nutrition, Sleep & Biomarkers**: Protein intake, sleep quality, known deficiencies (Vitamin D3, Iron/Ferritin, Thyroid imbalance), exam/work stress history.
+4. **Scalp Dynamics & Sensation**: Sensation (itching, burning, pain), self-administered hair pull test (<3, 3-5, >5 hairs shed), flake presentation, and symptom duration slider.
 
 ### C. The "Scalp Health Score" (SHS: 0–100)
-- **Transparent Composite Index** calculated across 4 discrete sub-scores (0–25 each):
-  - **Flake & Scaling Index (0–25)**: Stratum corneum flake density and spread.
-  - **Redness & Erythema Index (0–25)**: Micro-vascular inflammation and irritation.
-  - **Sebum & Oiliness Balance (0–25)**: Lipid overproduction vs barrier dehydration.
-  - **Follicular Density Index (0–25)**: Hairline and parting coverage comparison against Norwood/Ludwig baseline boundaries.
+- **Transparent Composite Index** calculated across 4 discrete sub-scores (0–25 each, where 25 represents optimal health):
+  - **Flake & Scaling Index (0–25)**: Stratum corneum desquamation density and cluster area.
+  - **Redness & Erythema Index (0–25)**: Micro-vascular inflammation and vascular tone.
+  - **Sebum & Lipid Balance (0–25)**: Lipid overproduction vs. stratum corneum barrier dehydration.
+  - **Follicular Density Index (0–25)**: Hairline and parting coverage comparison against standardized density boundaries.
 
 ### D. Ingredient-First Care Schedule (No Random Brands)
-- Recommends scientific active molecules with explicit biochemical mechanisms and application cadences rather than sponsored product branding:
+- Recommends scientific active chemical molecules with explicit biochemical mechanisms and application cadences rather than sponsored cosmetic brands:
   - *Oily Fungal Scaling*: Ketoconazole 2% wash 2x/week (5-min leave-on) + Zinc Pyrithione alternate wash + Salicylic Acid 2% solution.
   - *Hard Water Mineral Buildup*: EDTA chelating wash + Salicylic Acid exfoliant + Ceramide lipid replenishment.
+  - *Acute Effluvium Support*: Gentle sulfate-free daily cleanser + barrier soothing serum (Panthenol/Aloe) + nutritional evaluation.
 
 ### E. Progress Tracker & Comparison Split Slider (Hair Diary)
 - 14-day and 30-day longitudinal re-scan comparison.
@@ -110,7 +154,7 @@ Every engineering decision in Follica is governed by five strict principles:
 
 ### F. Clinical Doctor Hand-off (Clinic Pass)
 - For Level 3 escalations or unresolving symptoms:
-- 1-Click generation of a standardized, 1-page clinical summary PDF (`/api/v1/report/pdf`) detailing images, timeline, duration, attempted washes, and AI suspicion for seamless physician/dermatologist consultation.
+- 1-Click generation of a standardized, 1-page clinical summary PDF (`/api/v1/report/pdf`) detailing images, timeline, duration, attempted washes, and objective sub-score metrics for seamless physician/dermatologist consultation.
 
 ### G. Future Scalability: DermaIQ Multi-Domain Architecture
 - Modular domain registry (`backend/app/core/domains.py`) enabling pluggable expansion from Scalp Health to Facial Acne and Eczema/Skin Rashes with zero breaking changes to the core engine.
@@ -124,15 +168,15 @@ To help new contributors navigate the codebase without ambiguity:
 | Component / File | Implementation Status | Description & Notes |
 | :--- | :--- | :--- |
 | `backend/app/api/endpoints.py` | **Fully Implemented** | Exposes `/analyze`, `/consent`, `/system/status`, `/report/pdf`, `/quality/check`, `/progress/compare`, `/domains`. |
-| `backend/app/services/quality_gate.py` | **Fully Implemented** | Pre-inference gate with Laplacian variance blur check, luminance distribution, and dual OpenCV/NumPy fallback. |
+| `backend/app/services/quality_gate.py` | **Fully Implemented** | Pre-inference gate with Laplacian variance blur check, luminance distribution, EXIF analyzer, and dual OpenCV/NumPy fallback. |
 | `backend/app/services/registration.py` | **Fully Implemented** | Longitudinal ORB keypoint homography alignment and spot-by-spot delta calculations. |
 | `backend/app/core/domains.py` | **Fully Implemented** | DermaIQ modular domain architecture registry (Scalp, Facial Acne, Eczema). |
-| `backend/app/static/index.html` | **Fully Implemented** | Interactive single-page web UI with guided viewfinder, symptom form, before/after slider, and PDF export. |
-| `backend/app/services/cv_pipeline.py` | **Fully Implemented** | Production-ready classical CV micro-feature extractors with pure NumPy fallback. |
-| `backend/app/services/triage_engine.py` | **Fully Implemented** | Enforces 0.65 confidence gate, non-diagnostic phrasing, and sub-score summation. |
+| `backend/app/static/index.html` | **Fully Implemented** | Interactive single-page web UI with guided capture rules, 4-step clinical intake, shimmering skeleton loading, before/after slider, and PDF export. |
+| `backend/app/services/cv_pipeline.py` | **Fully Implemented** | Production-ready classical CV micro-feature extractors with Gray-World White Balancing and pure NumPy fallback. |
+| `backend/app/services/triage_engine.py` | **Fully Implemented** | Enforces 0.65 confidence gate, multi-factor risk correlation matrix, non-diagnostic phrasing, and sub-score summation. |
 | `backend/app/services/pdf_service.py` | **Fully Implemented** | Generates generic 1-page clinical PDF hand-off report using ReportLab. |
 | `backend/app/core/constants.py` | **Fully Implemented** | Active ingredient guides, non-diagnostic terms, and mandatory universal disclaimer. |
-| `backend/app/models/schemas.py` | **Fully Implemented** | Pydantic data contracts for separate sub-scores, symptoms, progress comparison, and consent. |
+| `backend/app/models/schemas.py` | **Fully Implemented** | Pydantic data contracts for separate sub-scores, multi-factor symptoms, progress comparison, and consent. |
 | `backend/app/services/classifier_service.py` | **Functional / Heuristic Stub** | Ready to load `.onnx` weights from `models/`. Runs an embedded heuristic classifier when local model weights are not present. |
 | `training/follica_training_colab.ipynb` | **Fully Implemented** | Cloud training notebook with Google Drive checkpointing to survive disconnects. |
 | `training/calibration_loader.py` | **Fully Implemented / Data Placeholder** | Pipeline logic ready; awaiting physical addition of 100-200 volunteer photos. |
@@ -151,15 +195,13 @@ If you are joining this repository, pick up the following tasks in priority orde
    - Build the Consent Screen adhering to the `/api/v1/consent` contract.
    - Build the interactive Scalp Health Score visualization dashboard with discrete sub-scores and before/after slider.
 2. **Task 2: Volunteer Calibration Dataset Collection**:
-   - Collect and organize 100–200 consented scalp photos across Fitzpatrick skin types into `data/calibration/` and execute training via `follica_training_colab.ipynb`.
+   - Collect and organize 100-200 consented scalp photos across Fitzpatrick skin types into `data/calibration/` and execute training via `follica_training_colab.ipynb`.
 3. **Task 3: Push Notification Adherence Reminders**:
    - Add local push notification hooks in the mobile app for wash schedules (e.g. Ketoconazole 2x/week) and 14-day re-scan reminders.
-
 
 ---
 
 ## 7. How to Run Locally
-
 
 ### Setup and Start Backend Server
 ```bash
@@ -171,7 +213,7 @@ python -m venv venv
 
 # 3. Activate virtual environment
 # On Windows PowerShell:
-.\venv\Scripts\activate
+.env\Scriptsctivate
 # On macOS/Linux:
 source venv/bin/activate
 
@@ -190,4 +232,3 @@ python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```bash
 pytest tests/ -v
 ```
-
