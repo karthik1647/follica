@@ -237,3 +237,125 @@ def test_unknown_pdf_generation_with_massive_payload():
     assert response.status_code == 200
     assert response.headers["content-type"] == "application/pdf"
     assert len(response.content) > 1000
+
+
+# -----------------------------------------------------------------------------
+# 5. Flash Glare Separation Tests
+# -----------------------------------------------------------------------------
+
+def make_flash_overexposed_image(width=300, height=300, flash_center_radius=60):
+    """
+    Generates a synthetic scalp photo where camera flash creates a concentrated
+    specular hotspot at the image center.
+
+    Construction:
+    - Background: healthy dark scalp skin tone (no dandruff) with sharp hair lines
+    - Central circular region: achromatic white glare (R=255, G=255, B=255) simulating
+      the blown-out flash reflection on the curved scalp surface.
+
+    A naive flake detector without specular separation would count this white circle as dandruff.
+    After our fix, the specular mask removes it and the flake_score must remain >= 23.0.
+    """
+    # Base: dark healthy scalp skin tone with hair fiber lines (no flakes)
+    arr = np.full((height, width, 3), [90, 65, 55], dtype=np.uint8)
+
+    # Inject sharp hair shaft lines so blur gate passes
+    arr[::6, :, 0] = np.clip(arr[::6, :, 0].astype(int) - 50, 0, 255).astype(np.uint8)
+    arr[:, ::8, 1] = np.clip(arr[:, ::8, 1].astype(int) + 20, 0, 255).astype(np.uint8)
+
+    # Inject flash hotspot: pure achromatic white circle at center
+    cy, cx = height // 2, width // 2
+    for y in range(height):
+        for x in range(width):
+            if (y - cy) ** 2 + (x - cx) ** 2 < flash_center_radius ** 2:
+                arr[y, x] = [255, 255, 255]  # achromatic blown-out specular glare
+
+    img = Image.fromarray(arr.astype(np.uint8))
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG", quality=95)
+    return buf.getvalue()
+
+
+def make_genuine_dandruff_image(width=300, height=300):
+    """
+    Generates a synthetic scalp image with realistic dandruff simulation.
+
+    Construction:
+    - Base: medium scalp skin tone
+    - Scattered irregular bright patches with color tint (yellowish-white, not achromatic)
+      to simulate real keratin squame texture.
+
+    This image must yield a low flake_score (bad scalp) regardless of the specular mask,
+    proving that the fix does not accidentally suppress real dandruff detection.
+    """
+    arr = np.full((height, width, 3), [160, 120, 100], dtype=np.uint8)
+
+    # Inject sharp hair lines for focus gate
+    arr[::6, :, 0] = np.clip(arr[::6, :, 0].astype(int) - 50, 0, 255).astype(np.uint8)
+
+    # Scatter small irregular bright patches with slight yellowish tint (dandruff flakes)
+    # These pass the texture discriminator because they have irregular boundaries
+    rng = np.random.default_rng(seed=42)
+    for _ in range(80):
+        py = rng.integers(10, height - 10)
+        px = rng.integers(10, width - 10)
+        ph = rng.integers(3, 8)
+        pw = rng.integers(3, 9)
+        # Yellowish-white tint: R and G high, B lower — not achromatic, so NOT masked as glare
+        arr[py:py + ph, px:px + pw] = [245, 238, 195]
+
+    img = Image.fromarray(arr.astype(np.uint8))
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG", quality=95)
+    return buf.getvalue()
+
+
+def test_flash_glare_healthy_scalp_not_misclassified_as_dandruff():
+    """
+    Core regression test for the flash glare fix.
+
+    A healthy dark scalp with a large central camera flash hotspot must NOT be
+    misclassified as having dandruff. The specular separation mask in compute_flake_score()
+    must remove the achromatic white hotspot before the Top-Hat flake detector runs.
+
+    Expected: flake_score >= 23.0 (near-perfect clean scalp, Grade 0 or Grade 1 trace)
+
+    If this test fails, it means the specular mask is not working and the pipeline
+    is still counting flash glare as dandruff flakes.
+    """
+    img_bytes = make_flash_overexposed_image(flash_center_radius=60)
+    img_pil = Image.open(io.BytesIO(img_bytes)).convert("RGB")
+    img_rgb = np.array(img_pil.resize((512, 512)), dtype=np.uint8)
+
+    flake_score = cv_pipeline.compute_flake_score(img_rgb)
+
+    assert flake_score >= 23.0, (
+        f"Flash glare misclassification regression: healthy scalp with flash hotspot "
+        f"yielded flake_score={flake_score}, expected >= 23.0. "
+        f"The specular mask in compute_flake_score() is not suppressing glare correctly."
+    )
+
+
+def test_genuine_dandruff_not_suppressed_by_glare_mask():
+    """
+    Safety test to verify that the specular glare fix does not accidentally suppress
+    real dandruff detection.
+
+    A scalp image with scattered yellowish-white keratin squames (not achromatic, not smooth)
+    must still yield a low flake_score (indicating the pipeline correctly counts them as flakes).
+
+    Expected: flake_score <= 22.0 (some degradation from perfect 25.0 due to visible flakes)
+
+    If this test fails, it means the specular mask threshold is too aggressive and is
+    removing genuine dandruff particles along with glare.
+    """
+    img_bytes = make_genuine_dandruff_image()
+    img_pil = Image.open(io.BytesIO(img_bytes)).convert("RGB")
+    img_rgb = np.array(img_pil.resize((512, 512)), dtype=np.uint8)
+
+    flake_score = cv_pipeline.compute_flake_score(img_rgb)
+
+    assert flake_score <= 22.0, (
+        f"Glare mask over-suppression: genuine dandruff image yielded flake_score={flake_score}, "
+        f"expected <= 22.0. The specular mask may be incorrectly removing real squames."
+    )

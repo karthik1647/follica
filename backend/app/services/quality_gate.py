@@ -1,4 +1,4 @@
-﻿"""
+"""
 Follica Image Quality Pre-Inference Gate Service.
 
 Architectural Design Intent & Algorithmic Rationale:
@@ -22,20 +22,29 @@ Architectural Design Intent & Algorithmic Rationale:
         chrominance cannot be differentiated from dark hair.
       - Mean luminance above 225.0 indicates severe overexposure or flashlight glare washing
         out epidermal texture.
-   c. Dimensional Integrity:
+   c. Flash Glare Hotspot Detection (NEW):
+      - Direct camera flash produces concentrated specular hotspots on the curved scalp surface.
+      - These achromatic saturated-white regions corrupt the flake detection channel and make
+        healthy scalps appear to have dandruff.
+      - If more than 15% of the image area consists of specular-white overblown pixels
+        (brightness > 240, color saturation < 20), the image is flagged for retake with
+        guidance to use natural light instead of flash.
+   d. Dimensional Integrity:
       - Scalp photographs smaller than 150x150 pixels lack sufficient spatial resolution for
         morphological filtering and are rejected immediately.
-   d. EXIF Metadata & Optical Exposure Evaluator:
+   e. EXIF Metadata & Optical Exposure Evaluator:
       - Extracts camera hardware settings (ISO, Exposure Time, Flash, Aperture) if embedded.
       - High ISO (>800) indicates high sensor grain/chroma noise that can distort micro-features.
       - Slow shutter speed (<1/25s) flags motion blur risk.
-      - Camera flash presence is tracked (flash provides optimal color rendering on hair partings).
+      - Camera flash presence is now flagged as a WARNING (not a bonus), since direct flash
+        causes specular hotspots that mimic dandruff in naive flake detection algorithms.
 
 3. Dual-Mode Implementation (OpenCV + Pure NumPy Fallback):
    - When OpenCV is available, hardware-accelerated cv2.Laplacian and cv2.cvtColor are used.
    - When running in minimal environments without C++ OpenCV binaries, pure NumPy discrete
      difference approximations and luminance matrix calculations provide equivalent gating.
 """
+
 
 import io
 from typing import Dict, Any, Tuple, Optional
@@ -142,7 +151,10 @@ class ImageQualityGate:
                 score -= 15.0  # Elevated motion blur risk
 
             if exif_data["flash_fired"] is True:
-                score = min(100.0, score + 5.0)  # Flash provides direct scalp illumination
+                # Flash is no longer awarded a quality bonus. Direct flash creates specular
+                # hotspots on the curved scalp surface that corrupt flake detection. Natural
+                # light is the preferred capture condition for this pipeline.
+                pass
 
             exif_data["optical_quality_score"] = float(round(np.clip(score, 20.0, 100.0), 1))
 
@@ -151,7 +163,31 @@ class ImageQualityGate:
 
         return exif_data
 
+    def calculate_flash_glare_ratio(self, img_rgb: np.ndarray) -> float:
+        """
+        Calculates the percentage of image area occupied by specular flash glare hotspots.
+
+        Flash glare pixels are achromatic (near-white, no color saturation) at extreme brightness.
+        These are the exact pixels that the cv_pipeline's build_specular_glare_mask() removes
+        from flake analysis, but if they occupy more than 15% of the frame, the image is too
+        corrupted by flash to produce reliable results even after masking.
+
+        Threshold reasoning: The L'Oreal ScalpConsult Pro study (PMC11975186) uses cross-polarized
+        light specifically to eliminate specular glare. When more than 15% of the image frame is
+        obliterated by flash glare, we lose too much scalp tissue information for reliable analysis.
+        """
+        r = img_rgb[:, :, 0].astype(int)
+        g = img_rgb[:, :, 1].astype(int)
+        b = img_rgb[:, :, 2].astype(int)
+        brightness = np.maximum(np.maximum(r, g), b)
+        color_diff = np.abs(r - g) + np.abs(g - b)
+        # Stricter criteria than the cv_pipeline mask: only flag truly blown-out flash hotspots
+        glare_mask = (brightness > 240) & (color_diff < 20)
+        glare_ratio = float(np.sum(glare_mask) / float(glare_mask.size) * 100.0)
+        return round(glare_ratio, 2)
+
     def calculate_laplacian_variance(self, img_rgb: np.ndarray) -> float:
+
         """
         Calculates the focus sharpness score using the variance of the Laplacian.
         Higher variance indicates sharper structural edges.
@@ -221,10 +257,14 @@ class ImageQualityGate:
 
         brightness_score = self.calculate_brightness(img_rgb)
         blur_score = self.calculate_laplacian_variance(img_rgb)
+        flash_glare_ratio = self.calculate_flash_glare_ratio(img_rgb)
         exif_info = self.extract_exif_metadata(raw_pil)
 
         brightness_passed = self.min_brightness <= brightness_score <= self.max_brightness
         blur_passed = blur_score >= self.min_blur_score
+        # Flash glare is flagged if more than 15% of the image is obliterated by
+        # achromatic specular hotspots. See calculate_flash_glare_ratio() for threshold rationale.
+        flash_glare_passed = flash_glare_ratio <= 15.0
 
         metrics = {
             "width": width,
@@ -236,6 +276,8 @@ class ImageQualityGate:
             "blur_score": blur_score,
             "min_blur_threshold": self.min_blur_score,
             "blur_passed": blur_passed,
+            "flash_glare_ratio": flash_glare_ratio,
+            "flash_glare_passed": flash_glare_passed,
             "exif": exif_info
         }
 
@@ -245,7 +287,7 @@ class ImageQualityGate:
                 "is_valid": False,
                 "error_code": "IMAGE_UNDEREXPOSED",
                 "rejection_reason": f"Image brightness ({brightness_score}) indicates severe underexposure.",
-                "user_guidance": "The photo is too dark. Please take the photo in a well-lit room or enable the camera flash.",
+                "user_guidance": "The photo is too dark. Please take the photo in a well-lit room. Use ceiling or window light, not camera flash.",
                 "metrics": metrics
             }
 
@@ -258,7 +300,19 @@ class ImageQualityGate:
                 "metrics": metrics
             }
 
-        # 3. Focus / Blur Check:
+        # 3. Flash Glare Hotspot Check:
+        # A photo may pass mean-brightness checks but still contain a concentrated flash
+        # hotspot occupying >15% of the frame. This is caught here explicitly.
+        if not flash_glare_passed:
+            return False, {
+                "is_valid": False,
+                "error_code": "FLASH_GLARE_DETECTED",
+                "rejection_reason": f"Camera flash glare covers {flash_glare_ratio}% of the image, which exceeds the 15% threshold for reliable scalp analysis.",
+                "user_guidance": "Turn off your camera flash or torch. Use natural daylight or a room ceiling light instead. Flash creates white reflections on the scalp that interfere with the dandruff and sebum analysis.",
+                "metrics": metrics
+            }
+
+        # 4. Focus / Blur Check:
         if not blur_passed:
             return False, {
                 "is_valid": False,
@@ -275,6 +329,7 @@ class ImageQualityGate:
             "user_guidance": None,
             "metrics": metrics
         }
+
 
 
 # Singleton service instance
