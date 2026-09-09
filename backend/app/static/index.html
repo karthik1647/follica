@@ -677,10 +677,14 @@
                 const payload = {
                     analysis_data: currentAnalysisResult,
                     context: {
-                        duration_weeks: parseInt(document.getElementById('duration-slider').value),
+                        duration_months: parseInt(document.getElementById('duration-slider').value, 10) || 0,
+                        duration_weeks: Math.round((parseInt(document.getElementById('duration-slider').value, 10) || 0) * 4.33),
                         itching: document.getElementById('sens-2').checked,
                         burning_or_pain: document.getElementById('sens-3').checked,
-                        hard_water_exposure: document.querySelector('input[name="water_environment"]:checked').value === 'hard_borewell'
+                        hard_water_exposure: document.querySelector('input[name="water_environment"]:checked').value === 'hard_borewell',
+                        gut_health: document.querySelector('input[name="gut_health"]:checked')?.value || 'optimal',
+                        metabolic_energy: document.querySelector('input[name="metabolic_energy"]:checked')?.value || 'balanced',
+                        hormonal_profile: document.querySelector('input[name="hormonal_profile"]:checked')?.value || 'none'
                     },
                     patient_ref_id: 'FOLLICA-SCAN-' + Math.floor(1000 + Math.random() * 9000)
                 };
