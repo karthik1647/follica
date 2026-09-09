@@ -121,12 +121,53 @@ class TriageEngine:
                 clinical_note="Keratin synthesis and follicle matrix division depend heavily on adequate serum ferritin, 25-hydroxyvitamin D3, and amino acid availability."
             ))
 
-        # 8. Optimal Homeostasis Factor for Healthy Users
-        if not context.itching and not context.burning_or_pain and context.flake_type == "none" and context.hair_pull_test == "negative_under_3":
+        # 8. Gastrointestinal Absorption & Gut-Skin-Hair Axis (Traya 3-Science Model)
+        if context.gut_health in ["frequent_bloating_acidity", "chronic_constipation", "irregular_ibs"]:
+            gut_label = context.gut_health.replace('_', ' ').title()
+            correlations.append(ClinicalCorrelationFactor(
+                factor=f"Gastrointestinal Absorption Barrier ({gut_label})",
+                impact_level="high" if context.gut_health == "irregular_ibs" else "moderate",
+                clinical_note="Frequent gastrointestinal distress, dysbiosis, or acidity impairs duodenal and jejunal micronutrient absorption (ferritin, zinc, biotin, amino acids), starving hair matrix keratinocytes during anagen synthesis."
+            ))
+
+        # 9. Systemic Metabolic Energy & Fatigue Indicator
+        if context.metabolic_energy in ["chronic_sluggish_fatigue", "sudden_weight_shift"]:
+            meta_label = context.metabolic_energy.replace('_', ' ').title()
+            correlations.append(ClinicalCorrelationFactor(
+                factor=f"Systemic Metabolic Load ({meta_label})",
+                impact_level="moderate",
+                clinical_note="Chronic fatigue or sudden weight shifts signal systemic metabolic deceleration or adrenal-cortisol strain, compromising follicular micro-circulation."
+            ))
+
+        # 10. Endocrine & Hormonal Profile
+        if context.hormonal_profile in ["thyroid_dysfunction", "pcos_irregular_cycles", "insulin_resistance"]:
+            endo_label = context.hormonal_profile.replace('_', ' ').title()
+            correlations.append(ClinicalCorrelationFactor(
+                factor=f"Endocrine Axis Imbalance ({endo_label})",
+                impact_level="high",
+                clinical_note="Endocrine dysregulation directly alters follicular cycling: thyroid slowdown prolongs telogen resting, while hyperandrogenism/insulin resistance elevates local follicular DHT sensitivity."
+            ))
+
+        # 11. Optimal Homeostasis Factor for Healthy Users
+        if (
+            not context.itching
+            and not context.burning_or_pain
+            and context.flake_type == "none"
+            and context.hair_pull_test == "negative_under_3"
+            and context.gut_health == "optimal"
+            and context.metabolic_energy == "balanced"
+            and context.hormonal_profile == "none"
+        ):
+            correlations.append(ClinicalCorrelationFactor(
+                factor="Optimal Scalp & Systemic Homeostasis",
+                impact_level="low",
+                clinical_note="No active inflammation, microbial scaling, gut dysbiosis, or pathological shedding reported. Epidermal barrier function, metabolic balance, and follicle retention are intact."
+            ))
+        elif not context.itching and not context.burning_or_pain and context.flake_type == "none" and context.hair_pull_test == "negative_under_3":
             correlations.append(ClinicalCorrelationFactor(
                 factor="Optimal Scalp Homeostasis & Protective Acid Mantle",
                 impact_level="low",
-                clinical_note="No active inflammation, microbial scaling, or pathological shedding reported. Epidermal barrier function and follicle retention are intact."
+                clinical_note="No active cutaneous inflammation or microbial scaling detected on the scalp surface."
             ))
 
         return correlations
@@ -284,6 +325,23 @@ class TriageEngine:
                     clinical_hand_off_notes="Self-managed mild condition."
                 )
 
+        # -------------------------------------------------------------------
+        # 3. Systemic Biomarker Guidance & Physician Hand-off Enrichment
+        # -------------------------------------------------------------------
+        lifestyle_enriched = list(lifestyle)
+        if context.gut_health in ["frequent_bloating_acidity", "chronic_constipation", "irregular_ibs"]:
+            lifestyle_enriched.append(
+                "Support the gut-skin-hair axis: prioritize dietary fiber, fermented foods, and hydration to optimize micronutrient (iron, zinc, amino acid) bioavailability."
+            )
+        if context.hormonal_profile in ["thyroid_dysfunction", "pcos_irregular_cycles", "insulin_resistance"] or context.metabolic_energy in ["chronic_sluggish_fatigue", "sudden_weight_shift"]:
+            lifestyle_enriched.append(
+                "Discuss targeted blood work (TSH, Free T3/T4, Serum Ferritin, Vitamin D3, Fasting Glucose) with your physician to evaluate systemic metabolic drivers."
+            )
+
+        if context.gut_health != "optimal" or context.metabolic_energy != "balanced" or context.hormonal_profile != "none":
+            systemic_tag = f" Systemic Profile: Gut={context.gut_health}, Energy={context.metabolic_energy}, Hormonal={context.hormonal_profile}."
+            referral.clinical_hand_off_notes = (referral.clinical_hand_off_notes.rstrip(".") + "." + systemic_tag).strip()
+
         return AnalysisResponse(
             suggested_condition=final_condition,
             confidence_score=confidence,
@@ -295,7 +353,7 @@ class TriageEngine:
             triage_reason=triage_reason,
             clinical_correlations=correlations,
             recommended_ingredients=ingredients,
-            lifestyle_guidance=lifestyle,
+            lifestyle_guidance=lifestyle_enriched,
             consultation_referral=referral,
             disclaimer=UNIVERSAL_DISCLAIMER,
             analysis_timestamp=datetime.now(timezone.utc).isoformat()

@@ -134,8 +134,11 @@ class ClinicalPDFService:
                 f"<b>Symptom Duration:</b> {context.duration_months} Months ({context.duration_weeks} Weeks) | "
                 f"<b>Itching:</b> {'Yes' if context.itching else 'No'} | "
                 f"<b>Burning/Pain:</b> {'Yes' if context.burning_or_pain else 'No'} | "
-                f"<b>Hard Water Exposure:</b> {'Yes' if context.hard_water_exposure else 'No'} | "
-                f"<b>Self-Reported Stress:</b> {context.stress_level.capitalize()}<br/>"
+                f"<b>Hard Water:</b> {'Yes' if context.hard_water_exposure else 'No'} | "
+                f"<b>Stress:</b> {context.stress_level.capitalize()}<br/>"
+                f"<b>Gut Health:</b> {context.gut_health.replace('_', ' ').title()} | "
+                f"<b>Metabolic Energy:</b> {context.metabolic_energy.replace('_', ' ').title()} | "
+                f"<b>Endocrine/Hormonal:</b> {context.hormonal_profile.replace('_', ' ').title()}<br/>"
                 f"<b>Additional Notes / Past Products:</b> {context.symptom_notes or 'None specified'}"
             )
             story.append(Paragraph(context_text, body_style))

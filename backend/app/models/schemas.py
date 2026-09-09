@@ -95,6 +95,18 @@ class SymptomContext(BaseModel):
         default="balanced_protein",
         description="Nutritional protein and macro-nutrient balance"
     )
+    gut_health: Literal["optimal", "frequent_bloating_acidity", "chronic_constipation", "irregular_ibs"] = Field(
+        default="optimal",
+        description="Gastrointestinal digestion and absorption status (gut-skin-hair axis)"
+    )
+    metabolic_energy: Literal["balanced", "chronic_sluggish_fatigue", "sudden_weight_shift"] = Field(
+        default="balanced",
+        description="Daily systemic energy level and metabolic rate indicator"
+    )
+    hormonal_profile: Literal["none", "thyroid_dysfunction", "pcos_irregular_cycles", "insulin_resistance"] = Field(
+        default="none",
+        description="Self-reported endocrine and hormonal history"
+    )
     sleep_quality: Literal["good_7_8h", "irregular_under_6h", "shift_work_disrupted"] = Field(
         default="good_7_8h",
         description="Circadian rhythm and sleep duration"

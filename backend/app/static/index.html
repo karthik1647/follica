@@ -227,6 +227,32 @@
                                 </div>
                             </div>
                             <div class="form-row">
+                                <span class="field-label">Gut & Digestion Health (Traya 3-Science Axis)</span>
+                                <div class="chip-group">
+                                    <div class="chip-item"><input type="radio" id="gut-1" name="gut_health" value="optimal" checked onchange="updateRiskCounter()"><label for="gut-1" class="chip-label">Optimal Digestion</label></div>
+                                    <div class="chip-item"><input type="radio" id="gut-2" name="gut_health" value="frequent_bloating_acidity" onchange="updateRiskCounter()"><label for="gut-2" class="chip-label">Bloating / Acidity</label></div>
+                                    <div class="chip-item"><input type="radio" id="gut-3" name="gut_health" value="chronic_constipation" onchange="updateRiskCounter()"><label for="gut-3" class="chip-label">Constipation</label></div>
+                                    <div class="chip-item"><input type="radio" id="gut-4" name="gut_health" value="irregular_ibs" onchange="updateRiskCounter()"><label for="gut-4" class="chip-label">IBS / Dysbiosis</label></div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <span class="field-label">Daily Energy & Metabolism</span>
+                                <div class="chip-group">
+                                    <div class="chip-item"><input type="radio" id="meta-1" name="metabolic_energy" value="balanced" checked onchange="updateRiskCounter()"><label for="meta-1" class="chip-label">Balanced Energy</label></div>
+                                    <div class="chip-item"><input type="radio" id="meta-2" name="metabolic_energy" value="chronic_sluggish_fatigue" onchange="updateRiskCounter()"><label for="meta-2" class="chip-label">Sluggish / Chronic Fatigue</label></div>
+                                    <div class="chip-item"><input type="radio" id="meta-3" name="metabolic_energy" value="sudden_weight_shift" onchange="updateRiskCounter()"><label for="meta-3" class="chip-label">Rapid Weight Fluctuation</label></div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <span class="field-label">Endocrine & Hormonal Profile</span>
+                                <div class="chip-group">
+                                    <div class="chip-item"><input type="radio" id="horm-1" name="hormonal_profile" value="none" checked onchange="updateRiskCounter()"><label for="horm-1" class="chip-label">None / Balanced</label></div>
+                                    <div class="chip-item"><input type="radio" id="horm-2" name="hormonal_profile" value="thyroid_dysfunction" onchange="updateRiskCounter()"><label for="horm-2" class="chip-label">Thyroid Condition</label></div>
+                                    <div class="chip-item"><input type="radio" id="horm-3" name="hormonal_profile" value="pcos_irregular_cycles" onchange="updateRiskCounter()"><label for="horm-3" class="chip-label">PCOS / Irregular Cycles</label></div>
+                                    <div class="chip-item"><input type="radio" id="horm-4" name="hormonal_profile" value="insulin_resistance" onchange="updateRiskCounter()"><label for="horm-4" class="chip-label">Insulin Resistance</label></div>
+                                </div>
+                            </div>
+                            <div class="form-row">
                                 <span class="field-label">Known Deficiencies / Biomarkers</span>
                                 <div class="chip-group">
                                     <div class="chip-item"><input type="checkbox" id="def-d3" name="deficiency_d3"><label for="def-d3" class="chip-label">Low Vitamin D3</label></div>
@@ -388,9 +414,12 @@
             if (document.getElementById('def-iron').checked) count++;
             if (document.getElementById('def-family').checked) count++;
             if (document.getElementById('def-stress').checked) count++;
-            if (document.querySelector('input[name="water_environment"]:checked').value === 'hard_borewell') count++;
-            if (document.querySelector('input[name="diet_pattern"]:checked').value === 'low_protein_crash_diet') count++;
-            if (document.querySelector('input[name="hair_pull_test"]:checked').value === 'positive_over_5') count++;
+            if (document.querySelector('input[name="water_environment"]:checked')?.value === 'hard_borewell') count++;
+            if (document.querySelector('input[name="diet_pattern"]:checked')?.value === 'low_protein_crash_diet') count++;
+            if (document.querySelector('input[name="hair_pull_test"]:checked')?.value === 'positive_over_5') count++;
+            if (document.querySelector('input[name="gut_health"]:checked')?.value && document.querySelector('input[name="gut_health"]:checked').value !== 'optimal') count++;
+            if (document.querySelector('input[name="metabolic_energy"]:checked')?.value && document.querySelector('input[name="metabolic_energy"]:checked').value !== 'balanced') count++;
+            if (document.querySelector('input[name="hormonal_profile"]:checked')?.value && document.querySelector('input[name="hormonal_profile"]:checked').value !== 'none') count++;
 
             const badge = document.getElementById('live-risk-badge');
             badge.innerText = count + ' Correlated Factors';
@@ -449,6 +478,9 @@
             document.getElementById('helmet-check').checked = false;
             document.getElementById('styling-check').checked = false;
             document.getElementById('diet-1').checked = true;
+            document.getElementById('gut-1').checked = true;
+            document.getElementById('meta-1').checked = true;
+            document.getElementById('horm-1').checked = true;
             document.getElementById('def-d3').checked = false;
             document.getElementById('def-iron').checked = false;
             document.getElementById('def-family').checked = false;
@@ -484,6 +516,9 @@
             document.getElementById('water-2').checked = true;
             document.getElementById('helmet-check').checked = true;
             document.getElementById('def-stress').checked = true;
+            document.getElementById('gut-2').checked = true;
+            document.getElementById('meta-2').checked = true;
+            document.getElementById('horm-1').checked = true;
             
             document.getElementById('sens-1').checked = false;
             document.getElementById('sens-2').checked = true;
@@ -532,6 +567,9 @@
             formData.append('chemical_heat_styling', document.getElementById('styling-check').checked);
             formData.append('washing_frequency', document.querySelector('input[name="washing_frequency"]:checked').value);
             formData.append('diet_pattern', document.querySelector('input[name="diet_pattern"]:checked').value);
+            formData.append('gut_health', document.querySelector('input[name="gut_health"]:checked')?.value || 'optimal');
+            formData.append('metabolic_energy', document.querySelector('input[name="metabolic_energy"]:checked')?.value || 'balanced');
+            formData.append('hormonal_profile', document.querySelector('input[name="hormonal_profile"]:checked')?.value || 'none');
             
             const sensChecked = Array.from(document.querySelectorAll('input[name="sensation_opt"]:checked')).map(cb => cb.value);
             formData.append('sensation', sensChecked.join(',') || 'painless');

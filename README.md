@@ -125,8 +125,11 @@ Follica bridges the chasm between inaccessible high-cost clinical hardware and c
      - *Hard Water Mineral Crust*: EDTA chelating wash + Salicylic Acid descaler + Ceramide barrier lipid serum.
    - Enables users to obtain effective treatments from any generic pharmacy for Rs 100-200.
 
-4. **Multi-Factor Clinical & Environmental Correlation Matrix**:
-   - Synthesizes user lifestyle data with visual CV metrics to explain root drivers:
+4. **Multi-Factor Clinical, Metabolic & Environmental Correlation Matrix**:
+   - Synthesizes user lifestyle, gastrointestinal, and metabolic data with visual CV metrics to identify root drivers:
+     - *Gut Dysbiosis (Bloating/Acidity/IBS) + Shedding* -> Malabsorption of serum ferritin, zinc, biotin, and l-lysine starving anagen matrix keratinocytes.
+     - *Endocrine Imbalance (Thyroid / PCOS)* -> Follicular dormancy or heightened local dihydrotestosterone (DHT) sensitivity.
+     - *Chronic Sluggish Fatigue + Weight Shifts* -> Systemic metabolic load compromising follicular micro-circulation.
      - *Hard Water + Sebum* -> Insoluble calcium-fatty acid soap scum deposition.
      - *Daily Helmet Wear + Itching* -> Friction and sweat occlusion accelerating *Malassezia* fungal proliferation.
      - *Positive Hair Pull Test (>5 hairs) + Sudden Shedding + Exam Stress* -> Acute Telogen Effluvium premature follicle transition.
