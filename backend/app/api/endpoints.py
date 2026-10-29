@@ -26,7 +26,7 @@ from app.models.schemas import (
     ProgressComparisonResponse
 )
 from app.services.classifier_service import classifier_service
-from app.services.cv_pipeline import cv_pipeline
+from app.services.cv_pipeline import cv_pipeline, ImageDecodeError
 from app.services.triage_engine import triage_engine
 from app.services.pdf_service import pdf_service
 from app.services.quality_gate import quality_gate
@@ -71,11 +71,38 @@ async def check_image_quality(image: UploadFile = File(...)):
     try:
         contents = await image.read()
         if len(contents) == 0:
-            raise HTTPException(status_code=400, detail="Uploaded image is empty.")
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error_code": "IMAGE_CORRUPTED_OR_UNREADABLE",
+                    "rejection_reason": "Uploaded image file is empty (0 bytes).",
+                    "user_guidance": "Please upload a valid JPEG, PNG, or WebP photograph of your scalp."
+                }
+            )
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to read image upload: {str(e)}")
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error_code": "IMAGE_CORRUPTED_OR_UNREADABLE",
+                "rejection_reason": f"Failed to read image upload: {str(e)}",
+                "user_guidance": "Please upload a valid JPEG, PNG, or WebP photograph of your scalp."
+            }
+        )
 
-    is_valid, report = quality_gate.evaluate(contents)
+    try:
+        is_valid, report = quality_gate.evaluate(contents)
+    except ImageDecodeError as e:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error_code": "IMAGE_CORRUPTED_OR_UNREADABLE",
+                "rejection_reason": f"Corrupted or unreadable image: {str(e)}",
+                "user_guidance": "Please upload a valid JPEG, PNG, or WebP photograph of your scalp."
+            }
+        )
+
     if not is_valid:
         raise HTTPException(
             status_code=400,
@@ -167,11 +194,27 @@ async def analyze_scalp(
     try:
         contents = await image.read()
         if len(contents) == 0:
-            raise HTTPException(status_code=400, detail="Uploaded image is empty.")
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error_code": "IMAGE_CORRUPTED_OR_UNREADABLE",
+                    "rejection_reason": "Uploaded image file is empty (0 bytes).",
+                    "user_guidance": "Please upload a valid JPEG, PNG, or WebP photograph of your scalp."
+                }
+            )
         if len(contents) > settings.MAX_IMAGE_SIZE_BYTES:
             raise HTTPException(status_code=413, detail="Image exceeds 10MB limit.")
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to read image upload: {str(e)}")
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error_code": "IMAGE_CORRUPTED_OR_UNREADABLE",
+                "rejection_reason": f"Failed to read image upload: {str(e)}",
+                "user_guidance": "Please upload a valid JPEG, PNG, or WebP photograph of your scalp."
+            }
+        )
 
     # 0. Pre-Inference Image Quality Gate
     if settings.QUALITY_GATE_ENABLED:
@@ -247,7 +290,17 @@ async def analyze_scalp(
     raw_condition, confidence = classifier_service.predict(contents, context)
 
     # 2. Pipeline 2: Classical Computer Vision Micro-Feature Extraction
-    sub_scores = cv_pipeline.analyze_image(contents)
+    try:
+        sub_scores = cv_pipeline.analyze_image(contents)
+    except ImageDecodeError as e:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error_code": "IMAGE_CORRUPTED_OR_UNREADABLE",
+                "rejection_reason": f"Corrupted or unreadable image: {str(e)}",
+                "user_guidance": "Please upload a valid JPEG, PNG, or WebP photograph of your scalp."
+            }
+        )
 
     # 3. Server-Side Triage, Multi-Factor Correlation & Confidence Gate Evaluation
     analysis_result = triage_engine.evaluate(
@@ -270,12 +323,41 @@ async def compare_progress_scans(
     Compares two longitudinal scalp assessments (Baseline vs Follow-up) and computes
     homography alignment quality, sub-score deltas, and overall treatment response trend.
     """
-    base_bytes = await baseline_image.read()
-    follow_bytes = await followup_image.read()
-    if len(base_bytes) == 0 or len(follow_bytes) == 0:
-        raise HTTPException(status_code=400, detail="One or both uploaded images are empty.")
+    try:
+        base_bytes = await baseline_image.read()
+        follow_bytes = await followup_image.read()
+        if len(base_bytes) == 0 or len(follow_bytes) == 0:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error_code": "IMAGE_CORRUPTED_OR_UNREADABLE",
+                    "rejection_reason": "One or both uploaded images are empty (0 bytes).",
+                    "user_guidance": "Please upload valid baseline and follow-up scalp photographs."
+                }
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error_code": "IMAGE_CORRUPTED_OR_UNREADABLE",
+                "rejection_reason": f"Failed to read image upload: {str(e)}",
+                "user_guidance": "Please upload valid baseline and follow-up scalp photographs."
+            }
+        )
 
-    return registration_service.align_and_compare(base_bytes, follow_bytes, days_elapsed)
+    try:
+        return registration_service.align_and_compare(base_bytes, follow_bytes, days_elapsed)
+    except ImageDecodeError as e:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error_code": "IMAGE_CORRUPTED_OR_UNREADABLE",
+                "rejection_reason": f"Corrupted or unreadable image: {str(e)}",
+                "user_guidance": "Please upload valid JPEG, PNG, or WebP photographs for comparison."
+            }
+        )
 
 
 @router.post("/report/pdf", tags=["Clinical Export"])

@@ -598,7 +598,17 @@
 
                 if (!response.ok) {
                     const err = await response.json();
-                    alert(err.detail ? JSON.stringify(err.detail) : 'Analysis request failed.');
+                    let message = 'Analysis request failed.';
+                    if (err.detail) {
+                        if (typeof err.detail === 'object') {
+                            const reason = err.detail.rejection_reason || err.detail.error_code || 'Image could not be processed.';
+                            const guidance = err.detail.user_guidance ? '\n\nGuidance: ' + err.detail.user_guidance : '';
+                            message = reason + guidance;
+                        } else {
+                            message = err.detail;
+                        }
+                    }
+                    alert(message);
                     document.getElementById('results-skeleton').style.display = 'none';
                     document.getElementById('results-empty').style.display = 'block';
                     return;

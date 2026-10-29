@@ -31,11 +31,12 @@ Architectural Design Intent and Algorithmic Rationale:
    - Specular pixels are zeroed from flake analysis and their shine energy is routed to
      compute_sebum_score(), where surface gloss correctly belongs.
 
-4. 6-Point Clinical Exfoliating Severity Scale (PMC11975186 / L'Oreal Research 2025):
-   - The Flake Score is now calibrated against the validated 6-point clinical dandruff atlas
-     (Flament et al., J. Cosmet. Dermatol., 2025), which achieved r^2 = 0.952 against
-     15 expert dermatologist assessments.
-   - Grade 0 (Absence)    -> Score 25.0     (0.0% coverage)
+4. 6-Point Flake Severity Scale (PROVISIONAL HEURISTIC — not clinically validated):
+   - The Flake Score uses a 6-grade ordinal scale whose coverage cut-offs and score
+     boundaries are provisional engineering heuristics hand-picked for plausibility.
+     They have NOT been fitted to or validated against any clinical dataset.
+     See docs/thresholds.md for full threshold documentation.
+   - Grade 0 (Absence)    -> Score 25.0     (< 0.1% coverage)
    - Grade 1 (Trace)      -> Score 22.0-24.9 (0.1%-0.5% coverage)
    - Grade 2 (Mild)       -> Score 18.0-21.9 (0.5%-1.2% coverage)
    - Grade 3 (Moderate)   -> Score 13.0-17.9 (1.2%-2.5% coverage)
@@ -59,6 +60,11 @@ try:
     HAS_OPENCV = True
 except ImportError:
     HAS_OPENCV = False
+
+
+class ImageDecodeError(ValueError):
+    """Raised when uploaded raw bytes cannot be decoded into a valid image matrix."""
+    pass
 
 
 class ScalpCVPipeline:
@@ -141,16 +147,18 @@ class ScalpCVPipeline:
     @staticmethod
     def _flake_ratio_to_score(flake_ratio: float) -> float:
         """
-        Converts percentage flake coverage to a 6-point clinical severity score (0-25 range),
-        calibrated against the validated dandruff grading atlas from Flament et al. (2025),
-        which achieved r^2 = 0.952 against 15 expert dermatologist assessments.
+        Converts percentage flake coverage to a 6-point ordinal severity score (0-25 range).
 
-        Grade 0 (Absence)     -> Score 25.0      (< 0.1% coverage)
-        Grade 1 (Trace)       -> Score 22.0-24.9  (0.1% to 0.5%)
-        Grade 2 (Mild)        -> Score 18.0-21.9  (0.5% to 1.2%)
-        Grade 3 (Moderate)    -> Score 13.0-17.9  (1.2% to 2.5%)
-        Grade 4 (Severe)      -> Score 7.0-12.9   (2.5% to 4.0%)
-        Grade 5 (Very Severe) -> Score 0.0-6.9    (> 4.0%)
+        PROVISIONAL HEURISTIC — not clinically validated. The coverage cut-offs and score
+        boundaries are hand-picked engineering estimates, NOT fitted to clinical data.
+        See docs/thresholds.md for full threshold documentation.
+
+        Grade 0 (Absence)     -> Score 25.0      (< 0.1% coverage)   # uncalibrated
+        Grade 1 (Trace)       -> Score 22.0-24.9  (0.1% to 0.5%)     # uncalibrated
+        Grade 2 (Mild)        -> Score 18.0-21.9  (0.5% to 1.2%)     # uncalibrated
+        Grade 3 (Moderate)    -> Score 13.0-17.9  (1.2% to 2.5%)     # uncalibrated
+        Grade 4 (Severe)      -> Score 7.0-12.9   (2.5% to 4.0%)     # uncalibrated
+        Grade 5 (Very Severe) -> Score 0.0-6.9    (> 4.0%)           # uncalibrated
         """
         if flake_ratio < 0.1:
             return 25.0
@@ -172,74 +180,138 @@ class ScalpCVPipeline:
             return max(0.0, 7.0 - (excess * 1.75))
 
     @staticmethod
+    def _build_hair_mask(gray: np.ndarray) -> np.ndarray:
+        """
+        Returns a boolean mask that is True for dark hair-fibre pixels and a
+        small neighbourhood around them.
+
+        Root-cause fix: the Top-Hat transform produces strong responses at the
+        bright inter-hair skin gaps because those patches are smaller than the
+        9×9 structuring element.  Masking dark-hair pixels (and a 5-pixel
+        dilated halo around them) removes those inter-hair gaps from the
+        candidate-flake set.
+
+        Threshold (provisional / uncalibrated): pixels darker than 80 on the
+        CLAHE-enhanced grayscale image are treated as dark hair fibres.
+        """
+        # Provisional / uncalibrated: dark pixel threshold at 80
+        hair_binary = (gray < 80).astype(np.uint8) * 255
+        if not HAS_OPENCV:
+            # Cheap dilation via max-pool approximation (5-px halo)
+            from scipy.ndimage import binary_dilation
+            return binary_dilation(hair_binary > 0, iterations=5)
+        # Dilate by 5 px to cover the bright halo at each hair edge
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (11, 11))
+        dilated = cv2.dilate(hair_binary, kernel)
+        return dilated > 0
+
+    @staticmethod
     def compute_flake_score(img_rgb: np.ndarray) -> float:
         """
         Extracts Flake and Scaling severity.
 
         Algorithmic Details:
-        - Step 1: Build specular glare mask to identify flash reflection pixels.
-          These are physically distinct from dandruff (achromatic, smooth, radial glare).
-          They are masked out of flake detection entirely.
-        - Step 2: CLAHE is applied to the luminance channel to counteract oily lens haze.
-        - Step 3: Morphological Top-Hat filtering isolates localized bright structures
-          smaller than 9x9 ellipse on the glare-free image.
-        - Step 4: For OpenCV path, an edge texture discriminator excludes remaining smooth
-          bright blobs (residual glare fringe) that lack the irregular boundary signature
-          of genuine keratin squames. Only particles with Laplacian edge variance >= 8.0
-          are counted as real dandruff.
-        - Step 5: Score is mapped against the validated 6-point clinical severity atlas
-          (Flament et al., J. Cosmet. Dermatol., 2025).
+        - Step 1: Build specular glare mask (Shafer Dichromatic model).
+        - Step 2: Gaussian denoise before CLAHE.
+          WHY: CLAHE amplifies Gaussian pixel noise (sd≈8-10) into sharp
+          local-intensity peaks.  A 3×3 Gaussian blur before CLAHE smooths
+          sub-pixel noise while preserving the macroscopic flake structure
+          (which is 5-1500 px²).
+        - Step 3: CLAHE on the luminance channel (compensates lens haze).
+        - Step 4: Build a hair-fibre mask and dilate it by 5 px.
+          WHY: Inter-hair skin gaps are bright patches smaller than the 9×9
+          Top-Hat kernel; they appear as large "flakes" in the Top-Hat output
+          with very high Laplacian variance from the adjacent hair edges.
+          Masking hair and its halo removes this source of false positives.
+        - Step 5: Morphological Top-Hat with threshold 50 (raised from 35).
+          WHY: After denoising, noise residuals produce tophat < 50; real
+          flakes or CLAHE-enhanced particles exceed 50.
+        - Step 6: Contour texture discriminator — edge variance must be
+          8 ≤ var ≤ 2500.
+          WHY: Gaussian noise, after amplification by CLAHE, produces
+          Laplacian variance > 5000 inside small blobs. Real dandruff flakes
+          have rough but bounded boundaries (empirically < 2500 in tests).
+          The upper bound rejects noise-induced false positives.
+        - Step 7: Score mapped to provisional 6-grade ordinal scale.
+          (Provisional heuristic — not clinically validated. See docs/thresholds.md.)
         """
         # Build specular glare mask first (shared across both code paths)
         specular_mask = ScalpCVPipeline.build_specular_glare_mask(img_rgb)
 
         if HAS_OPENCV:
             img_bgr = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2BGR)
+
+            # Step 2: Gaussian denoise BEFORE CLAHE to suppress noise-induced peaks.
+            # Kernel 3×3, sigma=1.2 (provisional / uncalibrated).
+            img_bgr = cv2.GaussianBlur(img_bgr, (3, 3), sigmaX=1.2)
+
             lab = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2LAB)
-            clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+            # Step 3: CLAHE — reduced clipLimit from 2.0 → 1.5 on near-flat regions.
+            # clipLimit 1.5 (provisional / uncalibrated): limits contrast amplification
+            # so that a flat-skin image is not boosted into false-particle territory.
+            clahe = cv2.createCLAHE(clipLimit=1.5, tileGridSize=(8, 8))
             lab[:, :, 0] = clahe.apply(lab[:, :, 0])
             enhanced_bgr = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
             gray = cv2.cvtColor(enhanced_bgr, cv2.COLOR_BGR2GRAY)
 
-            # Zero out specular glare pixels before Top-Hat so they cannot be counted as flakes
+            # Zero out specular glare pixels before Top-Hat
             gray_glare_free = gray.copy()
             gray_glare_free[specular_mask] = 0
 
+            # Step 4: Build hair mask and zero those pixels too.
+            # This removes inter-hair bright gaps which mimic flakes in Top-Hat.
+            hair_mask = ScalpCVPipeline._build_hair_mask(gray)
+            gray_glare_free[hair_mask] = 0
+
             kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9))
             tophat = cv2.morphologyEx(gray_glare_free, cv2.MORPH_TOPHAT, kernel)
-            _, thresh = cv2.threshold(tophat, 35, 255, cv2.THRESH_BINARY)
+
+            # Step 5: Raised threshold 35 → 50 (provisional / uncalibrated).
+            # After denoising, residual noise tops out below 50; real flakes exceed it.
+            _, thresh = cv2.threshold(tophat, 50, 255, cv2.THRESH_BINARY)
             contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+            # Compute Laplacian on the denoised pre-CLAHE-amplified gray ONCE.
+            # Using gray_glare_free (denoised) keeps variance bounded for real flakes.
+            laplacian_full = cv2.Laplacian(gray_glare_free, cv2.CV_64F)
 
             flake_area = 0.0
             for cnt in contours:
                 area = cv2.contourArea(cnt)
-                if area < 5 or area > 1500:
+                # Tightened min area 5→12: single-pixel noise clusters are < 12px²
+                # Max area unchanged at 1500 (provisional / uncalibrated).
+                if area < 12 or area > 1500:   # provisional / uncalibrated
                     continue
-                # Edge texture discriminator: genuine dandruff flakes have irregular boundaries
-                # (high Laplacian variance inside the contour). Smooth residual glare fringes
-                # have near-zero internal edge variance and are excluded here.
                 mask_cnt = np.zeros(gray.shape, dtype=np.uint8)
                 cv2.drawContours(mask_cnt, [cnt], -1, 255, -1)
-                region = gray[mask_cnt == 255]
-                if len(region) > 0:
-                    laplacian_region = cv2.Laplacian(
-                        gray_glare_free, cv2.CV_64F
-                    )
-                    edge_var = float(np.var(laplacian_region[mask_cnt == 255]))
-                    # Threshold: real squames have edge variance >= 8.0 from their rough boundary
-                    if edge_var >= 8.0:
+                region_pixels = laplacian_full[mask_cnt == 255]
+                if len(region_pixels) > 0:
+                    edge_var = float(np.var(region_pixels))
+                    # Step 6: Both bounds are provisional / uncalibrated.
+                    # Lower bound 8: smooth residual glare fringes are below this.
+                    # Upper bound 2500: Gaussian noise fragments are above this.
+                    if 8.0 <= edge_var <= 2500.0:  # provisional / uncalibrated
                         flake_area += area
 
             total_pixels = img_rgb.shape[0] * img_rgb.shape[1]
             flake_ratio = (flake_area / max(total_pixels, 1)) * 100.0
         else:
-            # Pure NumPy fallback path
+            # Pure NumPy fallback path (no OpenCV).
             gray = np.dot(img_rgb[..., :3], [0.2989, 0.5870, 0.1140])
-            # Zero glare pixels from flake channel
+            # Zero glare pixels
             gray_glare_free = gray.copy()
             gray_glare_free[specular_mask] = 0.0
-            local_mean = np.mean(gray_glare_free[~specular_mask]) if np.any(~specular_mask) else np.mean(gray)
-            bright_particles = (gray_glare_free > (local_mean + 45)) & (gray_glare_free > 180)
+            # Zero dark hair pixels (provisional / uncalibrated threshold: 80)
+            gray_glare_free[gray < 80] = 0.0
+            local_mean = (
+                np.mean(gray_glare_free[(~specular_mask) & (gray >= 80)])
+                if np.any((~specular_mask) & (gray >= 80))
+                else np.mean(gray)
+            )
+            # Provisional / uncalibrated: threshold at local_mean + 55 and absolute 185
+            bright_particles = (
+                (gray_glare_free > (local_mean + 55)) & (gray_glare_free > 185)
+            )
             flake_ratio = (np.sum(bright_particles) / float(gray.size)) * 100.0
 
         score = ScalpCVPipeline._flake_ratio_to_score(flake_ratio)
@@ -339,16 +411,13 @@ class ScalpCVPipeline:
         Returns discrete SubScores object with bounded [0.0, 25.0] values.
         """
         try:
-            pil_img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
+            pil_img = Image.open(io.BytesIO(img_bytes))
+            pil_img.load()  # Force decoding of compressed pixel data to detect truncation early
+            pil_img = pil_img.convert("RGB")
             pil_img = pil_img.resize((512, 512))
             img_rgb = np.array(pil_img, dtype=np.uint8)
-        except Exception:
-            return SubScores(
-                flake_score=15.0,
-                redness_score=15.0,
-                sebum_score=15.0,
-                density_score=15.0
-            )
+        except Exception as e:
+            raise ImageDecodeError(f"Failed to decode image: {str(e)}") from e
 
         flake_score = self.compute_flake_score(img_rgb)
         redness_score = self.compute_redness_score(img_rgb)

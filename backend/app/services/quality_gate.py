@@ -15,13 +15,14 @@ Architectural Design Intent & Algorithmic Rationale:
       - The discrete 2D Laplacian operator computes the 2nd spatial derivative of pixel intensity.
       - Sharp, in-focus scalp images possess crisp follicular edges and flake boundaries,
         yielding high variance in Laplacian response.
-      - Blurry images suffer from edge attenuation, causing the variance to drop below 60.0.
+      - Blurry images suffer from edge attenuation, causing the variance to drop below
+        settings.QUALITY_MIN_BLUR_SCORE (provisional / uncalibrated baseline: 60.0).
    b. Illumination & Exposure Distribution:
       - Trichoscopy features cannot be extracted in severely shadowed or washed-out images.
-      - Mean luminance below 35.0 (out of 255) indicates underexposure where scalp skin
-        chrominance cannot be differentiated from dark hair.
-      - Mean luminance above 225.0 indicates severe overexposure or flashlight glare washing
-        out epidermal texture.
+      - Mean luminance below settings.QUALITY_MIN_BRIGHTNESS (provisional / uncalibrated baseline: 35.0)
+        indicates underexposure where scalp skin chrominance cannot be differentiated from dark hair.
+      - Mean luminance above settings.QUALITY_MAX_BRIGHTNESS (provisional / uncalibrated baseline: 225.0)
+        indicates severe overexposure or flashlight glare washing out epidermal texture.
    c. Flash Glare Hotspot Detection (NEW):
       - Direct camera flash produces concentrated specular hotspots on the curved scalp surface.
       - These achromatic saturated-white regions corrupt the flake detection channel and make
@@ -68,15 +69,31 @@ class ImageQualityGate:
 
     def __init__(
         self,
-        min_blur_score: float = settings.QUALITY_MIN_BLUR_SCORE,
-        min_brightness: float = settings.QUALITY_MIN_BRIGHTNESS,
-        max_brightness: float = settings.QUALITY_MAX_BRIGHTNESS,
-        min_dimension: int = settings.QUALITY_MIN_DIMENSION,
+        min_blur_score: Optional[float] = None,
+        min_brightness: Optional[float] = None,
+        max_brightness: Optional[float] = None,
+        min_dimension: Optional[int] = None,
     ):
-        self.min_blur_score = min_blur_score
-        self.min_brightness = min_brightness
-        self.max_brightness = max_brightness
-        self.min_dimension = min_dimension
+        self._min_blur_score = min_blur_score
+        self._min_brightness = min_brightness
+        self._max_brightness = max_brightness
+        self._min_dimension = min_dimension
+
+    @property
+    def min_blur_score(self) -> float:
+        return self._min_blur_score if self._min_blur_score is not None else settings.QUALITY_MIN_BLUR_SCORE
+
+    @property
+    def min_brightness(self) -> float:
+        return self._min_brightness if self._min_brightness is not None else settings.QUALITY_MIN_BRIGHTNESS
+
+    @property
+    def max_brightness(self) -> float:
+        return self._max_brightness if self._max_brightness is not None else settings.QUALITY_MAX_BRIGHTNESS
+
+    @property
+    def min_dimension(self) -> int:
+        return self._min_dimension if self._min_dimension is not None else settings.QUALITY_MIN_DIMENSION
 
     def _decode_image(self, image_bytes: bytes) -> Tuple[np.ndarray, Optional[Image.Image]]:
         """
@@ -84,6 +101,7 @@ class ImageQualityGate:
         Handles RGBA, Grayscale, and standard RGB formats cleanly.
         """
         pil_img = Image.open(io.BytesIO(image_bytes))
+        pil_img.load()
         raw_pil = pil_img.copy()
         if pil_img.mode != "RGB":
             pil_img = pil_img.convert("RGB")
@@ -172,9 +190,10 @@ class ImageQualityGate:
         from flake analysis, but if they occupy more than 15% of the frame, the image is too
         corrupted by flash to produce reliable results even after masking.
 
-        Threshold reasoning: The L'Oreal ScalpConsult Pro study (PMC11975186) uses cross-polarized
-        light specifically to eliminate specular glare. When more than 15% of the image frame is
-        obliterated by flash glare, we lose too much scalp tissue information for reliable analysis.
+        Threshold reasoning (provisional / uncalibrated): When more than 15% of the image
+        frame is obliterated by flash glare, too much scalp tissue information is lost for
+        reliable analysis. The 15% limit is a provisional engineering heuristic — it has
+        not been validated against a clinical dataset. See docs/thresholds.md.
         """
         r = img_rgb[:, :, 0].astype(int)
         g = img_rgb[:, :, 1].astype(int)
@@ -233,8 +252,8 @@ class ImageQualityGate:
         except Exception as e:
             return False, {
                 "is_valid": False,
-                "error_code": "INVALID_IMAGE_DATA",
-                "rejection_reason": "Failed to decode image file. File may be corrupted or in an unsupported format.",
+                "error_code": "IMAGE_CORRUPTED_OR_UNREADABLE",
+                "rejection_reason": "Failed to decode image file. File may be corrupted, truncated, or in an unsupported format.",
                 "user_guidance": "Please upload a valid JPEG, PNG, or WebP photograph of your scalp.",
                 "metrics": {}
             }

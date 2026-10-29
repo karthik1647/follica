@@ -105,13 +105,117 @@ def test_unknown_heavy_gaussian_noise_image():
 
 
 def test_unknown_corrupted_raw_bytes_rejection():
-    """Verifies that non-image garbage bytes return a clean 400 Bad Request rather than a 500 error."""
+    """Verifies that non-image garbage bytes return HTTP 400 with IMAGE_CORRUPTED_OR_UNREADABLE."""
     corrupted_bytes = b"NOT_A_REAL_JPEG_IMAGE_DATA_0123456789"
     files = {"image": ("corrupted.jpg", corrupted_bytes, "image/jpeg")}
     response = client.post("/api/v1/analyze", files=files, data={})
     assert response.status_code == 400
     err = response.json()
-    assert "rejection_reason" in err["detail"] or "error" in err["detail"]
+    assert err["detail"]["error_code"] == "IMAGE_CORRUPTED_OR_UNREADABLE"
+
+
+def _make_truncated_jpeg_bytes() -> bytes:
+    """Helper to generate a genuinely truncated JPEG byte stream."""
+    img = Image.new("RGB", (200, 200), color=(200, 150, 150))
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG")
+    full_data = buf.getvalue()
+    return full_data[:len(full_data) // 3]
+
+
+def test_analyze_endpoint_rejects_unreadable_images():
+    """
+    Acceptance test for /analyze:
+    Random bytes, empty file, and truncated JPEG must all return HTTP 400
+    with error_code IMAGE_CORRUPTED_OR_UNREADABLE.
+    """
+    cases = [
+        ("random_bytes.bin", b"RANDOM_GARBAGE_BYTES_0123456789!@#$%^"),
+        ("empty_file.jpg", b""),
+        ("truncated.jpg", _make_truncated_jpeg_bytes())
+    ]
+    for filename, payload in cases:
+        files = {"image": (filename, payload, "image/jpeg")}
+        response = client.post("/api/v1/analyze", files=files, data={})
+        assert response.status_code == 400, f"Expected 400 for {filename}, got {response.status_code}"
+        detail = response.json()["detail"]
+        assert isinstance(detail, dict), f"Expected dict detail for {filename}"
+        assert detail.get("error_code") == "IMAGE_CORRUPTED_OR_UNREADABLE", (
+            f"Expected error_code IMAGE_CORRUPTED_OR_UNREADABLE for {filename}, got {detail.get('error_code')}"
+        )
+
+
+def test_quality_check_endpoint_rejects_unreadable_images():
+    """
+    Acceptance test for /quality/check:
+    Random bytes, empty file, and truncated JPEG must all return HTTP 400
+    with error_code IMAGE_CORRUPTED_OR_UNREADABLE.
+    """
+    cases = [
+        ("random_bytes.bin", b"RANDOM_GARBAGE_BYTES_0123456789!@#$%^"),
+        ("empty_file.jpg", b""),
+        ("truncated.jpg", _make_truncated_jpeg_bytes())
+    ]
+    for filename, payload in cases:
+        files = {"image": (filename, payload, "image/jpeg")}
+        response = client.post("/api/v1/quality/check", files=files)
+        assert response.status_code == 400, f"Expected 400 for {filename}, got {response.status_code}"
+        detail = response.json()["detail"]
+        assert isinstance(detail, dict), f"Expected dict detail for {filename}"
+        assert detail.get("error_code") == "IMAGE_CORRUPTED_OR_UNREADABLE", (
+            f"Expected error_code IMAGE_CORRUPTED_OR_UNREADABLE for {filename}, got {detail.get('error_code')}"
+        )
+
+
+def test_progress_compare_endpoint_rejects_unreadable_images():
+    """
+    Acceptance test for /progress/compare:
+    Random bytes, empty file, and truncated JPEG must all return HTTP 400
+    with error_code IMAGE_CORRUPTED_OR_UNREADABLE.
+    """
+    valid_bytes = make_test_image(width=200, height=200)
+    cases = [
+        ("random_bytes.bin", b"RANDOM_GARBAGE_BYTES_0123456789!@#$%^"),
+        ("empty_file.jpg", b""),
+        ("truncated.jpg", _make_truncated_jpeg_bytes())
+    ]
+    for filename, payload in cases:
+        # Test as baseline image
+        files = {
+            "baseline_image": (filename, payload, "image/jpeg"),
+            "followup_image": ("valid.jpg", valid_bytes, "image/jpeg")
+        }
+        response = client.post("/api/v1/progress/compare", files=files, data={"days_elapsed": "14"})
+        assert response.status_code == 400, f"Expected 400 for bad baseline {filename}"
+        detail = response.json()["detail"]
+        assert isinstance(detail, dict), f"Expected dict detail for {filename}"
+        assert detail.get("error_code") == "IMAGE_CORRUPTED_OR_UNREADABLE"
+
+        # Test as followup image
+        files = {
+            "baseline_image": ("valid.jpg", valid_bytes, "image/jpeg"),
+            "followup_image": (filename, payload, "image/jpeg")
+        }
+        response = client.post("/api/v1/progress/compare", files=files, data={"days_elapsed": "14"})
+        assert response.status_code == 400, f"Expected 400 for bad followup {filename}"
+        detail = response.json()["detail"]
+        assert isinstance(detail, dict), f"Expected dict detail for {filename}"
+        assert detail.get("error_code") == "IMAGE_CORRUPTED_OR_UNREADABLE"
+
+
+def test_cv_pipeline_analyze_image_raises_image_decode_error():
+    """Verifies that ScalpCVPipeline.analyze_image raises ImageDecodeError directly."""
+    import pytest
+    from app.services.cv_pipeline import ImageDecodeError
+
+    with pytest.raises(ImageDecodeError):
+        cv_pipeline.analyze_image(b"NOT_A_REAL_IMAGE")
+
+    with pytest.raises(ImageDecodeError):
+        cv_pipeline.analyze_image(b"")
+
+    with pytest.raises(ImageDecodeError):
+        cv_pipeline.analyze_image(_make_truncated_jpeg_bytes())
 
 
 # -----------------------------------------------------------------------------

@@ -161,7 +161,7 @@ def generate_report(output_path: str):
     meta_text = (
         "<b>System Classification:</b> Software as a Medical Device (SaMD) / Dual-Pipeline Computer Vision & Triage Engine<br/>"
         "<b>Architectural Foundation:</b> Standard Biomedical Instrumentation Design Flow (Transducer to Clinical Diagnosis)<br/>"
-        "<b>Clinical Benchmarks:</b> Dichromatic Reflection Model | L'Oreal Dandruff Atlas (PMC11975186) | Traya 3-Science Axis"
+        "<b>Clinical Benchmarks:</b> Dichromatic Reflection Model | 6-Grade Provisional Flake Scale | Traya 3-Science Axis"
     )
     story.append(Paragraph(meta_text, meta_style))
     story.append(Spacer(1, 10))
@@ -214,7 +214,7 @@ def generate_report(output_path: str):
         ],
         [
             Paragraph("5. Calibration Signal", table_cell_bold),
-            Paragraph("Optical: Gray-World White Balance algorithm normalizing ambient room illuminants to D65 standard.<br/>Clinical: 6-point exfoliating severity scale calibrated per Flament et al. 2025 (PMC11975186, r^2 = 0.952).", table_cell),
+            Paragraph("Optical: Gray-World White Balance algorithm normalizing ambient room illuminants to D65 standard.<br/>Flake Scale: Provisional 6-grade ordinal scale (coverage cut-offs are uncalibrated engineering heuristics; not clinically validated). See docs/thresholds.md.", table_cell),
             Paragraph("Ensures colorimetric invariance against warm yellow (2700K) or cool fluorescent (6500K) room lighting.", table_cell)
         ],
         [
@@ -295,13 +295,15 @@ def generate_report(output_path: str):
     )
     story.append(Paragraph(glare_text, body_style))
 
-    story.append(Paragraph("B. Clinical Dandruff Atlas Calibration (PMC11975186 Benchmark)", h2_style))
+    story.append(Paragraph("B. 6-Grade Flake Severity Scale (Provisional Heuristic)", h2_style))
     paper_text = (
-        "Rather than using an arbitrary threshold, Follica's flake scoring algorithm is calibrated directly against the clinical dandruff grading atlas "
-        "published by Flament et al. (2025, PMC11975186 / Journal of Cosmetic Dermatology), which established r^2 = 0.952 correlation with 15 expert "
-        "dermatologists. The system maps measured particle surface coverage to the validated 6-point scale: Grade 0 (<0.1% coverage -> 25.0 score), "
-        "Grade 1 (0.1-0.5% -> 22.0-24.9), Grade 2 (0.5-1.2% -> 18.0-21.9), Grade 3 (1.2-2.5% -> 13.0-17.9), Grade 4 (2.5-4.0% -> 7.0-12.9), and "
-        "Grade 5 (>4.0% -> 0.0-6.9)."
+        "Follica's flake scoring algorithm uses a 6-grade ordinal scale to convert measured particle surface coverage "
+        "into a sub-score (0–25). The coverage cut-off values at each grade boundary (0.1%, 0.5%, 1.2%, 2.5%, 4.0%) "
+        "and the corresponding score ranges are provisional engineering heuristics chosen for algorithmic plausibility. "
+        "They have NOT been fitted to or validated against any clinical dataset or published dermatological atlas. "
+        "All numeric thresholds are documented in docs/thresholds.md with status 'uncalibrated'. "
+        "Grade 0 (<0.1% -> 25.0), Grade 1 (0.1-0.5% -> 22.0-24.9), Grade 2 (0.5-1.2% -> 18.0-21.9), "
+        "Grade 3 (1.2-2.5% -> 13.0-17.9), Grade 4 (2.5-4.0% -> 7.0-12.9), Grade 5 (>4.0% -> 0.0-6.9)."
     )
     story.append(Paragraph(paper_text, body_style))
 

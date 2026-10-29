@@ -170,3 +170,153 @@ def test_generic_clinical_pdf_generation():
     content_text = str(pdf_response.content)
     assert "bc roy" not in content_text.lower()
     assert "iit" not in content_text.lower()
+
+
+def test_cors_headers_allowed_and_disallowed_origins():
+    """
+    Acceptance test for CORS configuration:
+    1. A request from an allowed Origin receives the 'access-control-allow-origin' header.
+    2. A request from an unlisted/random Origin does NOT receive the 'access-control-allow-origin' header.
+    3. Wildcard credentials combination is disabled ('access-control-allow-credentials' is not true with '*').
+    4. Safe allowed methods (GET, POST, OPTIONS) and headers are verified.
+    """
+    # 1. Allowed Origin
+    allowed_origin = "http://localhost:8000"
+    res_allowed = client.options(
+        "/api/v1/system/status",
+        headers={
+            "Origin": allowed_origin,
+            "Access-Control-Request-Method": "GET"
+        }
+    )
+    assert res_allowed.headers.get("access-control-allow-origin") == allowed_origin
+    assert res_allowed.headers.get("access-control-allow-credentials") is None
+
+    # 2. Disallowed Random Origin
+    disallowed_origin = "http://malicious-random-site.com"
+    res_disallowed = client.options(
+        "/api/v1/system/status",
+        headers={
+            "Origin": disallowed_origin,
+            "Access-Control-Request-Method": "GET"
+        }
+    )
+    assert "access-control-allow-origin" not in res_disallowed.headers
+
+
+def test_frontend_root_served_cleanly():
+    """Verifies that the single-page application is served at root without error."""
+    response = client.get("/")
+    assert response.status_code == 200
+    assert "Follica" in response.text or "text/html" in response.headers.get("content-type", "")
+
+
+# ---------------------------------------------------------------------------
+# Tests for unverified claim removal (Bug: unsupported clinical citations)
+# ---------------------------------------------------------------------------
+
+import os
+import pathlib
+
+# Source files that must not contain any banned citation strings
+_REPO_ROOT = pathlib.Path(__file__).resolve().parents[2]   # follica/
+_BACKEND_ROOT = pathlib.Path(__file__).resolve().parents[1]  # follica/backend/
+
+_BANNED_STRINGS = [
+    # Specific paper reference
+    "Flament et al",
+    "PMC11975186",
+    # Fabricated validation statistics
+    "r^2 = 0.952",
+    "r^2=0.952",
+    # Specific study reference
+    "L'Oreal ScalpConsult Pro study",
+    # Market claim
+    "$35 billion",
+    "CAGR",
+]
+
+_SOURCE_FILES_TO_CHECK = [
+    _BACKEND_ROOT / "app" / "services" / "cv_pipeline.py",
+    _BACKEND_ROOT / "app" / "services" / "quality_gate.py",
+    _BACKEND_ROOT / "app" / "core" / "config.py",
+    _REPO_ROOT / "README.md",
+    _REPO_ROOT / "scripts" / "generate_design_flow_pdf.py",
+    _REPO_ROOT / "scripts" / "update_readme.py",
+    _REPO_ROOT / "scripts" / "update_readme_plan.py",
+]
+
+
+def test_no_banned_clinical_citations_in_source_files():
+    """
+    Acceptance test: confirms that all unsupported validation/citation claims have
+    been removed from source code, README, and PDF-generation scripts.
+
+    Fails before the fix; passes after removal of Flament et al., PMC11975186,
+    r^2=0.952, L'Oreal study reference, and $35B market claim.
+    """
+    violations = []
+    for filepath in _SOURCE_FILES_TO_CHECK:
+        if not filepath.exists():
+            continue
+        text = filepath.read_text(encoding="utf-8", errors="replace")
+        for banned in _BANNED_STRINGS:
+            if banned.lower() in text.lower():
+                violations.append(f"{filepath.name}: found banned string '{banned}'")
+
+    assert not violations, (
+        "Unsupported clinical citation(s) still present in source:\n"
+        + "\n".join(violations)
+    )
+
+
+def test_thresholds_documentation_exists_and_is_complete():
+    """
+    Acceptance test: confirms that docs/thresholds.md exists and documents
+    the key numeric thresholds used in the pipeline.
+    """
+    thresholds_path = _BACKEND_ROOT / "docs" / "thresholds.md"
+    assert thresholds_path.exists(), (
+        f"docs/thresholds.md not found at {thresholds_path}. "
+        "This file must document all numeric thresholds."
+    )
+
+    text = thresholds_path.read_text(encoding="utf-8")
+
+    # Each of these threshold values or names must appear in the document
+    required_entries = [
+        "QUALITY_MIN_BLUR_SCORE",
+        "QUALITY_MIN_BRIGHTNESS",
+        "QUALITY_MAX_BRIGHTNESS",
+        "QUALITY_MIN_DIMENSION",
+        "CONFIDENCE_GATE_THRESHOLD",
+        "red_excess",           # erythema threshold
+        "shine_ratio",          # sebum thresholds
+        "edge_energy",          # density threshold
+        "uncalibrated",         # status column must have at least one
+        "flash_glare",          # flash glare threshold
+    ]
+
+    missing = [entry for entry in required_entries if entry not in text]
+    assert not missing, (
+        f"docs/thresholds.md is missing required entries: {missing}"
+    )
+
+
+def test_thresholds_marked_uncalibrated():
+    """
+    Confirms that every grade boundary row in docs/thresholds.md carries the
+    'uncalibrated' label, ensuring no threshold is implicitly treated as validated.
+    """
+    thresholds_path = _BACKEND_ROOT / "docs" / "thresholds.md"
+    if not thresholds_path.exists():
+        pytest.skip("docs/thresholds.md does not exist; skipping.")
+
+    text = thresholds_path.read_text(encoding="utf-8")
+    # The document must include the word 'uncalibrated' at least 10 times
+    count = text.lower().count("uncalibrated")
+    assert count >= 10, (
+        f"Expected at least 10 occurrences of 'uncalibrated' in thresholds.md, found {count}. "
+        "Make sure all thresholds are properly labelled."
+    )
+

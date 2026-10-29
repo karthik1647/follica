@@ -1,4 +1,4 @@
-﻿readme_content = """# Follica: AI-Powered Scalp Health Assessment and Clinical Triage System
+readme_content = """# Follica: AI-Powered Scalp Health Assessment and Clinical Triage System
 
 Follica is an open-source, dual-pipeline scalp health assessment and clinical triage platform. It evaluates user-uploaded scalp photographs and contextual clinical questionnaires to generate objective health scoring (Scalp Health Score 0-100), recommend targeted active ingredient care routines for minor conditions, and produce standardized clinical hand-off summaries when medical escalation to a dermatologist is warranted.
 
@@ -15,19 +15,19 @@ Following the standard medical device and clinical engineering need scoping meth
 
 ### b. Stakeholder Perspectives
 - **Patients (Students and General Public)**: Require accessible, private, non-judgmental, immediate, and zero-cost objective scoring. They need clear active-ingredient chemical schedules rather than commercial brand marketing, and transparent guidance on when self-care is safe versus when specialist consultation is imperative.
-- **Doctors (Dermatologists and Trichologists)**: Require standardized clinical pre-intake, high-resolution calibrated scalp photography (flash-illuminated, optical quality validated via EXIF metadata), and objective mathematical sub-scores (Flake, Erythema, Sebum, Follicular Density) to fast-track in-person differential diagnosis and eliminate patient recall bias.
+- **Doctors (Dermatologists and Trichologists)**: Require standardized clinical pre-intake, high-resolution scalp photography (with EXIF metadata assessed for optical quality indicators), and objective mathematical sub-scores (Flake, Erythema, Sebum, Follicular Density) to fast-track in-person differential diagnosis and eliminate patient recall bias.
 - **Healthcare Systems and Campus Clinics (e.g., Institutional Health Services)**: Require scalable, automated triage to filter out benign xerosis and mild dandruff from active autoimmune or infectious presentations (Alopecia Areata, dissecting cellulitis), reducing outpatient wait queues and preventing clinician burnout.
 - **Payers and Institutional Administrators**: Require low-overhead, evidence-based triage infrastructure that prevents unnecessary specialist referrals while ensuring timely escalation of complex dermatoses.
 
 ### c. Market and Population Potential
-- **Expanding Global Market**: The global scalp health, hair loss, and trichology care market exceeds $35 billion annually, with a compound annual growth rate (CAGR) exceeding 8.4%.
+- **Large and Growing Addressable Population**: Scalp disorders are among the most prevalent dermatological conditions globally, and demand for accessible, affordable scalp-health screening tools is increasing. (Market size claims have been removed; no independently verified figure was available.)
 - **High-Density Vulnerable Demographics**: High-density student and urban populations represent a high-friction demographic exposed to unique environmental aggravators: hard borewell water mineral crystallization, high atmospheric PM2.5 particulate deposition, daily motorcycle helmet friction and sweat occlusion, academic exam stress, and dietary micronutrient deficits (Iron/Ferritin, Vitamin D3, protein synthesis gaps).
 
 ### d. Technical Feasibility and Engineering Mitigations
 - **Dual-Pipeline Architectural Approach**: Combines lightweight Deep Learning classification (MobileNetV4 / EfficientNet-B0) with deterministic Classical Computer Vision micro-feature extractors (Laplacian variance focus filtering, CLAHE dehazing, Gray-World White Balance color temperature normalization, and HSV/Lab color space analysis for vascular erythema and sebum lipid clustering) alongside a Multi-Factor Clinical Correlation Matrix.
 - **Technical Challenges**: Smartphone optical variability, camera lens fingerprint oil and dust haze, ambient lighting color temperature shifts (2700K warm incandescent vs. 6500K daylight), diverse skin phototypes (Fitzpatrick I-VI), and lack of specialized polarizing dermascopes.
 - **Engineering Mitigations**:
-  - Pre-inference quality gate rejecting blurred captures (Laplacian variance < 80.0) and extreme exposure (brightness < 40 or > 225).
+  - Pre-inference quality gate rejecting blurred captures (Laplacian variance < 60.0) and extreme exposure (brightness < 35 or > 225) as configured in core/config.py (provisional thresholds).
   - EXIF metadata parser evaluating sensor ISO noise rating, shutter speed motion blur risk, and flash firing status to compute an objective Optical Quality Score (0-100).
   - Gray-World White Balance color normalization to prevent warm ambient illumination from producing false-positive erythema readings.
   - Server-side confidence gate (< 0.65) strictly rerouting low-confidence predictions to Level 2 (Monitored Routine).

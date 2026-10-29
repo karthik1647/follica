@@ -50,10 +50,11 @@ class Settings(BaseModel):
     MODEL_WEIGHTS_PATH: str = os.getenv("FOLLICA_MODEL_PATH", "models/follica_mobilenetv4.onnx")
 
     # Image Quality Pre-Inference Gate Configuration:
-    # Rationale: Scalp micro-feature extraction requires sharp focus and balanced illumination.
-    # A Laplacian variance below 60.0 indicates significant motion or optical blur.
-    # Luminance below 35.0 indicates severe underexposure, while luminance above 225.0 indicates
-    # blown-out specular highlights or flashlight wash.
+    # Note: These optical gating thresholds are provisional / uncalibrated baseline thresholds
+    # pending large-scale clinical dataset fitting.
+    # - Laplacian variance < 60.0 indicates significant motion or optical blur.
+    # - Luminance < 35.0 indicates severe underexposure.
+    # - Luminance > 225.0 indicates blown-out specular highlights or flashlight wash.
     QUALITY_GATE_ENABLED: bool = True
     QUALITY_MIN_BLUR_SCORE: float = 60.0
     QUALITY_MIN_BRIGHTNESS: float = 35.0
@@ -62,6 +63,18 @@ class Settings(BaseModel):
 
     # Storage Bucket Name
     SUPABASE_STORAGE_BUCKET: str = "follica-scalp-scans-encrypted"
+
+    # CORS Configuration:
+    # Comma-separated list or list of allowed origin URLs.
+    # Default is restricted to local development environments.
+    CORS_ALLOWED_ORIGINS: list[str] = [
+        origin.strip()
+        for origin in os.getenv(
+            "CORS_ALLOWED_ORIGINS",
+            "http://localhost:8000,http://127.0.0.1:8000,http://localhost:3000,http://127.0.0.1:3000"
+        ).split(",")
+        if origin.strip()
+    ]
 
 
 settings = Settings()

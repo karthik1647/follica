@@ -41,10 +41,15 @@ class ScalpImageRegistrationService:
     @staticmethod
     def _decode_image(image_bytes: bytes) -> np.ndarray:
         """Decodes raw byte stream into RGB NumPy array."""
-        pil_img = Image.open(io.BytesIO(image_bytes))
-        if pil_img.mode != "RGB":
-            pil_img = pil_img.convert("RGB")
-        return np.array(pil_img)
+        from app.services.cv_pipeline import ImageDecodeError
+        try:
+            pil_img = Image.open(io.BytesIO(image_bytes))
+            pil_img.load()
+            if pil_img.mode != "RGB":
+                pil_img = pil_img.convert("RGB")
+            return np.array(pil_img)
+        except Exception as e:
+            raise ImageDecodeError(f"Failed to decode image: {str(e)}") from e
 
     def align_and_compare(
         self,
