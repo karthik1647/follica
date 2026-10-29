@@ -358,32 +358,36 @@ class ScalpCVPipeline:
         """
         Extracts Sebum and Lipid Barrier Balance.
 
-        This function intentionally incorporates specular glare energy because specular
-        highlights on the scalp are caused by two overlapping phenomena:
-        1. Oily sebum / lipid coating on the scalp surface refracts camera light.
-        2. Camera flash or ring light reflects off the curved scalp geometry.
+        NOTE ON PROXY MEASUREMENT:
+        This score is an optical proxy for sebum production based on surface luster.
+        Specular highlights originate from both oily sebum lipid coatings and direct
+        camera flash or environmental illumination.
+        The shine detection criteria (brightness > 220, color_diff < 30) and the
+        upper boundary (3.5% shine) are provisional / uncalibrated heuristics.
 
-        By routing specular pixels here (rather than discarding them completely), we
-        preserve the physiologically meaningful signal that a highly reflective scalp
-        is associated with elevated sebum production, while keeping that signal away
-        from the flake detection channel where it was causing false positives.
+        NO DRYNESS TERM:
+        Dryness / xerosis and flaking are already quantified by compute_flake_score().
+        Penalizing low or zero shine here would double-count dry scalp conditions and
+        falsely penalize a clean, matte scalp (which previously scored 19.0).
+        A matte, non-shiny scalp (shine <= 3.5%) receives the optimal score (25.0).
+        Points are deducted only for excessive oily shine above 3.5%.
         """
         r, g, b = img_rgb[:, :, 0], img_rgb[:, :, 1], img_rgb[:, :, 2]
         brightness = np.maximum(np.maximum(r, g), b)
         color_diff = np.abs(r.astype(int) - g.astype(int)) + np.abs(g.astype(int) - b.astype(int))
-        # Broader shine detection (threshold 30 instead of 25) to also include
-        # slightly colored sebum highlights from warm room lighting
+
+        # Shine detection: brightness > 220, color_diff < 30 (provisional / uncalibrated proxy)
         shine_mask = (brightness > 220) & (color_diff < 30)
         shine_ratio = (np.sum(shine_mask) / float(brightness.size)) * 100.0
 
-        if 1.0 <= shine_ratio <= 3.5:
+        # Matte and balanced scalps score full points (25.0).
+        # Points are docked only for excessive shine (> 3.5% area coverage).
+        if shine_ratio <= 3.5:  # provisional / uncalibrated threshold
             score = 25.0
-        elif shine_ratio > 3.5:
-            excess_oil = shine_ratio - 3.5
-            score = 25.0 - (excess_oil * 2.5)
         else:
-            dryness = 1.0 - shine_ratio
-            score = 25.0 - (dryness * 6.0)
+            excess_oil = shine_ratio - 3.5
+            # Penalty slope: 2.5 pts per 1% excess shine (provisional / uncalibrated)
+            score = 25.0 - (excess_oil * 2.5)
 
         return float(np.clip(round(score, 2), 0.0, 25.0))
 

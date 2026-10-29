@@ -99,11 +99,10 @@ All cut-offs below are provisional heuristics. No clinical calibration has been 
 
 | File | Constant / Expression | Value | Controls | Status |
 |------|-----------------------|-------|----------|--------|
-| `backend/app/services/cv_pipeline.py` | `brightness > 220` (shine mask) | `220` | Minimum brightness for a pixel to count as a shine/gloss candidate. | **uncalibrated** |
-| `backend/app/services/cv_pipeline.py` | `color_diff < 30` (shine mask) | `30` | Achromatic colour-difference threshold for shine pixel identification (broader than specular mask to capture warm sebum gloss). | **uncalibrated** |
-| `backend/app/services/cv_pipeline.py` | `1.0 <= shine_ratio <= 3.5` | `1.0 % – 3.5 %` | Optimal sebum shine percentage range where full score (25.0) is awarded. | **uncalibrated** |
+| `backend/app/services/cv_pipeline.py` | `brightness > 220` (shine mask) | `220` | Minimum brightness for a pixel to count as a shine/gloss candidate (proxy for luster). | **uncalibrated** |
+| `backend/app/services/cv_pipeline.py` | `color_diff < 30` (shine mask) | `30` | Achromatic colour-difference threshold for shine pixel identification (broader than specular mask). | **uncalibrated** |
+| `backend/app/services/cv_pipeline.py` | `shine_ratio <= 3.5` | `≤ 3.5 %` | Optimal shine percentage range where full score (25.0) is awarded. Zero-shine matte scalps score 25.0 (no dryness penalty; dryness is measured in flake score). | **uncalibrated** |
 | `backend/app/services/cv_pipeline.py` | `excess_oil × 2.5` penalty | `2.5` | Linear penalty coefficient for shine above 3.5 %. | **uncalibrated** |
-| `backend/app/services/cv_pipeline.py` | `dryness × 6.0` penalty | `6.0` | Linear penalty coefficient for shine below 1.0 % (dry scalp). | **uncalibrated** |
 
 ---
 
