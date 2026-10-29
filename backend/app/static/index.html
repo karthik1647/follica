@@ -351,10 +351,28 @@
                         <div>
                             <div class="gauge-metric-label">Scalp Health Score (SHS)</div>
                             <div id="res-shs-val" class="gauge-metric-value">--/100</div>
+                            <div style="font-size: 0.68rem; color: #64748b; font-weight: 600;">Image-derived micro-features</div>
+                        </div>
+                        <div style="border-left: 1px solid #ccfbf1; padding-left: 16px;">
+                            <div class="gauge-metric-label" style="color: #6366f1;">Questionnaire Risk Level</div>
+                            <div id="res-risk-level-badge" style="display: inline-block; font-size: 0.85rem; font-weight: 800; text-transform: uppercase; margin-top: 4px; padding: 3px 10px; border-radius: 999px; background: #e0e7ff; color: #3730a3;">--</div>
+                            <div style="font-size: 0.66rem; color: #64748b; margin-top: 2px;">self-reported, not clinically validated</div>
                         </div>
                         <div>
                             <div id="res-triage-badge" class="triage-badge-pill triage-level-1">Level 1: Minor Routine</div>
                         </div>
+                    </div>
+
+                    <div id="res-risk-indicators-panel" style="margin-bottom: 16px; padding: 12px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <span style="font-size: 0.74rem; font-weight: 800; color: #334155; text-transform: uppercase; letter-spacing: 0.5px;">
+                                Questionnaire Risk Indicators (<span id="res-risk-count">0</span> flagged)
+                            </span>
+                            <span style="font-size: 0.66rem; color: #64748b; font-weight: 600;">self-reported, not clinically validated</span>
+                        </div>
+                        <ul id="res-risk-indicators-list" style="margin: 0 0 0 16px; padding: 0; font-size: 0.78rem; color: #475569; line-height: 1.5;">
+                            <li style="color: #64748b;">No questionnaire markers flagged.</li>
+                        </ul>
                     </div>
 
                     <div style="margin-bottom: 16px;">
@@ -631,6 +649,43 @@
             document.getElementById('results-panel').style.display = 'block';
 
             document.getElementById('res-shs-val').innerText = data.scalp_health_score.toFixed(1) + '/100';
+
+            if (data.risk_indicators) {
+                const rLevel = data.risk_indicators.overall_level || 'low';
+                const rBadge = document.getElementById('res-risk-level-badge');
+                if (rBadge) {
+                    rBadge.innerText = rLevel.toUpperCase();
+                    if (rLevel === 'low') {
+                        rBadge.style.background = '#ecfdf5';
+                        rBadge.style.color = '#065f46';
+                    } else if (rLevel === 'moderate') {
+                        rBadge.style.background = '#fffbeb';
+                        rBadge.style.color = '#92400e';
+                    } else {
+                        rBadge.style.background = '#fef2f2';
+                        rBadge.style.color = '#991b1b';
+                    }
+                }
+                const rCount = document.getElementById('res-risk-count');
+                if (rCount) rCount.innerText = data.risk_indicators.marker_count;
+                const rList = document.getElementById('res-risk-indicators-list');
+                if (rList) {
+                    rList.innerHTML = '';
+                    if (data.risk_indicators.triggered_markers && data.risk_indicators.triggered_markers.length > 0) {
+                        data.risk_indicators.triggered_markers.forEach(m => {
+                            const li = document.createElement('li');
+                            li.style.marginBottom = '3px';
+                            li.innerHTML = `<strong>${m.name}:</strong> ${m.detail}`;
+                            rList.appendChild(li);
+                        });
+                    } else {
+                        const li = document.createElement('li');
+                        li.style.color = '#64748b';
+                        li.innerText = 'No questionnaire risk markers reported (low risk profile).';
+                        rList.appendChild(li);
+                    }
+                }
+            }
 
             const badge = document.getElementById('res-triage-badge');
             badge.innerText = data.triage_level;

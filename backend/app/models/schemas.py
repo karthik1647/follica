@@ -295,6 +295,37 @@ class ClinicalCorrelationFactor(BaseModel):
     clinical_note: str = Field(..., description="Physiological explanation of how this factor affects hair/scalp")
 
 
+class RiskIndicatorItem(BaseModel):
+    """Single triggered questionnaire-derived risk marker."""
+    name: str = Field(..., description="Short name of the triggered risk indicator")
+    detail: str = Field(..., description="One-line transparent explanation of why it was flagged")
+
+
+class RiskIndicators(BaseModel):
+    """
+    Self-reported questionnaire-derived risk indicators.
+    Computed via transparent count-based rules and kept separate from the
+    image-derived Scalp Health Score (provisional / uncalibrated).
+    """
+    overall_level: Literal["low", "moderate", "elevated"] = Field(
+        default="low",
+        description="Overall self-reported risk level from count-based rule (provisional / uncalibrated)"
+    )
+    marker_count: int = Field(
+        default=0,
+        ge=0,
+        description="Total count of triggered self-reported risk markers"
+    )
+    triggered_markers: List[RiskIndicatorItem] = Field(
+        default_factory=list,
+        description="List of triggered self-reported risk indicators with transparent explanations"
+    )
+    note: str = Field(
+        default="Self-reported questionnaire indicators; not clinically validated or blended into the image-derived Scalp Health Score.",
+        description="Transparent methodology statement"
+    )
+
+
 class ConsultationReferral(BaseModel):
     """Generic clinical escalation data model."""
     required: bool = Field(default=False, description="Whether consultation with a dermatologist is recommended")
@@ -372,6 +403,10 @@ class AnalysisResponse(BaseModel):
     disclaimer: str = Field(
         default=UNIVERSAL_DISCLAIMER,
         description="Universal medical disclaimer mandatory across all response payloads"
+    )
+    risk_indicators: Optional[RiskIndicators] = Field(
+        default=None,
+        description="Questionnaire-derived self-reported risk indicators (not clinically validated; separate from image-derived SHS)"
     )
     analysis_timestamp: str = Field(..., description="ISO 8601 UTC timestamp of analysis")
 

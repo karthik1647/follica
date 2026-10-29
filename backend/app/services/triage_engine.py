@@ -41,7 +41,9 @@ from app.models.schemas import (
     AnalysisResponse,
     IngredientRecommendation,
     ConsultationReferral,
-    ClinicalCorrelationFactor
+    ClinicalCorrelationFactor,
+    RiskIndicatorItem,
+    RiskIndicators
 )
 
 
@@ -173,6 +175,126 @@ class TriageEngine:
         return correlations
 
     @classmethod
+    def compute_risk_indicators(cls, context: SymptomContext) -> RiskIndicators:
+        """
+        Derives self-reported questionnaire risk indicators using transparent count-based rules.
+        Does NOT blend into the image-derived Scalp Health Score (provisional / uncalibrated).
+        """
+        markers: List[RiskIndicatorItem] = []
+
+        # 1. Hair pull test result
+        if context.hair_pull_test == "positive_over_5":
+            markers.append(RiskIndicatorItem(
+                name="Hair Pull Test: Positive (>5 hairs)",
+                detail="Active shedding detected during gentle traction test (>5 hairs released)."
+            ))
+        elif context.hair_pull_test == "borderline_3_5":
+            markers.append(RiskIndicatorItem(
+                name="Hair Pull Test: Borderline (3-5 hairs)",
+                detail="Elevated shedding observed during traction test (3-5 hairs released)."
+            ))
+
+        # 2. Shedding pattern
+        if context.shedding_pattern == "sudden_acute":
+            markers.append(RiskIndicatorItem(
+                name="Shedding Pattern: Sudden Acute",
+                detail="Rapid-onset acute shedding reported (characteristic of telogen effluvium dynamics)."
+            ))
+        elif context.shedding_pattern == "gradual_chronic":
+            markers.append(RiskIndicatorItem(
+                name="Shedding Pattern: Gradual Chronic",
+                detail="Gradual progressive shedding or thinning reported over time."
+            ))
+
+        # 3. Scalp pain / trichodynia
+        if context.scalp_pain_trichodynia:
+            markers.append(RiskIndicatorItem(
+                name="Scalp Pain / Trichodynia",
+                detail="Scalp pain or tenderness upon hair movement (indicative of perifollicular nerve irritation)."
+            ))
+
+        # 4. Burning or pain
+        if context.burning_or_pain:
+            markers.append(RiskIndicatorItem(
+                name="Burning Sensation or Pain",
+                detail="Active burning or painful tenderness reported across the scalp."
+            ))
+
+        # 5. Deficiency flags
+        if context.deficiency_flags:
+            flags_str = ", ".join(context.deficiency_flags)
+            markers.append(RiskIndicatorItem(
+                name=f"Known Deficiencies ({flags_str})",
+                detail=f"Self-reported nutritional or blood biomarker deficiencies: {flags_str}."
+            ))
+
+        # 6. Diet pattern
+        if context.diet_pattern == "low_protein_crash_diet":
+            markers.append(RiskIndicatorItem(
+                name="Diet Pattern: Low-Protein / Crash Diet",
+                detail="Inadequate protein intake restricts amino acid substrate required for keratin matrix synthesis."
+            ))
+
+        # 7. Gut health
+        if context.gut_health in ["frequent_bloating_acidity", "chronic_constipation", "irregular_ibs"]:
+            gut_lbl = context.gut_health.replace("_", " ").title()
+            markers.append(RiskIndicatorItem(
+                name=f"Gut Health: {gut_lbl}",
+                detail="Digestive distress or gut dysbiosis can impair intestinal absorption of micronutrients."
+            ))
+
+        # 8. Metabolic energy
+        if context.metabolic_energy in ["chronic_sluggish_fatigue", "sudden_weight_shift"]:
+            meta_lbl = context.metabolic_energy.replace("_", " ").title()
+            markers.append(RiskIndicatorItem(
+                name=f"Metabolic Energy: {meta_lbl}",
+                detail="Chronic fatigue or sudden weight shifts signal systemic metabolic or adrenal load."
+            ))
+
+        # 9. Hormonal profile
+        if context.hormonal_profile in ["thyroid_dysfunction", "pcos_irregular_cycles", "insulin_resistance"]:
+            endo_lbl = context.hormonal_profile.replace("_", " ").title()
+            markers.append(RiskIndicatorItem(
+                name=f"Hormonal Profile: {endo_lbl}",
+                detail="Endocrine imbalance directly impacts follicle cycling and androgen receptor sensitivity."
+            ))
+
+        # 10. Duration (provisional threshold: >=3 months or >=12 weeks indicates prolonged/chronic involvement)
+        if context.duration_months >= 3 or context.duration_weeks >= 12:
+            markers.append(RiskIndicatorItem(
+                name=f"Prolonged Duration ({context.duration_months} mo / {context.duration_weeks} wk)",
+                detail="Symptoms have persisted for 3 months or longer, suggesting non-transient progression."
+            ))
+
+        # 11. Family history of hair loss
+        if context.family_history_hair_loss:
+            markers.append(RiskIndicatorItem(
+                name="Family History: Hair Loss",
+                detail="Genetic predisposition to androgenetic pattern hair loss."
+            ))
+
+        marker_count = len(markers)
+        has_pain = context.scalp_pain_trichodynia or context.burning_or_pain
+
+        # Transparent count-based rule with clinical pain escalation (provisional / uncalibrated):
+        # 0 markers: low
+        # 1-2 markers (and no severe inflammatory pain): moderate
+        # 3+ markers OR presence of acute inflammatory pain: elevated
+        if marker_count == 0:
+            overall_level = "low"
+        elif marker_count <= 2 and not has_pain:
+            overall_level = "moderate"
+        else:
+            overall_level = "elevated"
+
+        return RiskIndicators(
+            overall_level=overall_level,
+            marker_count=marker_count,
+            triggered_markers=markers,
+            note="Self-reported, not clinically validated. Kept separate from image-derived Scalp Health Score."
+        )
+
+    @classmethod
     def evaluate(
         cls,
         raw_condition: str,
@@ -194,6 +316,7 @@ class TriageEngine:
         total_shs = float(max(0.0, min(100.0, total_shs)))
 
         correlations = cls.compute_correlations(context, sub_scores)
+        risk_indicators = cls.compute_risk_indicators(context)
 
         # -------------------------------------------------------------------
         # 1. Server-Side Confidence Gate Enforcement
@@ -356,6 +479,7 @@ class TriageEngine:
             lifestyle_guidance=lifestyle_enriched,
             consultation_referral=referral,
             disclaimer=UNIVERSAL_DISCLAIMER,
+            risk_indicators=risk_indicators,
             analysis_timestamp=datetime.now(timezone.utc).isoformat()
         )
 

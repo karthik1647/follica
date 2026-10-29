@@ -91,8 +91,15 @@ class ClinicalPDFService:
                 ["Suggested Pattern:", analysis.suggested_condition],
                 ["Confidence Metric:", f"{analysis.confidence_score * 100:.1f}% {'(Confidence-Gated)' if analysis.confidence_gated else ''}"],
                 ["Triage Category:", analysis.triage_level],
-                ["Composite Scalp Health Score:", f"{analysis.scalp_health_score:.1f} / 100"]
+                ["Composite Scalp Health Score:", f"{analysis.scalp_health_score:.1f} / 100 (Image-only CV Score)"]
             ]
+            if hasattr(analysis, "risk_indicators") and analysis.risk_indicators:
+                risk_lvl = analysis.risk_indicators.overall_level.capitalize()
+                risk_cnt = analysis.risk_indicators.marker_count
+                triage_data.append([
+                    "Questionnaire Risk Indicators:",
+                    f"{risk_lvl} ({risk_cnt} marker{'s' if risk_cnt != 1 else ''} flagged; self-reported, not clinically validated)"
+                ])
             triage_table = Table(triage_data, colWidths=[160, 360])
             triage_table.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#F8FAFC')),
@@ -130,6 +137,11 @@ class ClinicalPDFService:
 
             # Self-Reported Context
             story.append(Paragraph("Patient-Reported Context", heading_style))
+            if hasattr(analysis, "risk_indicators") and analysis.risk_indicators and analysis.risk_indicators.triggered_markers:
+                story.append(Paragraph("<b>Triggered Risk Indicators (self-reported, not clinically validated):</b>", body_style))
+                for m in analysis.risk_indicators.triggered_markers:
+                    story.append(Paragraph(f"• <b>{m.name}:</b> {m.detail}", body_style))
+                story.append(Spacer(1, 4))
             context_text = (
                 f"<b>Symptom Duration:</b> {context.duration_months} Months ({context.duration_weeks} Weeks) | "
                 f"<b>Itching:</b> {'Yes' if context.itching else 'No'} | "

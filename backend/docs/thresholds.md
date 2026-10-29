@@ -143,9 +143,23 @@ All cut-offs below are provisional heuristics. No clinical calibration has been 
 
 ---
 
+## 10. Questionnaire Risk Indicators Count-Based Rules (`services/triage_engine.py`)
+
+> Object: `risk_indicators` in `AnalysisResponse`. Transparent count-based evaluation of 11 self-reported lifestyle and symptom intake markers. Kept strictly separate from the image-derived `scalp_health_score` (self-reported, not clinically validated).
+
+| File | Constant / Expression | Value | Controls | Status |
+|------|-----------------------|-------|----------|--------|
+| `backend/app/services/triage_engine.py` | `marker_count == 0` | `0` | No self-reported risk markers flagged -> overall level: `low`. | **uncalibrated** |
+| `backend/app/services/triage_engine.py` | `1 <= marker_count <= 2 and not has_pain` | `1 – 2` | Mild self-reported risk markers -> overall level: `moderate`. | **uncalibrated** |
+| `backend/app/services/triage_engine.py` | `marker_count >= 3 or has_pain` | `>= 3` / pain | Multiple risk markers or inflammatory scalp pain / trichodynia -> overall level: `elevated`. | **uncalibrated** |
+| `backend/app/services/triage_engine.py` | `duration_months >= 3 or duration_weeks >= 12` | `3 mo / 12 wk` | Prolonged symptom timeline threshold identifying chronic vs acute involvement. | **uncalibrated** |
+
+---
+
 ## Change Log
 
 | Date | Change |
 |------|--------|
 | 2026-10-30 | Created. All thresholds collected from `cv_pipeline.py`, `quality_gate.py`, `config.py`. All marked **uncalibrated**. Removed all unsupported citations (Flament et al., PMC11975186, rÂ²=0.952, L'Oreal ScalpConsult Pro study, \$35B market). |
 | 2026-10-30 (density fix) | Section 7 rewritten: `edge_energy >= 18.0` gradient threshold **removed**; replaced by hair-coverage segmentation thresholds (`coverage_ratio`, LAB L < 115, p90 < 70). See commit f2b128a. All new thresholds **uncalibrated**. |
+| 2026-10-30 (risk indicators) | Section 10 added: questionnaire-derived risk indicators object added to `AnalysisResponse`, computed via transparent count rules (`low` / `moderate` / `elevated`) without blending into image-only `scalp_health_score`. All thresholds **uncalibrated**. |
