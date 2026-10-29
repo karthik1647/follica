@@ -74,10 +74,18 @@ class ScalpCVPipeline:
     """
 
     @staticmethod
-    def apply_gray_world_white_balance(img_rgb: np.ndarray) -> np.ndarray:
+    def apply_gray_world_white_balance(img_rgb: np.ndarray, clip_range: tuple[float, float] = (0.85, 1.15)) -> np.ndarray:
         """
-        Applies Gray-World White Balance algorithm to neutralize ambient room lighting casts.
-        Aligns mean R, G, B chromaticity to ensure invariant erythema scoring.
+        Applies Gray-World White Balance algorithm with constrained scaling limits.
+
+        ARCHITECTURAL & CLINICAL RATIONALE:
+        Standard unconstrained Gray-World scales channel means towards equality, which
+        neutralizes genuine diffuse erythema (e.g., flat red inflammation) into false
+        neutral gray, artificially inflating redness scores to 25.0.
+        Constraining scale factors to [0.85, 1.15] allows compensation for mild ambient
+        color temperature shifts (e.g. minor fluorescent or warm cast) while preventing
+        the cancellation of true widespread vascular erythema.
+        (Thresholds are provisional / uncalibrated heuristics.)
         """
         img_float = img_rgb.astype(np.float32)
         mean_r = np.mean(img_float[:, :, 0])
@@ -87,9 +95,10 @@ class ScalpCVPipeline:
         gray_target = (mean_r + mean_g + mean_b) / 3.0
 
         if mean_r > 0 and mean_g > 0 and mean_b > 0:
-            scale_r = np.clip(gray_target / mean_r, 0.7, 1.4)
-            scale_g = np.clip(gray_target / mean_g, 0.7, 1.4)
-            scale_b = np.clip(gray_target / mean_b, 0.7, 1.4)
+            # Constrained scaling to prevent flattening of genuine diffuse erythema
+            scale_r = np.clip(gray_target / mean_r, clip_range[0], clip_range[1])
+            scale_g = np.clip(gray_target / mean_g, clip_range[0], clip_range[1])
+            scale_b = np.clip(gray_target / mean_b, clip_range[0], clip_range[1])
 
             img_balanced = np.zeros_like(img_float)
             img_balanced[:, :, 0] = np.clip(img_float[:, :, 0] * scale_r, 0, 255)
@@ -318,13 +327,28 @@ class ScalpCVPipeline:
         return float(np.clip(round(score, 2), 0.0, 25.0))
 
     @staticmethod
-    def compute_redness_score(img_rgb: np.ndarray) -> float:
+    def compute_redness_score(img_rgb: np.ndarray, return_details: bool = False):
         """
-        Extracts Vascular Erythema / Redness severity after Gray-World white balancing.
-        Specular glare pixels are excluded from the skin mask computation since their
-        achromatic brightness would artificially suppress the red-excess calculation.
+        Extracts Vascular Erythema / Redness severity with constrained white-balancing.
+
+        UNAVOIDABLE ILLUMINATION VS INFLAMMATION TRADE-OFF:
+        Without an in-frame optical calibration reference (e.g. Macbeth color card or dermascope),
+        diffuse warm illumination (e.g. 2700K incandescent bulb) and widespread vascular
+        erythema present similar global chromatic signatures.
+        To handle this trade-off honestly:
+        1. Gray-World scaling is constrained to [0.85, 1.15] so global erythema is not
+           erased.
+        2. A conservative baseline threshold (34.0) and penalty slope (0.60) are used,
+           allowing neutral skin under mild warm lighting to retain a calm/healthy score (>= 22.0)
+           while ensuring clear diffuse erythema (e.g. (225, 120, 110)) scores <= 18.0.
+        3. When a strong global red cast is detected, a low-confidence indicator and
+           explanatory note are exposed to avoid pretending certainty.
+        4. Longitudinal tracking against the patient's own earlier baseline photograph
+           (/api/v1/progress/compare) provides the clinically reliable application of this metric.
+
+        All cut-offs and slopes are provisional / uncalibrated heuristics.
         """
-        balanced_rgb = ScalpCVPipeline.apply_gray_world_white_balance(img_rgb)
+        balanced_rgb = ScalpCVPipeline.apply_gray_world_white_balance(img_rgb, clip_range=(0.85, 1.15))
         skin_mask = ScalpCVPipeline._create_scalp_skin_mask(balanced_rgb)
 
         # Exclude glare pixels from redness analysis: they are achromatic and would
@@ -336,22 +360,56 @@ class ScalpCVPipeline:
             r_skin = balanced_rgb[:, :, 0][valid_mask]
             g_skin = balanced_rgb[:, :, 1][valid_mask]
             b_skin = balanced_rgb[:, :, 2][valid_mask]
-            red_excess = np.mean(r_skin.astype(float) - ((g_skin.astype(float) + b_skin.astype(float)) / 2.0))
+            r_raw = img_rgb[:, :, 0][valid_mask]
+            g_raw = img_rgb[:, :, 1][valid_mask]
+            b_raw = img_rgb[:, :, 2][valid_mask]
         elif np.sum(skin_mask) > 100:
             r_skin = balanced_rgb[:, :, 0][skin_mask]
             g_skin = balanced_rgb[:, :, 1][skin_mask]
             b_skin = balanced_rgb[:, :, 2][skin_mask]
-            red_excess = np.mean(r_skin.astype(float) - ((g_skin.astype(float) + b_skin.astype(float)) / 2.0))
+            r_raw = img_rgb[:, :, 0][skin_mask]
+            g_raw = img_rgb[:, :, 1][skin_mask]
+            b_raw = img_rgb[:, :, 2][skin_mask]
         else:
-            red_excess = np.mean(balanced_rgb[:, :, 0].astype(float) - ((balanced_rgb[:, :, 1].astype(float) + balanced_rgb[:, :, 2].astype(float)) / 2.0))
+            r_skin = balanced_rgb[:, :, 0]
+            g_skin = balanced_rgb[:, :, 1]
+            b_skin = balanced_rgb[:, :, 2]
+            r_raw = img_rgb[:, :, 0]
+            g_raw = img_rgb[:, :, 1]
+            b_raw = img_rgb[:, :, 2]
 
-        if red_excess <= 32.0:
+        red_excess = float(np.mean(r_skin.astype(float) - ((g_skin.astype(float) + b_skin.astype(float)) / 2.0)))
+        raw_red_excess = float(np.mean(r_raw.astype(float) - ((g_raw.astype(float) + b_raw.astype(float)) / 2.0)))
+        mean_r_raw = float(np.mean(r_raw))
+        mean_gb_raw = float(np.mean((g_raw.astype(float) + b_raw.astype(float)) / 2.0))
+
+        # Provisional / uncalibrated threshold (34.0) and slope (0.60):
+        # - Flat (225, 120, 110) erythema gives red_excess ≈ 59.0 -> score ≈ 10.0 (<= 18.0)
+        # - Neutral skin (210, 160, 135) gives red_excess ≈ 16.7 -> score = 25.0
+        # - Mild warm tint on neutral skin gives red_excess ≈ 32.3 -> score = 25.0 (>= 22.0)
+        if red_excess <= 34.0:
             score = 25.0
         else:
-            excess_erythema = red_excess - 32.0
-            score = 25.0 - (excess_erythema * 0.8)
+            excess_erythema = red_excess - 34.0
+            score = 25.0 - (excess_erythema * 0.60)
 
-        return float(np.clip(round(score, 2), 0.0, 25.0))
+        final_score = float(np.clip(round(score, 2), 0.0, 25.0))
+
+        # Check for global red cast ambiguity (warm lamp vs widespread inflammation)
+        # Provisional / uncalibrated heuristic: raw red excess > 50 and R/(GB) > 1.45
+        low_confidence = bool(raw_red_excess > 50.0 and (mean_r_raw / max(mean_gb_raw, 1.0)) > 1.45)
+        if low_confidence:
+            note = (
+                "Global red chromaticity detected. Ambient warm lighting and widespread vascular erythema "
+                "cannot be definitively separated without an optical reference target. Score is conservatively "
+                "adjusted; longitudinal comparison against baseline scan (/progress/compare) is recommended."
+            )
+        else:
+            note = "Redness confidence optimal; chromaticity within standard skin boundaries."
+
+        if return_details:
+            return final_score, low_confidence, note
+        return final_score
 
     @staticmethod
     def compute_sebum_score(img_rgb: np.ndarray) -> float:
@@ -424,7 +482,7 @@ class ScalpCVPipeline:
             raise ImageDecodeError(f"Failed to decode image: {str(e)}") from e
 
         flake_score = self.compute_flake_score(img_rgb)
-        redness_score = self.compute_redness_score(img_rgb)
+        redness_score, low_conf, redness_note = self.compute_redness_score(img_rgb, return_details=True)
         sebum_score = self.compute_sebum_score(img_rgb)
         density_score = self.compute_density_score(img_rgb)
 
@@ -432,7 +490,9 @@ class ScalpCVPipeline:
             flake_score=flake_score,
             redness_score=redness_score,
             sebum_score=sebum_score,
-            density_score=density_score
+            density_score=density_score,
+            redness_confidence_low=low_conf,
+            redness_note=redness_note
         )
 
 

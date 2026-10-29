@@ -263,6 +263,14 @@ class SubScores(BaseModel):
         default="Within baseline density boundaries (Norwood 1-2 / Ludwig 1)",
         description="Pattern stage reference against standardized hair loss progression scales"
     )
+    redness_confidence_low: Optional[bool] = Field(
+        default=None,
+        description="True when global red color cast creates ambiguity between warm ambient lighting and diffuse erythema"
+    )
+    redness_note: Optional[str] = Field(
+        default=None,
+        description="Optional clinical note regarding ambient lighting cast vs vascular erythema"
+    )
 
 
 class IngredientRecommendation(BaseModel):

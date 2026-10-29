@@ -89,8 +89,9 @@ All cut-offs below are provisional heuristics. No clinical calibration has been 
 
 | File | Constant / Expression | Value | Controls | Status |
 |------|-----------------------|-------|----------|--------|
-| `backend/app/services/cv_pipeline.py` | `red_excess <= 32.0` | `32.0` | Red-excess (R − mean(G,B)) below this is scored as optimal (25.0). Above this the score decays. | **uncalibrated** |
-| `backend/app/services/cv_pipeline.py` | `score = 25.0 − (excess_erythema × 0.8)` | `0.8` | Linear penalty coefficient applied to red excess above the 32.0 baseline. | **uncalibrated** |
+| `backend/app/services/cv_pipeline.py` | `red_excess <= 34.0` | `34.0` | Red-excess (R − mean(G,B)) below this is scored as optimal (25.0). Tolerates mild warm ambient lighting on neutral skin. | **uncalibrated** |
+| `backend/app/services/cv_pipeline.py` | `score = 25.0 − (excess_erythema × 0.60)` | `0.60` | Linear penalty coefficient applied to red excess above 34.0 baseline. | **uncalibrated** |
+| `backend/app/services/cv_pipeline.py` | `raw_red_excess > 50.0 and R/GB > 1.45` | `50.0, 1.45` | Global red cast threshold triggering low-confidence flag due to ambient lighting vs erythema ambiguity. | **uncalibrated** |
 | `backend/app/services/cv_pipeline.py` | `_create_scalp_skin_mask`: `r > 60`, `g > 40` | `60`, `40` | Absolute channel thresholds defining the skin chromaticity region. Dark hair shafts are excluded. | **uncalibrated** |
 
 ---
@@ -130,7 +131,7 @@ All cut-offs below are provisional heuristics. No clinical calibration has been 
 
 | File | Constant / Expression | Value | Controls | Status |
 |------|-----------------------|-------|----------|--------|
-| `backend/app/services/cv_pipeline.py` | `np.clip(gray_target / mean_r, 0.7, 1.4)` | `0.7 – 1.4` | Channel scaling range; prevents extreme colour correction that would produce unnatural results on very colour-cast images. | **uncalibrated** |
+| `backend/app/services/cv_pipeline.py` | `np.clip(gray_target / mean_r, 0.85, 1.15)` | `0.85 – 1.15` | Constrained channel scaling range; allows minor ambient color correction while preventing complete cancellation of true widespread vascular erythema. | **uncalibrated** |
 
 ---
 
