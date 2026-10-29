@@ -257,7 +257,7 @@ class SubScores(BaseModel):
         ...,
         ge=0.0,
         le=25.0,
-        description="Hair Follicle & Density Score (0=significant thinning/spacing, 25=dense follicular coverage)"
+        description="Hair Coverage (indicative) Score (0=minimal visible coverage, 25=dense coverage). Note: indicative visible fiber area ratio, does NOT measure follicular unit density."
     )
     stage_comparison: Optional[str] = Field(
         default="Within baseline density boundaries (Norwood 1-2 / Ludwig 1)",
@@ -270,6 +270,14 @@ class SubScores(BaseModel):
     redness_note: Optional[str] = Field(
         default=None,
         description="Optional clinical note regarding ambient lighting cast vs vascular erythema"
+    )
+    density_confidence_low: Optional[bool] = Field(
+        default=None,
+        description="True when optical contrast between hair fibers and skin is too low to reliably segment coverage"
+    )
+    density_note: Optional[str] = Field(
+        default=None,
+        description="Optional clinical note regarding hair coverage and contrast limitations"
     )
 
 

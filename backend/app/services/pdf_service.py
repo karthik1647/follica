@@ -113,7 +113,7 @@ class ClinicalPDFService:
                 ["Flake & Scaling Score (0-25)", f"{analysis.sub_scores.flake_score:.1f}", "High-contrast particle count & area ratio"],
                 ["Erythema / Redness Score (0-25)", f"{analysis.sub_scores.redness_score:.1f}", "Skin chrominance delta from baseline"],
                 ["Sebum / Lipid Score (0-25)", f"{analysis.sub_scores.sebum_score:.1f}", "Specular highlight and luster distribution"],
-                ["Follicular Density Score (0-25)", f"{analysis.sub_scores.density_score:.1f}", "Multi-directional edge texture density"]
+                ["Hair Coverage (indicative) (0-25)", f"{analysis.sub_scores.density_score:.1f}", "Estimated visible fiber area ratio"]
             ]
             sub_table = Table([["Metric", "Score", "Extraction Method"]] + sub_data, colWidths=[180, 70, 270])
             sub_table.setStyle(TableStyle([
@@ -177,7 +177,7 @@ CV SUB-SCORES (0-25):
 - Flake & Scaling Score    : {analysis.sub_scores.flake_score:.1f}
 - Erythema & Redness Score : {analysis.sub_scores.redness_score:.1f}
 - Sebum Balance Score      : {analysis.sub_scores.sebum_score:.1f}
-- Density & Texture Score  : {analysis.sub_scores.density_score:.1f}
+- Hair Coverage (indicative): {analysis.sub_scores.density_score:.1f}
 
 PATIENT CONTEXT:
 - Duration: {context.duration_weeks} weeks

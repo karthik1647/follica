@@ -450,22 +450,121 @@ class ScalpCVPipeline:
         return float(np.clip(round(score, 2), 0.0, 25.0))
 
     @staticmethod
-    def compute_density_score(img_rgb: np.ndarray) -> float:
+    def compute_density_score(img_rgb: np.ndarray, return_details: bool = False):
         """
-        Extracts Hair Density and Follicular Coverage.
-        Uses gradient magnitude / edge energy.
-        """
-        gray = np.dot(img_rgb[..., :3], [0.2989, 0.5870, 0.1140])
-        diff_y = np.abs(np.diff(gray, axis=0))
-        diff_x = np.abs(np.diff(gray, axis=1))
-        edge_energy = float(np.mean(diff_y) + np.mean(diff_x))
+        Extracts Hair Coverage (indicative).
 
-        if edge_energy >= 18.0:
-            score = 25.0
+        IMPORTANT CLINICAL & METHODOLOGICAL LIMITATIONS:
+        1. This metric measures 2D visible hair fiber area coverage ratio. It does NOT
+           measure true follicular unit density (follicles/cm²), which requires contact
+           dermascopy/trichoscopy with calibrated optical magnification.
+        2. Contrast Dependency: The algorithm segments dark hair fibers on lighter skin.
+           When contrast is insufficient (e.g. grey, blonde, dyed hair, or dark skin phototypes
+           Fitzpatrick V-VI), optical segmentation is unreliable. In such cases, the function
+           assigns a neutral midpoint score (12.50) and flags density_confidence_low=True
+           rather than guessing.
+        3. Framing Sensitivity: Camera zoom distance, focus angle, and hair parting geometry
+           substantially alter visible scalp exposure. Longitudinal comparisons (/progress/compare)
+           must adhere to standardized photo distances and parting angles.
+
+        All segmentation thresholds (lightness L < 115, 50% fiber coverage for 25.0 score,
+        line count threshold 20) are provisional / uncalibrated heuristics.
+        """
+        # Exclude specular glare pixels (which should not count as hair or skin)
+        r = img_rgb[:, :, 0].astype(int)
+        g = img_rgb[:, :, 1].astype(int)
+        b = img_rgb[:, :, 2].astype(int)
+        brightness = np.maximum(np.maximum(r, g), b)
+        min_channel = np.minimum(np.minimum(r, g), b)
+        color_diff = np.abs(r - g) + np.abs(g - b)
+        glare_mask = (brightness > 230) & (color_diff < 25) & (min_channel > 190)
+
+        if HAS_OPENCV:
+            lab = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2LAB)
+            L = lab[:, :, 0]
+            valid_L = L[~glare_mask] if np.any(~glare_mask) else L.flatten()
+            p90 = float(np.percentile(valid_L, 90))
+
+            # Detect line fibers using HoughLinesP on smoothed Canny edges
+            gray = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2GRAY)
+            blur = cv2.GaussianBlur(gray, (7, 7), sigmaX=1.8)
+            edges = cv2.Canny(blur, 8, 22)
+            lines = cv2.HoughLinesP(edges, 1, np.pi / 180, threshold=40, minLineLength=30, maxLineGap=10)
+            num_lines = len(lines) if lines is not None else 0
+
+            # Dark hair fiber segmentation (provisional threshold L < 115)
+            dark_pixels = (L < 115) & (~glare_mask)
+            kernel_open = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+            hair_clean = cv2.morphologyEx(dark_pixels.astype(np.uint8), cv2.MORPH_OPEN, kernel_open)
+
+            total_valid = np.sum(~glare_mask)
+            coverage_ratio = float(np.sum(hair_clean > 0)) / max(float(total_valid), 1.0)
+
+            # Low contrast detection:
+            # - Dark skin phototype: skin tissue is dark (p90 < 70)
+            # - Fibers exist (num_lines >= 20) but dark fiber coverage is near zero (< 0.5%): grey/blonde/dyed hair
+            is_dark_skin = (p90 < 70.0)
+            is_grey_or_blonde = (num_lines >= 20) and (coverage_ratio < 0.005)
+
+            if is_dark_skin or is_grey_or_blonde:
+                neutral_score = 12.50
+                note = (
+                    "Hair coverage (indicative) could not be estimated reliably due to low optical contrast "
+                    "between hair fibers and scalp tissue (e.g. grey, blonde, dyed hair, or dark skin phototype). "
+                    "A neutral baseline score (12.50) is returned. Manual trichoscopy is recommended."
+                )
+                if return_details:
+                    return neutral_score, True, note
+                return neutral_score
+
+            # Strand-free scalp region (smooth skin, no dark fibers, no strand lines)
+            if coverage_ratio < 0.005 and num_lines < 20:
+                score = 0.0
+                note = "Hair coverage (indicative): 0.0% estimated fiber area (strand-free smooth scalp region)."
+                if return_details:
+                    return score, False, note
+                return score
+
+            # Linear mapping: 50% fiber coverage in frame -> full score 25.0
+            score = (coverage_ratio / 0.50) * 25.0
+            final_score = float(np.clip(round(score, 2), 0.0, 25.0))
+            note = (
+                f"Hair coverage (indicative): {coverage_ratio * 100:.1f}% estimated fiber area. "
+                "Note: optical surface coverage does not measure follicular unit density and varies with photo zoom and parting."
+            )
+            if return_details:
+                return final_score, False, note
+            return final_score
         else:
-            score = (edge_energy / 18.0) * 25.0
+            # Pure NumPy fallback
+            gray = np.dot(img_rgb[..., :3], [0.2989, 0.5870, 0.1140])
+            valid_gray = gray[~glare_mask] if np.any(~glare_mask) else gray.flatten()
+            p90 = float(np.percentile(valid_gray, 90))
 
-        return float(np.clip(round(score, 2), 0.0, 25.0))
+            dark_pixels = (gray < 90) & (~glare_mask)
+            total_valid = np.sum(~glare_mask)
+            coverage_ratio = float(np.sum(dark_pixels)) / max(float(total_valid), 1.0)
+
+            if p90 < 65.0:
+                neutral_score = 12.50
+                note = "Hair coverage (indicative): Low contrast dark skin phototype. Neutral score returned."
+                if return_details:
+                    return neutral_score, True, note
+                return neutral_score
+
+            if coverage_ratio < 0.005:
+                score = 0.0
+                note = "Hair coverage (indicative): 0.0% estimated fiber area (strand-free smooth scalp region)."
+                if return_details:
+                    return score, False, note
+                return score
+
+            score = (coverage_ratio / 0.50) * 25.0
+            final_score = float(np.clip(round(score, 2), 0.0, 25.0))
+            note = f"Hair coverage (indicative): {coverage_ratio * 100:.1f}% estimated fiber area (NumPy fallback)."
+            if return_details:
+                return final_score, False, note
+            return final_score
 
     def analyze_image(self, img_bytes: bytes) -> SubScores:
         """
@@ -482,17 +581,19 @@ class ScalpCVPipeline:
             raise ImageDecodeError(f"Failed to decode image: {str(e)}") from e
 
         flake_score = self.compute_flake_score(img_rgb)
-        redness_score, low_conf, redness_note = self.compute_redness_score(img_rgb, return_details=True)
+        redness_score, red_low_conf, redness_note = self.compute_redness_score(img_rgb, return_details=True)
         sebum_score = self.compute_sebum_score(img_rgb)
-        density_score = self.compute_density_score(img_rgb)
+        density_score, density_low_conf, density_note = self.compute_density_score(img_rgb, return_details=True)
 
         return SubScores(
             flake_score=flake_score,
             redness_score=redness_score,
             sebum_score=sebum_score,
             density_score=density_score,
-            redness_confidence_low=low_conf,
-            redness_note=redness_note
+            redness_confidence_low=red_low_conf,
+            redness_note=redness_note,
+            density_confidence_low=density_low_conf,
+            density_note=density_note
         )
 
 
