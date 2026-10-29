@@ -89,6 +89,7 @@ class TriageEngine:
             context.shedding_pattern == "sudden_acute" or
             context.hair_pull_test == "positive_over_5" or
             context.recent_exam_work_stress or
+            context.stress_level == "high" or
             context.diet_pattern == "low_protein_crash_diet"
         )
         if is_te_profile and context.hair_pull_test != "negative_under_3":
@@ -171,6 +172,30 @@ class TriageEngine:
                 impact_level="low",
                 clinical_note="No active cutaneous inflammation or microbial scaling detected on the scalp surface."
             ))
+
+        # 12. Demographic Presentation Profile (Age Group + Biological Sex)
+        # Informational explanatory text only; no numeric score weights.
+        pattern_desc = ""
+        if context.biological_sex == "male":
+            pattern_desc = "In biological males, androgenetic sensitivity typically manifests as bitemporal recession and vertex thinning (Norwood pattern)."
+        elif context.biological_sex == "female":
+            pattern_desc = "In biological females, pattern thinning commonly presents as diffuse widening along the central parting with frontal hairline preservation (Ludwig pattern)."
+        else:
+            pattern_desc = "Pattern hair thinning may present with either diffuse central widening or frontal edge recession."
+
+        age_desc = ""
+        if context.age_group == "under_18":
+            age_desc = "In individuals under 18, androgenetic miniaturization is relatively rare; shedding is more commonly linked to nutritional demands, traction, or acute telogen shifts. Note: This assessment tool is not intended for unsupervised use by minors; involvement of a parent or guardian and a paediatric dermatologist is recommended."
+        elif context.age_group in ["18_25", "26_35"]:
+            age_desc = f"In early adulthood ({context.age_group.replace('_', '-')}), hair cycling dynamics frequently reflect genetic predisposition, lifestyle transitions, or nutritional demands."
+        else:
+            age_desc = f"In mature age brackets ({context.age_group.replace('_', '-')}), progressive age-related follicular diameter reduction and hormonal shifts commonly influence overall visible density."
+
+        correlations.append(ClinicalCorrelationFactor(
+            factor="Demographic Presentation Profile",
+            impact_level="moderate" if context.age_group == "under_18" else "low",
+            clinical_note=f"{pattern_desc} {age_desc}"
+        ))
 
         return correlations
 
@@ -459,6 +484,40 @@ class TriageEngine:
         if context.hormonal_profile in ["thyroid_dysfunction", "pcos_irregular_cycles", "insulin_resistance"] or context.metabolic_energy in ["chronic_sluggish_fatigue", "sudden_weight_shift"]:
             lifestyle_enriched.append(
                 "Discuss targeted blood work (TSH, Free T3/T4, Serum Ferritin, Vitamin D3, Fasting Glucose) with your physician to evaluate systemic metabolic drivers."
+            )
+
+        # Age group guardian advisory
+        if context.age_group == "under_18":
+            lifestyle_enriched.append(
+                "Notice for users under 18: Follica is an informational tool not intended for unsupervised use by minors. Please review your symptoms with a parent or legal guardian and seek evaluation from a qualified paediatric physician or dermatologist before starting any new scalp treatments."
+            )
+
+        # Washing frequency guidance
+        if context.washing_frequency == "daily":
+            lifestyle_enriched.append(
+                "Washing frequency advice: Daily washing with standard surfactants can strip the scalp's protective lipid barrier and provoke compensatory sebum rebound. Consider alternating washes with lukewarm water or switching to an ultra-gentle, sulfate-free daily formulation."
+            )
+        elif context.washing_frequency in ["once_per_week", "rarely"]:
+            lifestyle_enriched.append(
+                "Washing frequency advice: Infrequent scalp cleansing allows sebum, environmental debris, and shed keratinocytes to accumulate, fostering an environment for microbial and Malassezia yeast overgrowth. Aim for a regular cadence of 2-3 washes per week."
+            )
+
+        # Chemical / thermal heat styling guidance
+        if context.chemical_heat_styling:
+            lifestyle_enriched.append(
+                "Thermal and chemical styling advisory: Frequent high-heat blow drying, straightening, or chemical treatments can damage the protective hair cuticle and weaken tensile strength; use thermal protection sprays and minimize heat exposure during recovery."
+            )
+
+        # Stress level guidance
+        if context.stress_level == "high":
+            lifestyle_enriched.append(
+                "Stress management: Elevated psychological stress increases circulating cortisol levels, which can prematurely trigger follicle transition into the telogen resting phase. Prioritize stress-reduction practices and regular physical activity."
+            )
+
+        # Sleep quality guidance
+        if context.sleep_quality in ["irregular_under_6h", "shift_work_disrupted"]:
+            lifestyle_enriched.append(
+                "Sleep hygiene: Irregular or inadequate sleep (<6 hours) disrupts nocturnal cellular repair cycles and hormone regulation essential for sustained follicular anagen growth. Aim for consistent, restorative sleep windows."
             )
 
         if context.gut_health != "optimal" or context.metabolic_energy != "balanced" or context.hormonal_profile != "none":

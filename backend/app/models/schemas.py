@@ -49,7 +49,6 @@ class SymptomContext(BaseModel):
         "diffuse_all_over",
         "patchy_spots"
     ] = Field(default="crown_vertex", description="Primary anatomical area of concern or routine check")
-    scan_angle: str = Field(default="crown_vertex", description="Targeted anatomical scalp angle")
 
     # 2. Multi-Select Sensations & Trichodynia
     sensation: str = Field(

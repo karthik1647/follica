@@ -142,12 +142,21 @@ class ClinicalPDFService:
                 for m in analysis.risk_indicators.triggered_markers:
                     story.append(Paragraph(f"• <b>{m.name}:</b> {m.detail}", body_style))
                 story.append(Spacer(1, 4))
+            minor_notice = ""
+            if context.age_group == "under_18":
+                minor_notice = "<b>Minor Patient Notice:</b> Under-18 assessment; involvement of a parent or guardian and consultation with a paediatric dermatologist is advised.<br/>"
+
             context_text = (
-                f"<b>Symptom Duration:</b> {context.duration_months} Months ({context.duration_weeks} Weeks) | "
+                f"{minor_notice}"
+                f"<b>Demographics:</b> Age {context.age_group.replace('_', '-')} ({context.biological_sex.capitalize()}) | "
+                f"<b>Symptom Duration:</b> {context.duration_months} Months ({context.duration_weeks} Weeks)<br/>"
+                f"<b>Washing Cadence:</b> {context.washing_frequency.replace('_', ' ').title()} | "
+                f"<b>Heat/Chemical Styling:</b> {'Yes' if context.chemical_heat_styling else 'No'} | "
                 f"<b>Itching:</b> {'Yes' if context.itching else 'No'} | "
-                f"<b>Burning/Pain:</b> {'Yes' if context.burning_or_pain else 'No'} | "
-                f"<b>Hard Water:</b> {'Yes' if context.hard_water_exposure else 'No'} | "
-                f"<b>Stress:</b> {context.stress_level.capitalize()}<br/>"
+                f"<b>Burning/Pain:</b> {'Yes' if context.burning_or_pain else 'No'}<br/>"
+                f"<b>Stress Level:</b> {context.stress_level.capitalize()} | "
+                f"<b>Sleep Quality:</b> {context.sleep_quality.replace('_', ' ').title()} | "
+                f"<b>Hard Water:</b> {'Yes' if context.hard_water_exposure else 'No'}<br/>"
                 f"<b>Gut Health:</b> {context.gut_health.replace('_', ' ').title()} | "
                 f"<b>Metabolic Energy:</b> {context.metabolic_energy.replace('_', ' ').title()} | "
                 f"<b>Endocrine/Hormonal:</b> {context.hormonal_profile.replace('_', ' ').title()}<br/>"

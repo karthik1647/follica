@@ -168,6 +168,9 @@
                                     <div class="chip-item"><input type="radio" id="age-4" name="age_group" value="36_50"><label for="age-4" class="chip-label">36 - 50</label></div>
                                     <div class="chip-item"><input type="radio" id="age-5" name="age_group" value="over_50"><label for="age-5" class="chip-label">50+</label></div>
                                 </div>
+                                <div id="under-18-notice" style="display: none; margin-top: 8px; font-size: 0.74rem; color: #92400e; background: #fffbeb; border: 1px solid #fde68a; padding: 6px 10px; border-radius: 6px;">
+                                    <strong>Guardian Notice:</strong> Follica is designed for adult educational awareness. For individuals under 18, symptoms should be reviewed with a parent or legal guardian and evaluated by a paediatric physician or dermatologist.
+                                </div>
                             </div>
                             <div class="form-row">
                                 <span class="field-label">Biological Sex / Pattern Model</span>
@@ -250,6 +253,22 @@
                                     <div class="chip-item"><input type="radio" id="horm-2" name="hormonal_profile" value="thyroid_dysfunction" onchange="updateRiskCounter()"><label for="horm-2" class="chip-label">Thyroid Condition</label></div>
                                     <div class="chip-item"><input type="radio" id="horm-3" name="hormonal_profile" value="pcos_irregular_cycles" onchange="updateRiskCounter()"><label for="horm-3" class="chip-label">PCOS / Irregular Cycles</label></div>
                                     <div class="chip-item"><input type="radio" id="horm-4" name="hormonal_profile" value="insulin_resistance" onchange="updateRiskCounter()"><label for="horm-4" class="chip-label">Insulin Resistance</label></div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <span class="field-label">Psychological Stress Level</span>
+                                <div class="chip-group">
+                                    <div class="chip-item"><input type="radio" id="stress-low" name="stress_level" value="low"><label for="stress-low" class="chip-label">Low</label></div>
+                                    <div class="chip-item"><input type="radio" id="stress-mod" name="stress_level" value="moderate" checked><label for="stress-mod" class="chip-label">Moderate</label></div>
+                                    <div class="chip-item"><input type="radio" id="stress-high" name="stress_level" value="high"><label for="stress-high" class="chip-label">High / Severe</label></div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <span class="field-label">Sleep Quality & Duration</span>
+                                <div class="chip-group">
+                                    <div class="chip-item"><input type="radio" id="sleep-1" name="sleep_quality" value="good_7_8h" checked><label for="sleep-1" class="chip-label">Good (7-8 hrs)</label></div>
+                                    <div class="chip-item"><input type="radio" id="sleep-2" name="sleep_quality" value="irregular_under_6h"><label for="sleep-2" class="chip-label">Irregular (&lt;6 hrs)</label></div>
+                                    <div class="chip-item"><input type="radio" id="sleep-3" name="sleep_quality" value="shift_work_disrupted"><label for="sleep-3" class="chip-label">Shift Work / Disrupted</label></div>
                                 </div>
                             </div>
                             <div class="form-row">
@@ -424,6 +443,15 @@
         let currentAnalysisResult = null;
         let selectedFile = null;
 
+        function handleAgeChange() {
+            const checkedAge = document.querySelector('input[name="age_group"]:checked')?.value;
+            const notice = document.getElementById('under-18-notice');
+            if (notice) {
+                notice.style.display = (checkedAge === 'under_18') ? 'block' : 'none';
+            }
+        }
+        document.querySelectorAll('input[name="age_group"]').forEach(el => el.addEventListener('change', handleAgeChange));
+
         function updateRiskCounter() {
             let count = 0;
             if (document.getElementById('helmet-check').checked) count++;
@@ -588,6 +616,8 @@
             formData.append('gut_health', document.querySelector('input[name="gut_health"]:checked')?.value || 'optimal');
             formData.append('metabolic_energy', document.querySelector('input[name="metabolic_energy"]:checked')?.value || 'balanced');
             formData.append('hormonal_profile', document.querySelector('input[name="hormonal_profile"]:checked')?.value || 'none');
+            formData.append('stress_level', document.querySelector('input[name="stress_level"]:checked')?.value || 'moderate');
+            formData.append('sleep_quality', document.querySelector('input[name="sleep_quality"]:checked')?.value || 'good_7_8h');
             
             const sensChecked = Array.from(document.querySelectorAll('input[name="sensation_opt"]:checked')).map(cb => cb.value);
             formData.append('sensation', sensChecked.join(',') || 'painless');

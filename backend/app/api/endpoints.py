@@ -151,7 +151,6 @@ async def analyze_scalp(
     age_group: str = Form(default="18_25"),
     biological_sex: str = Form(default="male"),
     primary_concern_zone: str = Form(default="crown_vertex"),
-    scan_angle: str = Form(default="crown_vertex"),
     # Sensation & Trichodynia
     sensation: str = Form(default="painless"),
     itching: bool = Form(default=False),
@@ -257,7 +256,6 @@ async def analyze_scalp(
         age_group=age_group if age_group in ["under_18", "18_25", "26_35", "36_50", "over_50"] else "18_25",
         biological_sex=biological_sex if biological_sex in ["male", "female", "other"] else "male",
         primary_concern_zone=primary_concern_zone if primary_concern_zone in valid_zones else "crown_vertex",
-        scan_angle=scan_angle,
         sensation=",".join(sens_items),
         sensations=sens_items,
         itching=itching or ("itching" in sens_items or "pruritus" in sens_items),
