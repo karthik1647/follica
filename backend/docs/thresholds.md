@@ -52,14 +52,17 @@
 
 All cut-offs below are provisional heuristics. No clinical calibration has been performed.
 
-### 4a. Top-Hat Morphology and Contour Filtering (OpenCV path)
+### 4a. Top-Hat Morphology, Denoising, and Contour Filtering (OpenCV path)
 
 | File | Constant / Expression | Value | Controls | Status |
 |------|-----------------------|-------|----------|--------|
+| `backend/app/services/cv_pipeline.py` | `cv2.GaussianBlur(img_bgr, (3, 3), sigmaX=1.2)` | `(3, 3), σ=1.2` | Pre-CLAHE smoothing to prevent sub-pixel Gaussian noise from being amplified into sharp intensity peaks. | **uncalibrated** |
+| `backend/app/services/cv_pipeline.py` | `cv2.createCLAHE(clipLimit=1.5, ...)` | `1.5` | Contrast limit for adaptive histogram equalization, balanced to avoid over-amplifying flat skin texture. | **uncalibrated** |
+| `backend/app/services/cv_pipeline.py` | `_build_hair_mask`: `gray < 80`, 11×11 dilation | `80`, 11×11 | Dark hair shaft threshold and dilation kernel to mask inter-hair skin gaps from false flake detection. | **uncalibrated** |
 | `backend/app/services/cv_pipeline.py` | `cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9))` | `9 × 9` | Top-Hat kernel size; larger than this represents skin texture rather than dandruff squames. | **uncalibrated** |
-| `backend/app/services/cv_pipeline.py` | `cv2.threshold(tophat, 35, ...)` | `35` | Intensity threshold separating candidate flake pixels from background. | **uncalibrated** |
-| `backend/app/services/cv_pipeline.py` | `area < 5 or area > 1500` | `5 – 1500 px²` | Contour area filter; particles outside this range are rejected as noise or non-flake structures. | **uncalibrated** |
-| `backend/app/services/cv_pipeline.py` | `edge_var >= 8.0` | `8.0` | Minimum Laplacian variance inside a candidate contour. Genuine keratin squames have rough boundaries; smooth residual glare fringes are below this value. | **uncalibrated** |
+| `backend/app/services/cv_pipeline.py` | `cv2.threshold(tophat, 50, ...)` | `50` | Intensity threshold separating candidate flake pixels from background after denoising. | **uncalibrated** |
+| `backend/app/services/cv_pipeline.py` | `area < 12 or area > 1500` | `12 – 1500 px²` | Contour area filter; rejects single-pixel noise clusters (<12) and overly large structures (>1500). | **uncalibrated** |
+| `backend/app/services/cv_pipeline.py` | `8.0 <= edge_var <= 2500.0` | `8.0 – 2500.0` | Laplacian variance window inside candidate contour; excludes smooth glare fringes (<8) and high-frequency noise spikes (>2500). | **uncalibrated** |
 
 ### 4b. Flake Coverage → Grade → Score Mapping (`_flake_ratio_to_score`)
 
@@ -76,8 +79,9 @@ All cut-offs below are provisional heuristics. No clinical calibration has been 
 
 | File | Constant / Expression | Value | Controls | Status |
 |------|-----------------------|-------|----------|--------|
-| `backend/app/services/cv_pipeline.py` | `gray_glare_free > (local_mean + 45)` | `+45` | Brightness offset above local mean for classifying a pixel as a candidate flake. | **uncalibrated** |
-| `backend/app/services/cv_pipeline.py` | `gray_glare_free > 180` | `180` | Absolute minimum brightness for a candidate flake pixel (ensures it is light-coloured). | **uncalibrated** |
+| `backend/app/services/cv_pipeline.py` | `gray < 80` (hair mask) | `80` | Masks dark hair pixels in pure NumPy path. | **uncalibrated** |
+| `backend/app/services/cv_pipeline.py` | `gray_glare_free > (local_mean + 55)` | `+55` | Brightness offset above local mean for classifying a pixel as a candidate flake. | **uncalibrated** |
+| `backend/app/services/cv_pipeline.py` | `gray_glare_free > 185` | `185` | Absolute minimum brightness for a candidate flake pixel (ensures it is light-coloured). | **uncalibrated** |
 
 ---
 
