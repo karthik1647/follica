@@ -29,6 +29,7 @@ from app.core.constants import (
     CONDITION_ALOPECIA_AREATA,
     CONDITION_FOLLICULITIS,
     CONDITION_SCALP_PSORIASIS,
+    CONDITION_ANDROGENETIC_ALOPECIA,
     CONDITION_UNVERIFIED_MONITORED,
     TRIAGE_LEVEL_1_MINOR,
     TRIAGE_LEVEL_2_MONITORED,
@@ -413,6 +414,29 @@ class TriageEngine:
                         f"Reported symptoms: Burning/Pain={context.burning_or_pain}, "
                         f"Trichodynia={context.scalp_pain_trichodynia}, "
                         f"Duration={context.duration_months} months ({context.duration_weeks} weeks). Scalp Health Score={total_shs}/100."
+                    )
+                )
+
+            elif raw_condition == CONDITION_ANDROGENETIC_ALOPECIA:
+                triage_level = TRIAGE_LEVEL_2_MONITORED
+                triage_reason = (
+                    "Visual patterns and reported intake indicate progressive follicular miniaturization consistent with pattern hair loss (androgenetic alopecia). "
+                    "Structured routine monitoring and consultation with a dermatologist are recommended to discuss medical management options."
+                )
+                guide = INGREDIENT_GUIDES.get(raw_condition, INGREDIENT_GUIDES[CONDITION_NORMAL])
+                ingredients = [
+                    IngredientRecommendation(**item) for item in guide.get("ingredients", [])
+                ]
+                lifestyle = guide.get("lifestyle", [])
+                referral = ConsultationReferral(
+                    required=True,
+                    urgency="recommended",
+                    addressed_to="For your treating physician / dermatologist",
+                    search_url=GENERIC_DERMATOLOGIST_SEARCH_URL,
+                    clinical_hand_off_notes=(
+                        f"Pattern hair loss assessment suggests {raw_condition}. "
+                        f"Duration={context.duration_months} months ({context.duration_weeks} weeks). "
+                        f"Scalp Health Score={total_shs}/100. Dermatologist evaluation recommended for clinical trichoscopy."
                     )
                 )
 

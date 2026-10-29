@@ -27,7 +27,9 @@ from app.core.constants import (
     CONDITION_DRY_SCALP,
     CONDITION_SEBORRHEIC_DERMATITIS,
     CONDITION_ALOPECIA_AREATA,
-    CONDITION_FOLLICULITIS
+    CONDITION_FOLLICULITIS,
+    CONDITION_ANDROGENETIC_ALOPECIA,
+    CONDITION_SCALP_PSORIASIS
 )
 from app.models.schemas import SymptomContext
 
@@ -113,19 +115,49 @@ class ScalpClassifierService:
 
     def _heuristic_classify(self, img_bytes: bytes, context: SymptomContext) -> Tuple[str, float]:
         """
-        Contextual fallback evaluator for local testing.
+        Contextual fallback evaluator for local testing when CNN model weights are absent.
         Combines multi-select questionnaire flags, concern zones, and visual features.
+
+        Note: This fallback is a rule-based stand-in until the CNN is retrained. The current
+        CNN class list (CLASSES, 5 classes) cannot output CONDITION_ANDROGENETIC_ALOPECIA or
+        CONDITION_SCALP_PSORIASIS without expanded training data and new class heads.
         """
-        if context.primary_concern_zone == "routine_healthy_check" and not context.itching and not context.burning_or_pain:
+        # 1. Psoriasis / Scalp Plaque check (provisional / uncalibrated heuristic)
+        if context.flake_type == "plaque_crusty" or "plaque" in context.sensation.lower():
+            return CONDITION_SCALP_PSORIASIS, 0.82
+
+        # 2. Routine healthy check
+        elif context.primary_concern_zone == "routine_healthy_check" and not context.itching and not context.burning_or_pain:
             return CONDITION_NORMAL, 0.94
+
+        # 3. Folliculitis / Scalp Bumps
         elif context.burning_or_pain and (context.duration_months >= 1 or context.duration_weeks > 3):
             return CONDITION_FOLLICULITIS, 0.81
-        elif context.itching and (context.hard_water_exposure or "burning" in context.sensation):
+
+        # 4. Focal / Patchy bald spots -> Alopecia Areata (autoimmune focal loss)
+        elif context.primary_concern_zone == "patchy_spots":
+            return CONDITION_ALOPECIA_AREATA, 0.78
+
+        # 5. Pattern thinning (crown/vertex, hairline/temples, central parting, diffuse) + family history or gradual chronic progression -> Androgenetic Alopecia
+        elif (
+            (context.family_history_hair_loss or context.shedding_pattern == "gradual_chronic")
+            and context.primary_concern_zone in ["crown_vertex", "hairline_temples", "central_parting", "diffuse_all_over"]
+            and (context.duration_months >= 2 or context.duration_weeks > 8)
+        ):
+            return CONDITION_ANDROGENETIC_ALOPECIA, 0.76
+
+        # 6. Seborrheic Dermatitis (greasy yellow scales or itching with hard water / burning)
+        elif (
+            context.flake_type == "greasy_yellow_thick"
+            or (context.itching and (context.hard_water_exposure or "burning" in context.sensation))
+        ):
             return CONDITION_SEBORRHEIC_DERMATITIS, 0.84
-        elif context.itching and not context.hard_water_exposure:
+
+        # 7. Dry Scalp / Mild Flaking
+        elif context.itching or context.flake_type == "dry_white_fine":
             return CONDITION_DRY_SCALP, 0.77
-        elif context.family_history_hair_loss and (context.duration_months >= 2 or context.duration_weeks > 8) and context.primary_concern_zone in ["crown_vertex", "hairline_temples", "patchy_spots"]:
-            return CONDITION_ALOPECIA_AREATA, 0.73
+
+        # 8. Baseline healthy
         else:
             return CONDITION_NORMAL, 0.89
 

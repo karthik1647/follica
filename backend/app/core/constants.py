@@ -44,6 +44,7 @@ CONDITION_NORMAL = "Pattern Consistent with Balanced / Healthy Scalp"
 CONDITION_DRY_SCALP = "Pattern Suggestive of Dry Scalp / Mild Flaking"
 CONDITION_SEBORRHEIC_DERMATITIS = "Pattern Suggestive of Seborrheic Dermatitis"
 CONDITION_ALOPECIA_AREATA = "Pattern Suggestive of Alopecia Areata / Patchy Loss"
+CONDITION_ANDROGENETIC_ALOPECIA = "Pattern Suggestive of Androgenetic Alopecia / Pattern Thinning"
 CONDITION_FOLLICULITIS = "Pattern Suggestive of Folliculitis / Scalp Bumps"
 CONDITION_SCALP_PSORIASIS = "Pattern Suggestive of Scalp Plaque / Scaling"
 CONDITION_UNVERIFIED_MONITORED = "Indeterminate Pattern / Requires Verification"
@@ -156,6 +157,56 @@ INGREDIENT_GUIDES = {
             "Do not squeeze, pick, or mechanically scratch inflamed follicular bumps.",
             "Launder pillowcases frequently in warm water.",
             "Seek evaluation from a dermatologist for appropriate clinical management."
+        ]
+    },
+    CONDITION_ANDROGENETIC_ALOPECIA: {
+        "summary": "Visual indications and self-reported intake suggest progressive pattern thinning consistent with androgenetic alopecia. A formal dermatological evaluation is recommended to discuss medical management options.",
+        "ingredients": [
+            {
+                "name": "Botanical Rosemary & Peptide Scalp Tonic",
+                "frequency": "Daily / post-wash",
+                "purpose": "Provides supportive antioxidant and peptide conditioning for the scalp micro-environment; discuss medical interventions directly with a certified dermatologist."
+            },
+            {
+                "name": "Niacinamide (2%) & Caffeine Scalp Serum",
+                "frequency": "1-2x daily",
+                "purpose": "Supports localized epidermal micro-circulation and skin barrier strength."
+            },
+            {
+                "name": "Gentle Volumizing / Densifying Cleanser",
+                "frequency": "2-3x per week",
+                "purpose": "Removes sebum buildup around follicular ostia without stripping moisture from delicate hair shafts."
+            }
+        ],
+        "lifestyle": [
+            "Consult a certified dermatologist or trichologist for trichoscopy assessment and individualized management plans.",
+            "Avoid hairstyles causing excessive physical tension (traction) that add mechanical stress to miniaturizing follicles.",
+            "Track visual pattern progression with standardized monthly parting photos under consistent lighting."
+        ]
+    },
+    CONDITION_SCALP_PSORIASIS: {
+        "summary": "Visual presentation or reported intake suggests thick, adherent plaque scaling or induration. Clinical assessment by a dermatologist is recommended for targeted management.",
+        "ingredients": [
+            {
+                "name": "Salicylic Acid / Keratolytic Scalp Solution",
+                "frequency": "1-2x per week as directed by physician",
+                "purpose": "Helps soften and gently loosen thick, adherent hyperkeratotic surface scales."
+            },
+            {
+                "name": "Ceramide & Colloidal Oat Soothing Emulsion",
+                "frequency": "Daily as needed",
+                "purpose": "Relieves scalp dryness and discomfort while supporting epidermal barrier integrity."
+            },
+            {
+                "name": "Gentle Non-Medicated Scalp Cleanser",
+                "frequency": "2-3x per week",
+                "purpose": "Cleanses without aggravating inflamed plaque margins or causing mechanical irritation."
+            }
+        ],
+        "lifestyle": [
+            "Consult a dermatologist for formal evaluation, as scalp plaque conditions typically require targeted prescription topical therapies.",
+            "Avoid forcibly picking, scratching, or peeling thick plaques, which can trigger localized inflammation (Koebner response).",
+            "Use lukewarm water rather than hot water when washing hair to minimize epidermal irritation and vascular erythema."
         ]
     }
 }

@@ -156,6 +156,21 @@ All cut-offs below are provisional heuristics. No clinical calibration has been 
 
 ---
 
+## 11. Heuristic Classification Fallback Rules (`services/classifier_service.py`)
+
+> Evaluated when ONNX model weights are absent or in fallback evaluation mode. Note: This rule-based fallback is a stand-in until the CNN is retrained. The CNN class list (`CLASSES`, 5 classes) matches `training/train.py` and requires new labeled training data to natively output `CONDITION_ANDROGENETIC_ALOPECIA` or `CONDITION_SCALP_PSORIASIS`.
+
+| File | Condition / Branch | Target Label | Confidence | Status |
+|------|--------------------|--------------|------------|--------|
+| `backend/app/services/classifier_service.py` | `flake_type == "plaque_crusty"` or `"plaque" in sensation` | `CONDITION_SCALP_PSORIASIS` | `0.82` | **uncalibrated** |
+| `backend/app/services/classifier_service.py` | `primary_concern_zone == "patchy_spots"` | `CONDITION_ALOPECIA_AREATA` | `0.78` | **uncalibrated** |
+| `backend/app/services/classifier_service.py` | `(family_history or gradual_chronic) and concern in ["crown_vertex", "hairline_temples", "central_parting", "diffuse_all_over"]` | `CONDITION_ANDROGENETIC_ALOPECIA` | `0.76` | **uncalibrated** |
+| `backend/app/services/classifier_service.py` | `burning_or_pain and duration >= 1 mo` | `CONDITION_FOLLICULITIS` | `0.81` | **uncalibrated** |
+| `backend/app/services/classifier_service.py` | `flake_type == "greasy_yellow_thick"` or `(itching and (hard_water or burning))` | `CONDITION_SEBORRHEIC_DERMATITIS` | `0.84` | **uncalibrated** |
+| `backend/app/services/classifier_service.py` | `itching` or `flake_type == "dry_white_fine"` | `CONDITION_DRY_SCALP` | `0.77` | **uncalibrated** |
+
+---
+
 ## Change Log
 
 | Date | Change |
@@ -164,3 +179,4 @@ All cut-offs below are provisional heuristics. No clinical calibration has been 
 | 2026-10-30 (density fix) | Section 7 rewritten: `edge_energy >= 18.0` gradient threshold **removed**; replaced by hair-coverage segmentation thresholds (`coverage_ratio`, LAB L < 115, p90 < 70). See commit f2b128a. All new thresholds **uncalibrated**. |
 | 2026-10-30 (risk indicators) | Section 10 added: questionnaire-derived risk indicators object added to `AnalysisResponse`, computed via transparent count rules (`low` / `moderate` / `elevated`) without blending into image-only `scalp_health_score`. All thresholds **uncalibrated**. |
 | 2026-10-30 (questionnaire usage) | Removed unused `scan_angle`. Wired `biological_sex` + `age_group` into non-numeric correlation text notes (Norwood vs Ludwig, under-18 guardian advisory). Wired `washing_frequency`, `chemical_heat_styling`, `stress_level`, `sleep_quality` into tailored lifestyle text. Added frontend form selectors for `stress_level` and `sleep_quality`. All advisory rules are qualitative and **uncalibrated**. |
+| 2026-10-30 (condition classification fixes) | Section 11 added: heuristic fallback rules updated. Family history + crown/vertex mapped to `CONDITION_ANDROGENETIC_ALOPECIA` (Level 2 triage). `patchy_spots` mapped to `CONDITION_ALOPECIA_AREATA` (Level 3). `plaque_crusty` mapped to `CONDITION_SCALP_PSORIASIS`. Added `plaque_crusty` option in frontend form. Documented that CNN `CLASSES` (5 classes) is constrained and requires model retraining. All fallback rules **uncalibrated**. |

@@ -141,6 +141,7 @@ def test_randomized_dual_pipeline_invariants(scenario_idx):
         "Pattern Suggestive of Dry Scalp / Mild Flaking",
         "Pattern Suggestive of Seborrheic Dermatitis",
         "Pattern Suggestive of Alopecia Areata / Patchy Loss",
+        "Pattern Suggestive of Androgenetic Alopecia / Pattern Thinning",
         "Pattern Suggestive of Folliculitis / Scalp Bumps",
         "Pattern Suggestive of Scalp Plaque / Scaling",
         "Indeterminate Pattern / Requires Verification"
