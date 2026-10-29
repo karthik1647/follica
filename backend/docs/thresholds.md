@@ -148,3 +148,4 @@ All cut-offs below are provisional heuristics. No clinical calibration has been 
 | Date | Change |
 |------|--------|
 | 2026-10-30 | Created. All thresholds collected from `cv_pipeline.py`, `quality_gate.py`, `config.py`. All marked **uncalibrated**. Removed all unsupported citations (Flament et al., PMC11975186, rÂ²=0.952, L'Oreal ScalpConsult Pro study, \$35B market). |
+| 2026-10-30 (density fix) | Section 7 rewritten: `edge_energy >= 18.0` gradient threshold **removed**; replaced by hair-coverage segmentation thresholds (`coverage_ratio`, LAB L < 115, p90 < 70). See commit f2b128a. All new thresholds **uncalibrated**. |

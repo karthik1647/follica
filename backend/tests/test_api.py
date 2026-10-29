@@ -292,7 +292,7 @@ def test_thresholds_documentation_exists_and_is_complete():
         "CONFIDENCE_GATE_THRESHOLD",
         "red_excess",           # erythema threshold
         "shine_ratio",          # sebum thresholds
-        "edge_energy",          # density threshold
+        "coverage_ratio",       # hair-coverage density threshold (replaced edge_energy in commit f2b128a)
         "uncalibrated",         # status column must have at least one
         "flash_glare",          # flash glare threshold
     ]
