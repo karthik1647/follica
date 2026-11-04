@@ -10,6 +10,7 @@ import {
   SafeAreaView,
   StatusBar,
 } from "react-native";
+import * as ImagePicker from "expo-image-picker";
 import { checkSystemStatus, submitScalpAnalysis, DEFAULT_API_BASE } from "./src/services/api";
 
 export default function App() {
@@ -17,6 +18,7 @@ export default function App() {
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
+  const [selectedImageUri, setSelectedImageUri] = useState(null);
   const [analysisResult, setAnalysisResult] = useState(null);
 
   // Questionnaire state
@@ -48,6 +50,47 @@ export default function App() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const pickImage = async (useCamera = false) => {
+    const fn = useCamera
+      ? ImagePicker.launchCameraAsync
+      : ImagePicker.launchImageLibraryAsync;
+    const res = await fn({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.85,
+    });
+    if (!res.canceled && res.assets && res.assets.length > 0) {
+      setSelectedImageUri(res.assets[0].uri);
+      setStatusMessage("Scalp photograph selected and ready for analysis.");
+    }
+  };
+
+  const runLiveOrMockAnalysis = async () => {
+    if (selectedImageUri) {
+      try {
+        setLoading(true);
+        const live = await submitScalpAnalysis(selectedImageUri, intake, apiBaseUrl);
+        const ingredients = (live.recommended_ingredients || []).map((item) => ({
+          molecule: item.name,
+          frequency: item.frequency,
+          contact_time: "Standard leave-on",
+          mechanism: item.purpose,
+        }));
+        setAnalysisResult({
+          ...live,
+          active_ingredients: ingredients,
+          lifestyle_advice: live.lifestyle_guidance || [],
+        });
+        setCurrentStep(3);
+        return;
+      } catch (err) {
+        setStatusMessage(`Live API error: ${err.message}`);
+      } finally {
+        setLoading(false);
+      }
+    }
+    runMockAnalysis();
   };
 
   const runMockAnalysis = () => {
@@ -164,6 +207,14 @@ export default function App() {
               <Text style={styles.secondaryButtonText}>Test Server Connection</Text>
             </TouchableOpacity>
 
+            <TouchableOpacity style={styles.secondaryButton} onPress={() => pickImage(true)} disabled={loading}>
+              <Text style={styles.secondaryButtonText}>Capture Scalp Photo (Camera)</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.secondaryButton} onPress={() => pickImage(false)} disabled={loading}>
+              <Text style={styles.secondaryButtonText}>Select Scalp Photo (Gallery)</Text>
+            </TouchableOpacity>
+
             {statusMessage ? <Text style={styles.statusText}>{statusMessage}</Text> : null}
 
             <TouchableOpacity style={styles.primaryButton} onPress={() => setCurrentStep(2)}>
@@ -253,7 +304,7 @@ export default function App() {
               ))}
             </View>
 
-            <TouchableOpacity style={styles.primaryButton} onPress={runMockAnalysis} disabled={loading}>
+            <TouchableOpacity style={styles.primaryButton} onPress={runLiveOrMockAnalysis} disabled={loading}>
               {loading ? (
                 <ActivityIndicator color="#ffffff" />
               ) : (

@@ -11,12 +11,14 @@
     },
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "com.follica.scalptriage",
       "infoPlist": {
         "NSCameraUsageDescription": "Follica requires camera access to capture standardized scalp photographs for computer vision health triage.",
         "NSPhotoLibraryUsageDescription": "Follica requires photo library access to upload scalp photographs for analysis."
       }
     },
     "android": {
+      "package": "com.follica.scalptriage",
       "adaptiveIcon": {
         "backgroundColor": "#0f172a"
       },

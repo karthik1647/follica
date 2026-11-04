@@ -7,10 +7,12 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "build:apk": "eas build -p android --profile preview"
   },
   "dependencies": {
     "expo": "~51.0.0",
+    "expo-image-picker": "~15.0.7",
     "expo-status-bar": "~1.12.1",
     "react": "18.2.0",
     "react-native": "0.74.1"
