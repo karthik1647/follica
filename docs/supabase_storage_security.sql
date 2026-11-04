@@ -1,8 +1,12 @@
-﻿-- ==============================================================================
--- Follica Supabase Storage & Database Security Policy
 -- ==============================================================================
+-- Follica Supabase Storage & Database Security Policy (Reference Template)
+-- ==============================================================================
+-- Note: Reference design template only. No application-level encryption at rest
+-- is implemented; production deployments requiring encryption should leverage
+-- OS-level full-disk encryption (BitLocker/LUKS) or managed encrypted cloud volumes.
+--
 -- Features:
--- 1. Encrypted-at-rest storage bucket configuration
+-- 1. Private access-controlled storage bucket configuration
 -- 2. Strict Row Level Security (RLS) policies (Users only access their own scans)
 -- 3. Automated 30-Day Retention Policy Cleanup Function (Staying within 1GB Free Tier)
 -- ==============================================================================
@@ -10,8 +14,8 @@
 -- 1. Create Private Storage Bucket for Scalp Scans
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES (
-    'follica-scalp-scans-encrypted',
-    'follica-scalp-scans-encrypted',
+    'follica-scalp-scans',
+    'follica-scalp-scans',
     false,
     10485760, -- 10MB limit per photo
     ARRAY['image/jpeg', 'image/png', 'image/webp']
@@ -23,7 +27,7 @@ CREATE POLICY "Users can upload only to their own folder"
 ON storage.objects
 FOR INSERT
 WITH CHECK (
-    bucket_id = 'follica-scalp-scans-encrypted'
+    bucket_id = 'follica-scalp-scans'
     AND auth.uid()::text = (storage.foldername(name))[1]
 );
 
@@ -31,7 +35,7 @@ CREATE POLICY "Users can view only their own uploaded scans"
 ON storage.objects
 FOR SELECT
 USING (
-    bucket_id = 'follica-scalp-scans-encrypted'
+    bucket_id = 'follica-scalp-scans'
     AND auth.uid()::text = (storage.foldername(name))[1]
 );
 
@@ -39,7 +43,7 @@ CREATE POLICY "Users can delete their own scans"
 ON storage.objects
 FOR DELETE
 USING (
-    bucket_id = 'follica-scalp-scans-encrypted'
+    bucket_id = 'follica-scalp-scans'
     AND auth.uid()::text = (storage.foldername(name))[1]
 );
 
@@ -69,7 +73,7 @@ AS $$
 BEGIN
     -- Delete storage records older than user retention window (default 30 days)
     DELETE FROM storage.objects
-    WHERE bucket_id = 'follica-scalp-scans-encrypted'
+    WHERE bucket_id = 'follica-scalp-scans'
       AND created_at < NOW() - INTERVAL '30 days';
 END;
 $$;

@@ -180,7 +180,7 @@ To help new contributors navigate the codebase without ambiguity:
 | `backend/app/services/classifier_service.py` | **Functional / Heuristic Stub** | Ready to load `.onnx` weights from `models/`. Runs an embedded heuristic classifier when local model weights are not present. |
 | `training/follica_training_colab.ipynb` | **Fully Implemented** | Cloud training notebook with Google Drive checkpointing to survive disconnects. |
 | `training/calibration_loader.py` | **Fully Implemented / Data Placeholder** | Pipeline logic ready; awaiting physical addition of 100-200 volunteer photos. |
-| `docs/supabase_storage_security.sql` | **Fully Implemented** | SQL schema for AES-256 encrypted bucket and automated 30-day retention purge. |
+| `docs/supabase_storage_security.sql` | **Reference Template** | Example PostgreSQL schema for private storage buckets and automated 30-day retention purge (no application-level encryption at rest; recommends OS-level disk encryption). |
 | `mobile/` | **Not Started** | Reserved for React Native / Expo cross-platform mobile frontend. |
 
 ---

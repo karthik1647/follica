@@ -156,7 +156,7 @@ PHASE 1: DUAL-PIPELINE CORE & WEB STUDIO [COMPLETED]
 PHASE 2: MOBILE APPLICATION WITH HARDWARE-LOCKED CAPTURE [IN PROGRESS]
 ├── React Native (Expo) cross-platform iOS/Android mobile client (mobile/)
 ├── Hardware camera viewfinder with locked flash and distance crosshair overlays
-├── Local SQLite encrypted scan diary with offline baseline caching
+├── Local SQLite scan diary with offline baseline caching (recommends OS-level disk encryption)
 └── Adherence push notifications for active wash leave-on schedules (e.g. 2x/week)
 
 PHASE 3: ADVANCED TRICHOSCOPIC BIOMARKERS [PLANNED]

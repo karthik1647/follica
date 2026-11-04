@@ -78,7 +78,7 @@ class Settings(BaseModel):
     CONSENT_MAX_RETENTION_DAYS: int = 365
 
     # Storage Bucket Name (future use - not currently active)
-    SUPABASE_STORAGE_BUCKET: str = "follica-scalp-scans-encrypted"
+    SUPABASE_STORAGE_BUCKET: str = "follica-scalp-scans"
 
     # CORS Configuration:
     # Comma-separated list or list of allowed origin URLs.

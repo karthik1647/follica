@@ -206,9 +206,22 @@ class ScalpCVPipeline:
         # Provisional / uncalibrated: dark pixel threshold at 80
         hair_binary = (gray < 80).astype(np.uint8) * 255
         if not HAS_OPENCV:
-            # Cheap dilation via max-pool approximation (5-px halo)
-            from scipy.ndimage import binary_dilation
-            return binary_dilation(hair_binary > 0, iterations=5)
+            # Pure NumPy binary dilation approximation (5-px halo) without scipy or OpenCV
+            dilated = (hair_binary > 0).copy()
+            for _ in range(5):
+                padded = np.pad(dilated, 1, mode="constant", constant_values=False)
+                dilated = (
+                    padded[:-2, 1:-1]
+                    | padded[2:, 1:-1]
+                    | padded[1:-1, :-2]
+                    | padded[1:-1, 2:]
+                    | padded[:-2, :-2]
+                    | padded[:-2, 2:]
+                    | padded[2:, :-2]
+                    | padded[2:, 2:]
+                    | dilated
+                )
+            return dilated
         # Dilate by 5 px to cover the bright halo at each hair edge
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (11, 11))
         dilated = cv2.dilate(hair_binary, kernel)

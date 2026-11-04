@@ -245,8 +245,8 @@ def generate_report(output_path: str):
         ],
         [
             Paragraph("9. Wireless Transmission", table_cell_bold),
-            Paragraph("Encrypted client-server payload transmission over TLS (HTTPS). Multipart/form-data schema transmitting image bytes and structured JSON questionnaire context to FastAPI.", table_cell),
-            Paragraph("AES-256 encrypted at rest in database storage with user-selectable 30-day automated purge window.", table_cell)
+            Paragraph("Secure client-server payload transmission over TLS (HTTPS). Multipart/form-data schema transmitting image bytes and structured JSON questionnaire context to FastAPI for transient in-memory inference.", table_cell),
+            Paragraph("No application-level encryption at rest implemented; recommends OS-level disk encryption (BitLocker/LUKS) with user-selectable 30-day automated purge window.", table_cell)
         ],
         [
             Paragraph("10. Data Display & Storage", table_cell_bold),

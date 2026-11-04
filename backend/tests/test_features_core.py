@@ -144,3 +144,23 @@ def test_healthy_individual_routine_checkup():
     assert "Balanced" in res["suggested_condition"] or "Healthy" in res["suggested_condition"] or "Normal" in res["suggested_condition"]
     assert any("pH-Balanced" in ing["name"] or "Panthenol" in ing["name"] for ing in res["recommended_ingredients"])
 
+
+def test_hair_mask_numpy_fallback_without_scipy():
+    """Verify hair fiber mask dilation works in pure NumPy without scipy or OpenCV."""
+    from app.services.cv_pipeline import cv_pipeline
+    import app.services.cv_pipeline as cv_mod
+    import numpy as np
+
+    gray = np.full((100, 100), 120, dtype=np.uint8)
+    gray[45:55, 45:55] = 40  # dark hair patch < 80
+
+    orig_has_opencv = cv_mod.HAS_OPENCV
+    try:
+        cv_mod.HAS_OPENCV = False
+        mask_np = cv_pipeline._build_hair_mask(gray)
+        assert mask_np.shape == (100, 100)
+        assert mask_np.dtype == bool
+        assert np.any(mask_np)
+        assert np.sum(mask_np) > 100  # dilated beyond initial 10x10 patch
+    finally:
+        cv_mod.HAS_OPENCV = orig_has_opencv
