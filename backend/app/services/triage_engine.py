@@ -31,6 +31,11 @@ from app.core.constants import (
     CONDITION_SCALP_PSORIASIS,
     CONDITION_ANDROGENETIC_ALOPECIA,
     CONDITION_UNVERIFIED_MONITORED,
+    CONDITION_CONTACT_DERMATITIS,
+    CONDITION_HEAD_LICE,
+    CONDITION_LICHEN_PLANUS,
+    CONDITION_TELOGEN_EFFLUVIUM,
+    CONDITION_TINEA_CAPITIS,
     TRIAGE_LEVEL_1_MINOR,
     TRIAGE_LEVEL_2_MONITORED,
     TRIAGE_LEVEL_3_ESCALATION,
@@ -385,12 +390,20 @@ class TriageEngine:
         # 2. Confident Prediction Triage Evaluation (Confidence >= 0.65)
         # -------------------------------------------------------------------
         else:
+            notes_lower = (context.symptom_notes or "").lower()
+            has_red_flag_lesion = any(
+                kw in notes_lower
+                for kw in ["bleed", "sore", "ulcer", "oozing", "open wound", "not heal", "won't heal"]
+            )
             is_level_3_condition = raw_condition in [
                 CONDITION_ALOPECIA_AREATA,
                 CONDITION_FOLLICULITIS,
-                CONDITION_SCALP_PSORIASIS
+                CONDITION_SCALP_PSORIASIS,
+                CONDITION_HEAD_LICE,
+                CONDITION_LICHEN_PLANUS,
+                CONDITION_TINEA_CAPITIS,
             ]
-            has_severe_pain = context.burning_or_pain or context.scalp_pain_trichodynia
+            has_severe_pain = context.burning_or_pain or context.scalp_pain_trichodynia or has_red_flag_lesion
             has_severe_erythema = sub_scores.redness_score < 8.0
 
             if is_level_3_condition or has_severe_pain or has_severe_erythema:
@@ -440,6 +453,25 @@ class TriageEngine:
                     )
                 )
 
+            elif raw_condition in [CONDITION_CONTACT_DERMATITIS, CONDITION_TELOGEN_EFFLUVIUM]:
+                triage_level = TRIAGE_LEVEL_2_MONITORED
+                triage_reason = (
+                    "Visual patterns suggest a condition that is often self-limiting once the trigger is "
+                    "identified. Follow the guidance, track progress, and seek evaluation if it persists."
+                )
+                guide = INGREDIENT_GUIDES[raw_condition]
+                ingredients = [
+                    IngredientRecommendation(**item) for item in guide.get("ingredients", [])
+                ]
+                lifestyle = guide.get("lifestyle", [])
+                referral = ConsultationReferral(
+                    required=False,
+                    urgency="routine",
+                    addressed_to="For your treating physician / dermatologist",
+                    search_url=GENERIC_DERMATOLOGIST_SEARCH_URL,
+                    clinical_hand_off_notes=f"Visual analysis suggests {raw_condition}. Review if unresolved after 2-4 weeks."
+                )
+
             elif raw_condition == CONDITION_SEBORRHEIC_DERMATITIS or context.flake_type == "greasy_yellow_thick" or (context.itching and (context.duration_months >= 1 or context.duration_weeks > 4)):
                 triage_level = TRIAGE_LEVEL_2_MONITORED
 
@@ -460,7 +492,7 @@ class TriageEngine:
                     clinical_hand_off_notes="Monitored active ingredient regimen in progress. Review if unresolved after 4 weeks."
                 )
 
-            elif raw_condition == CONDITION_NORMAL or (total_shs >= 75.0 and not context.itching and not context.burning_or_pain and context.flake_type == "none"):
+            elif raw_condition == CONDITION_NORMAL or (raw_condition == CONDITION_DRY_SCALP and total_shs >= 75.0 and not context.itching and not context.burning_or_pain and context.flake_type == "none"):
                 triage_level = TRIAGE_LEVEL_1_MINOR
                 final_condition = CONDITION_NORMAL
                 triage_reason = (
@@ -505,9 +537,14 @@ class TriageEngine:
             lifestyle_enriched.append(
                 "Support the gut-skin-hair axis: prioritize dietary fiber, fermented foods, and hydration to optimize micronutrient (iron, zinc, amino acid) bioavailability."
             )
-        if context.hormonal_profile in ["thyroid_dysfunction", "pcos_irregular_cycles", "insulin_resistance"] or context.metabolic_energy in ["chronic_sluggish_fatigue", "sudden_weight_shift"]:
+        if (
+            context.hormonal_profile in ["thyroid_dysfunction", "pcos_irregular_cycles", "insulin_resistance"]
+            or context.metabolic_energy in ["chronic_sluggish_fatigue", "sudden_weight_shift"]
+            or context.hair_pull_test in ["borderline_3_5", "positive_over_5"]
+            or context.shedding_pattern == "sudden_acute"
+        ):
             lifestyle_enriched.append(
-                "Discuss targeted blood work (TSH, Free T3/T4, Serum Ferritin, Vitamin D3, Fasting Glucose) with your physician to evaluate systemic metabolic drivers."
+                "Discuss targeted blood work (Serum Ferritin, Vitamin D3, TSH, Fasting Glucose) with your physician to evaluate systemic metabolic or acute effluvium drivers."
             )
 
         # Age group guardian advisory

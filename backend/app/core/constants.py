@@ -48,6 +48,11 @@ CONDITION_ANDROGENETIC_ALOPECIA = "Pattern Suggestive of Androgenetic Alopecia /
 CONDITION_FOLLICULITIS = "Pattern Suggestive of Folliculitis / Scalp Bumps"
 CONDITION_SCALP_PSORIASIS = "Pattern Suggestive of Scalp Plaque / Scaling"
 CONDITION_UNVERIFIED_MONITORED = "Indeterminate Pattern / Requires Verification"
+CONDITION_CONTACT_DERMATITIS = "Pattern Suggestive of Contact Dermatitis / Irritation"
+CONDITION_HEAD_LICE = "Pattern Suggestive of Head Lice / Infestation"
+CONDITION_LICHEN_PLANUS = "Pattern Suggestive of Lichen Planus / Scarring Inflammation"
+CONDITION_TELOGEN_EFFLUVIUM = "Pattern Suggestive of Telogen Effluvium / Diffuse Shedding"
+CONDITION_TINEA_CAPITIS = "Pattern Suggestive of Tinea Capitis / Fungal Scalp Infection"
 
 
 # Triage Categories
@@ -208,5 +213,85 @@ INGREDIENT_GUIDES = {
             "Avoid forcibly picking, scratching, or peeling thick plaques, which can trigger localized inflammation (Koebner response).",
             "Use lukewarm water rather than hot water when washing hair to minimize epidermal irritation and vascular erythema."
         ]
-    }
+    },
+    CONDITION_CONTACT_DERMATITIS: {
+        "summary": "Visual analysis suggests an irritant or allergic reaction pattern on the scalp. Identify and stop the trigger; seek evaluation if it persists.",
+        "ingredients": [
+            {
+                "name": "Fragrance-Free Gentle Scalp Cleanser",
+                "frequency": "2-3x per week",
+                "purpose": "Removes residue without adding potential irritants."
+            },
+            {
+                "name": "Ceramide & Colloidal Oat Soothing Emulsion",
+                "frequency": "Daily as needed",
+                "purpose": "Supports the skin barrier while the trigger is removed."
+            }
+        ],
+        "lifestyle": [
+            "Pause new hair dyes, shampoos, styling products or oils introduced in the last few weeks.",
+            "Rinse hair thoroughly with lukewarm water and avoid scratching the area.",
+            "See a dermatologist if redness, swelling or itching persists beyond 1-2 weeks."
+        ]
+    },
+    CONDITION_HEAD_LICE: {
+        "summary": "Visual analysis suggests a possible infestation pattern. Confirmation and treatment should be guided by a pharmacist or physician.",
+        "ingredients": [
+            {
+                "name": "Pharmacist-Recommended Anti-Lice Treatment",
+                "frequency": "As directed by the pharmacist or physician",
+                "purpose": "Treatment choice and repeat timing depend on local guidance and resistance; do not self-select without advice."
+            }
+        ],
+        "lifestyle": [
+            "Check for live lice or nits close to the scalp using a fine-toothed comb.",
+            "Wash bedding, hats and combs in hot water and avoid sharing them.",
+            "Check close contacts and seek advice from a pharmacist or doctor."
+        ]
+    },
+    CONDITION_LICHEN_PLANUS: {
+        "summary": "Visual analysis suggests an inflammatory pattern that can affect hair follicles. Needs in-person evaluation, as untreated inflammation may cause lasting hair loss.",
+        "ingredients": [
+            {
+                "name": "Gentle Non-Medicated Scalp Cleanser",
+                "frequency": "2-3x per week",
+                "purpose": "Avoids aggravating inflamed skin while awaiting clinical assessment."
+            }
+        ],
+        "lifestyle": [
+            "Book a dermatologist appointment soon; diagnosis usually needs examination and sometimes a biopsy.",
+            "Avoid scratching, tight hairstyles and harsh chemical treatments.",
+            "Take dated photos of the area to show the clinician."
+        ]
+    },
+    CONDITION_TELOGEN_EFFLUVIUM: {
+        "summary": "Visual analysis suggests a diffuse shedding pattern. Shedding often follows stress, illness, childbirth, crash dieting or nutrient deficiency.",
+        "ingredients": [
+            {
+                "name": "Gentle Daily Scalp Cleanser",
+                "frequency": "2-3x per week",
+                "purpose": "Maintains scalp hygiene without adding mechanical stress."
+            }
+        ],
+        "lifestyle": [
+            "Think back 2-3 months for triggers such as illness, major stress, childbirth or rapid weight change.",
+            "Discuss blood tests (serum ferritin, vitamin D, TSH) with a physician.",
+            "Maintain adequate protein and iron intake and re-check in 6-8 weeks; see a dermatologist if shedding continues."
+        ]
+    },
+    CONDITION_TINEA_CAPITIS: {
+        "summary": "Visual analysis suggests a possible fungal infection of the scalp. This normally requires prescription oral antifungal treatment, so please see a doctor.",
+        "ingredients": [
+            {
+                "name": "Gentle Non-Medicated Scalp Cleanser",
+                "frequency": "As needed",
+                "purpose": "Keeps the area clean until a clinician confirms the diagnosis; over-the-counter products alone are usually not sufficient."
+            }
+        ],
+        "lifestyle": [
+            "See a doctor or dermatologist promptly; a scalp scraping or culture is often needed to confirm.",
+            "Do not share combs, hats, towels or pillows; it can spread to others.",
+            "Wash bedding and hair tools in hot water."
+        ]
+    },
 }

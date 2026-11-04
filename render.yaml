@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: follica
+    runtime: docker
+    plan: free
+    region: oregon
+    healthCheckPath: /api/v1/system/status
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: CONSENT_DB_PATH
+        value: /app/backend/data/consent.db

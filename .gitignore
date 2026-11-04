@@ -8,8 +8,9 @@ env/
 .env
 checkpoints/
 models/*.pt
-models/*.onnx
 *.db
 data/
 .DS_Store
 Thumbs.db
+
+training/data/
