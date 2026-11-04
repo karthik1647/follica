@@ -61,7 +61,23 @@ class Settings(BaseModel):
     QUALITY_MAX_BRIGHTNESS: float = 225.0
     QUALITY_MIN_DIMENSION: int = 150
 
-    # Storage Bucket Name
+    # Consent DB - SQLite file path (override with FOLLICA_CONSENT_DB env var).
+    # The DB is auto-created on first start; no manual migration required.
+    CONSENT_DB_PATH: str = os.getenv(
+        "FOLLICA_CONSENT_DB",
+        os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "..", "..", "data", "consent.db"
+        )
+    )
+
+    # Documented consent retention period setting (days).
+    # Default is 30 days. Maximum acceptable is 365 days.
+    # Note: provisional / uncalibrated - retention period is user-selected and subject
+    # to operational defaults; consult applicable legal regulations (e.g., India DPDP Act) before production use.
+    CONSENT_RETENTION_DAYS: int = int(os.getenv("FOLLICA_CONSENT_RETENTION_DAYS", "30"))
+    CONSENT_MAX_RETENTION_DAYS: int = 365
+
+    # Storage Bucket Name (future use - not currently active)
     SUPABASE_STORAGE_BUCKET: str = "follica-scalp-scans-encrypted"
 
     # CORS Configuration:
@@ -78,4 +94,3 @@ class Settings(BaseModel):
 
 
 settings = Settings()
-

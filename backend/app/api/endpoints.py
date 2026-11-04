@@ -31,6 +31,7 @@ from app.services.triage_engine import triage_engine
 from app.services.pdf_service import pdf_service
 from app.services.quality_gate import quality_gate
 from app.services.registration import registration_service
+from app.services.consent_store import consent_store, TERMS_VERSION
 
 router = APIRouter()
 
@@ -125,8 +126,11 @@ async def check_image_quality(image: UploadFile = File(...)):
 @router.post("/consent", response_model=ConsentResponse, tags=["Consent & Privacy"])
 async def record_user_consent(request: ConsentRequest):
     """
-    Records biometric photo consent, user-defined retention policy, and optional research opt-in.
-    All data is governed by encrypted-at-rest storage policies.
+    Persists a consent record to SQLite (path: FOLLICA_CONSENT_DB env var).
+    Stored fields: UUID, UTC timestamp, terms version, salted-hash client token,
+    consent scopes, retention_days, revoked_at (NULL until revoked).
+    NOT stored: images, questionnaire answers, analysis results, raw identifiers.
+    See docs/privacy.md for the full data inventory.
     """
     if not request.biometric_image_consent:
         raise HTTPException(
@@ -134,14 +138,64 @@ async def record_user_consent(request: ConsentRequest):
             detail="Biometric image consent is required to process scalp scans."
         )
 
+    record = consent_store.create(
+        raw_client_identifier=request.user_id,
+        scope_analysis=True,
+        scope_progress=request.research_opt_in,
+        retention_days=request.data_retention_days,
+    )
+
     return ConsentResponse(
         status="success",
+        consent_id=record["id"],
         user_id=request.user_id,
         consent_recorded=True,
-        retention_days=request.data_retention_days,
-        storage_security="AES-256 encrypted at rest in Supabase bucket with RLS policies",
-        message="User consent and retention policy successfully registered."
+        retention_days=record["retention_days"],
+        terms_version=record["terms_version"],
+        message="Consent recorded and will be retained for "
+                f"{record['retention_days']} days. "
+                "Use DELETE /api/v1/consent/{id} to revoke at any time."
     )
+
+
+@router.delete("/consent/{consent_id}", tags=["Consent & Privacy"])
+async def revoke_consent(consent_id: str):
+    """
+    Revokes a previously recorded consent by UUID.
+    Sets revoked_at to the current UTC time; the record is purged on the next
+    retention sweep. Does NOT delete analysis results already generated.
+    """
+    ok, record = consent_store.revoke(consent_id)
+    if not ok:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Consent record '{consent_id}' not found."
+        )
+    return {
+        "status": "revoked",
+        "consent_id": consent_id,
+        "revoked_at": record["revoked_at"],
+        "message": "Consent revoked. The record will be purged on the next retention sweep."
+    }
+
+
+@router.get("/consent/{consent_id}", tags=["Consent & Privacy"])
+async def get_consent_record(consent_id: str):
+    """
+    Retrieves a previously recorded consent record by UUID.
+    Returns status, terms_version, retention_days, revoked_at, etc.
+    Does not expose raw client identifiers, photos, or questionnaire answers.
+    """
+    record = consent_store.get(consent_id)
+    if not record:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Consent record '{consent_id}' not found."
+        )
+    return {
+        "status": "success",
+        "consent": dict(record)
+    }
 
 
 @router.post("/analyze", response_model=AnalysisResponse, tags=["Scalp Analysis"])

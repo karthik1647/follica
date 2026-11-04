@@ -19,6 +19,13 @@ async def lifespan(app: FastAPI):
         print(f"[{settings.APP_NAME}] Model warmup completed successfully.")
     except Exception as e:
         print(f"[{settings.APP_NAME}] Warmup warning: {e}")
+
+    try:
+        from app.services.consent_store import consent_store
+        print(f"[{settings.APP_NAME}] Consent DB ready at: {settings.CONSENT_DB_PATH}")
+    except Exception as e:
+        print(f"[{settings.APP_NAME}] Consent DB init warning: {e}")
+
     yield
     print(f"[{settings.APP_NAME}] Shutting down gracefully.")
 
@@ -83,4 +90,3 @@ def api_root():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
-

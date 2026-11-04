@@ -70,7 +70,9 @@ def test_consent_contract():
     data = response.json()
     assert data["consent_recorded"] is True
     assert data["retention_days"] == 30
-    assert "AES-256" in data["storage_security"]
+    assert "SQLite" in data["storage_security"]
+    assert "AES-256" not in data["storage_security"]
+    assert "consent_id" in data
     assert data["disclaimer"] == UNIVERSAL_DISCLAIMER
 
 

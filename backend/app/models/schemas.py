@@ -433,10 +433,15 @@ class ConsentRequest(BaseModel):
 
 class ConsentResponse(BaseModel):
     status: str = "success"
+    consent_id: str                    # UUID of the persisted consent record
     user_id: str
     consent_recorded: bool
     retention_days: int
-    storage_security: str = "AES-256 encrypted at rest in Supabase bucket with RLS policies"
+    terms_version: str                 # version of T&C/Privacy Policy in effect at consent time
+    storage_security: str = (
+        "Local SQLite consent record store with salted SHA-256 pseudonyms; "
+        "no image or clinical data stored"
+    )
     message: str = "Consent preferences and retention window successfully registered."
     disclaimer: str = UNIVERSAL_DISCLAIMER
 

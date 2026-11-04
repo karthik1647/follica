@@ -303,7 +303,9 @@ To help new contributors navigate the codebase without ambiguity:
 | `backend/app/services/classifier_service.py` | **Functional / Heuristic Stub** | Ready to load `.onnx` weights from `models/`. Runs an embedded heuristic classifier when local model weights are not present. |
 | `training/follica_training_colab.ipynb` | **Fully Implemented** | Cloud training notebook with Google Drive checkpointing to survive disconnects. |
 | `training/calibration_loader.py` | **Fully Implemented / Data Placeholder** | Pipeline logic ready; awaiting physical addition of 100-200 volunteer photos. |
-| `docs/supabase_storage_security.sql` | **Fully Implemented** | SQL schema for AES-256 encrypted bucket and automated 30-day retention purge. |
+| `docs/supabase_storage_security.sql` | **Reference Template** | Example PostgreSQL schema for private storage buckets and automated 30-day retention purge. |
+| `docs/privacy.md` | **Fully Implemented** | Data inventory, consent scopes, SQLite persistence, retention policy, and DPDP Act compliance guidance. |
+| `backend/scripts/evaluate_cv.py` | **Fully Implemented** | Runs ScalpCVPipeline over evaluation photos, writes CSV reports, and computes optical correlation diagnostics. |
 | `mobile/` | **Not Started** | Reserved for React Native / Expo cross-platform mobile frontend. |
 
 ---
@@ -355,6 +357,34 @@ python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```bash
 pytest tests/ -v
 ```
+
+### Dataset Evaluation & Optical Diagnostics (`evaluate_cv.py`)
+Run the classical computer vision pipeline across a directory of scalp photos to evaluate score distributions and detect photographic confounding:
+
+```bash
+# Basic run on default data/eval layout (data/eval/<label>/*.jpg)
+python backend/scripts/evaluate_cv.py data/eval
+
+# Custom dataset directory and custom CSV output
+python backend/scripts/evaluate_cv.py path/to/dataset --output reports/evaluation.csv
+```
+
+#### How to Read the Output
+1. **Per-Label & Overall Statistics**:
+   - Displays count (n), mean +/- std, and [min, max] ranges for each sub-score (`flake_score`, `redness_score`, `sebum_score`, `density_score`) and overall `scalp_health_score` (SHS).
+   - Use these to verify that conditions with known clinical phenotypes (e.g. Seborrheic Dermatitis vs. Normal) show separated mean sub-scores.
+2. **SHS Value Clustering Warnings**:
+   - Flags any rounded SHS score that accounts for >15% of the dataset.
+   - *Interpretation*: Indicates inadequate score dispersion or discrete score attractors.
+3. **Sub-Score Boundary Saturation**:
+   - Flags when any sub-score is stuck at its floor (0.0) or cap (25.0) for >60% of images.
+   - *Interpretation*: Highlights threshold clipping (penalty curve too steep or detector insensitive).
+4. **Photo Quality Confounding (Pearson r)**:
+   - Calculates correlation between each sub-score and image sharpness (Laplacian variance) as well as mean perceptual brightness.
+   - Flags |r| >= 0.40 with warning indicators (`(!)`).
+   - *Interpretation*: Warns if a micro-feature extractor is primarily grading camera focus or flash exposure instead of scalp pathology.
+5. **Actionable Suggestions**:
+   - Prints specific guidance on normalizations or threshold reviews without modifying any thresholds automatically.
 
 ### Environment Configuration & Production Deployment
 Follica reads runtime settings from environment variables with safe development defaults:
