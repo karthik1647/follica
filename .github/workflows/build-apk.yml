@@ -1,0 +1,89 @@
+name: Build Signed Android Release APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feat/mobilenetv4-onnx-clinical-triage
+    paths:
+      - "mobile/**"
+      - ".github/workflows/build-apk.yml"
+
+jobs:
+  build-android-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Setup Android SDK (API 34)
+        uses: android-actions/setup-android@v3
+
+      - name: Install Mobile Dependencies & Prebuild Native Android Project
+        working-directory: ./mobile
+        run: |
+          npm install --legacy-peer-deps
+          npx expo prebuild --platform android --clean
+
+      - name: Generate Dedicated Release Keystore (Avoids Play Protect Debug-Key Block)
+        working-directory: ./mobile/android/app
+        run: |
+          keytool -genkeypair -v \
+            -storetype PKCS12 \
+            -keystore follica-release.keystore \
+            -alias follica-release-key \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass FollicaRelease2026! \
+            -keypass FollicaRelease2026! \
+            -dname "CN=Follica Clinical Triage, OU=Biomedical Engineering, O=Follica Research, L=Bengaluru, S=KA, C=IN"
+
+      - name: Configure Gradle Release Signing (V1 + V2 + V3)
+        working-directory: ./mobile/android
+        run: |
+          cat << 'EOF' >> app/build.gradle
+
+          android {
+              signingConfigs {
+                  release {
+                      storeFile file('follica-release.keystore')
+                      storePassword 'FollicaRelease2026!'
+                      keyAlias 'follica-release-key'
+                      keyPassword 'FollicaRelease2026!'
+                      v1SigningEnabled true
+                      v2SigningEnabled true
+                      v3SigningEnabled true
+                  }
+              }
+              buildTypes {
+                  release {
+                      signingConfig signingConfigs.release
+                      minifyEnabled false
+                      shrinkResources false
+                  }
+              }
+          }
+          EOF
+
+      - name: Assemble Signed Release APK
+        working-directory: ./mobile/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon
+
+      - name: Upload Signed Follica Release APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: follica-android-release-apk
+          path: mobile/android/app/build/outputs/apk/release/*.apk
+          retention-days: 30

@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Follica - Clinical Scalp Assessment & Triage Engine</title>
+    <meta name="theme-color" content="#0284c7">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="/static/icon-192.png">
+    <link rel="apple-touch-icon" href="/static/icon-192.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -112,6 +119,7 @@
                 <div class="status-pill"><span class="status-dot"></span><span>API Ready</span></div>
                 <button type="button" class="btn-demo-mode" onclick="loadHealthyDemoScenario()" style="border-color: #a7f3d0; color: #065f46; background: #ecfdf5;">Demo Healthy Check</button>
                 <button type="button" class="btn-demo-mode" onclick="loadDemoScenario()">Demo Symptom Case</button>
+                <button type="button" id="btn-install-pwa" class="btn-demo-mode" onclick="installMobileApp()" style="border-color: #0284c7; background: #0284c7; color: #ffffff;">Install Android App</button>
             </div>
 
         </div>
@@ -801,6 +809,26 @@
                 a.remove();
             } catch (e) {
                 alert('Failed to generate PDF pass: ' + e);
+            }
+        }
+
+        let deferredInstallPrompt = null;
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(() => {});
+            });
+        }
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredInstallPrompt = e;
+        });
+        async function installMobileApp() {
+            if (deferredInstallPrompt) {
+                deferredInstallPrompt.prompt();
+                await deferredInstallPrompt.userChoice;
+                deferredInstallPrompt = null;
+            } else {
+                alert('To install Follica on Android with zero Play Protect warnings: tap the Chrome menu (three dots) and select "Install app" or "Add to Home screen". Chrome mints and signs a Google-verified WebAPK automatically.');
             }
         }
     </script>

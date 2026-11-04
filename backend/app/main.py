@@ -75,6 +75,19 @@ def root():
     }
 
 
+
+
+@app.get("/manifest.json", response_class=FileResponse)
+def web_manifest():
+    """Serves WebAPK / PWA manifest for Google-signed Android installation."""
+    return FileResponse(os.path.join(STATIC_DIR, "manifest.json"), media_type="application/manifest+json")
+
+
+@app.get("/sw.js", response_class=FileResponse)
+def service_worker():
+    """Serves root-scoped Service Worker for Android WebAPK installation."""
+    return FileResponse(os.path.join(STATIC_DIR, "sw.js"), media_type="application/javascript")
+
 @app.get("/api")
 def api_root():
     """Lightweight API metadata discovery endpoint."""
