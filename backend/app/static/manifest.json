@@ -1,13 +1,13 @@
 {
-  "name": "Follica Clinical Scalp Triage",
+  "name": "Follica Trichoscopic Triage",
   "short_name": "Follica",
-  "description": "AI-Powered Hair and Scalp Health Triage and Clinical CV Assessment Engine",
+  "description": "Trichoscopic Scalp Triage and Classical CV Micro-Feature System",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#06080A",
-  "theme_color": "#06080A",
+  "background_color": "#0B0E11",
+  "theme_color": "#0B0E11",
   "categories": [
     "medical",
     "health"
