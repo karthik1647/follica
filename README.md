@@ -90,27 +90,26 @@ The current scalp care and trichology market is bifurcated into three distinct c
 
 The dual-pipeline architecture and photo-based classification heads of Follica are grounded in four key peer-reviewed clinical studies:
 
-1. **Differentiating Scalp Psoriasis and Seborrheic Dermatitis Using Deep Learning**  
-   *Frontiers in Medicine (2022)*, DOI: 10.3389/fmed.2022.981884.  
+1. **A Deep Learning-Based Approach Toward Differentiating Scalp Psoriasis and Seborrheic Dermatitis From Dermoscopic Images**  
+   *Frontiers in Medicine (2022)* — Zhang, Shen, Han, Yu & Wang — DOI: [10.3389/fmed.2022.965423](https://doi.org/10.3389/fmed.2022.965423).  
    - Demonstrated that convolutional neural networks fine-tuned on dermoscopic photographs achieve an Area Under the Curve (AUC) of 0.922, with 96.1% sensitivity and 88.2% specificity.  
-   - Established that deep learning models can differentiate adherent hyperkeratotic psoriasis plaques from greasy seborrheic flaking with higher diagnostic consistency than junior clinicians.  
+   - Established that deep learning models can differentiate adherent hyperkeratotic psoriasis plaques from greasy seborrheic flaking with higher diagnostic consistency than non-specialist inspection.  
    - *Application in Follica*: Governs our algorithmic separation of `CONDITION_SCALP_PSORIASIS` from `CONDITION_SEBORRHEIC_DERMATITIS`.
 
-2. **Benchmarking Deep Learning Backbones for Scalp Disease Classification**  
-   *Computers in Biology and Medicine / IEEE Access (2022-2023)*.  
-   - Compared deep convolutional backbones (ResNet-50, EfficientNet-B0/B4, MobileNetV3/V4) on multi-class scalp pathologies.  
-   - Showed that compound-scaled networks (EfficientNet and MobileNet) achieve validation accuracies exceeding 96% to 98% when trained on balanced clinical sets.  
-   - *Application in Follica*: Justified the selection of MobileNetV4 / EfficientNet-B0 as our production backbones (<15 MB ONNX footprint, fast inference on free cloud CPU tiers).
+2. **Deep Neural Networks for Multi-Class Hair & Scalp Disorders + MobileNetV4 Universal Backbone**  
+   *Skin Research and Technology (2024)*, DOI: [10.1111/srt.13660](https://doi.org/10.1111/srt.13660) & *ECCV (2024)*, Qin et al., [arXiv:2404.10518](https://arxiv.org/abs/2404.10518).  
+   - Evaluated deep convolutional backbones across multi-class scalp pathologies alongside Universal Inverted Bottleneck (MobileNetV4) architectures tailored for edge CPU/mobile inference.  
+   - *Application in Follica*: Justified the selection of `timm` MobileNetV4-Conv-Small as our production backbone (<15 MB ONNX footprint, sub-50 ms inference on CPU).
 
-3. **Automated Trichoscopic Detection and Staging of Alopecia Areata vs. Androgenetic Alopecia**  
-   *Scientific Reports / Journal of Dermatological Science (2023)*.  
-   - Applied residual neural networks to close-up trichoscopy, achieving an external validation AUC of 0.97 in detecting follicular miniaturization patterns and distinguishing active autoimmune focal loss from chronic patterned hair loss.  
-   - *Application in Follica*: Forms the foundation for disentangling `CONDITION_ALOPECIA_AREATA` (Level 3 focal escalation) from `CONDITION_ANDROGENETIC_ALOPECIA` (Level 2 monitored miniaturization).
+3. **Deep Trichoscopic Activity Assessment of Alopecia Areata & Quantitative Androgenetic Alopecia Grading**  
+   *JDDG (2025)*, DOI: [10.1111/ddg.15847](https://doi.org/10.1111/ddg.15847) & *Acta Dermato-Venereologica (2021)*, DOI: [10.2340/actadv.v101.564](https://doi.org/10.2340/actadv.v101.564).  
+   - Applied deep neural networks and quantitative trichoscopic analysis to close-up scalp images, distinguishing active autoimmune focal loss from chronic patterned vertex miniaturization.  
+   - *Application in Follica*: Forms the foundation for disentangling `CONDITION_ALOPECIA_AREATA` (Level 3 focal escalation) from `CONDITION_ANDROGENETIC_ALOPECIA` (Level 2 monitored miniaturization) and our 6x6 bare-tile void detector.
 
-4. **Multi-Feature Fusion: Coupling Neural Embeddings with Deterministic Computer Vision Descriptors**  
-   *Sensors / MDPI Diagnostics (2023)*.  
-   - Proved that combining deep convolutional feature representations with classical color-space descriptors (HSV, CIELAB) and morphological filters improves model robustness by over 14% across uncalibrated phone camera sensors and variable room lighting.  
-   - *Application in Follica*: Direct scientific justification for Follica's Dual-Pipeline (MobileNet deep classifier running in parallel with OpenCV Gray-World white balancing and CIELAB hair coverage segmentation).
+4. **AI Color-Constancy Normalization in Cutaneous Imaging & Gray-World Chrominance Calibration**  
+   *Skin Research and Technology (2023)*, DOI: [10.1111/srt.13508](https://doi.org/10.1111/srt.13508) & Buchsbaum (*J. Franklin Inst.*, 1980), DOI: [10.1016/0016-0032(80)90058-7](https://doi.org/10.1016/0016-0032(80)90058-7).  
+   - Demonstrated that computational color-constancy normalization prevents ambient illumination shifts and white-balance drift from corrupting erythema and scaling estimation.  
+   - *Application in Follica*: Direct scientific justification for Follica's Dual-Pipeline (MobileNetV4 classifier running in parallel with OpenCV Gray-World white balancing, HSV glare masking, and SDASI/SALT-anchored severity sub-scores).
 
 ---
 
@@ -119,19 +118,19 @@ The dual-pipeline architecture and photo-based classification heads of Follica a
 ### A. Standardized Clinical Datasets Followed
 Follica aligns its training taxonomy and validation protocols with three open-access dermatological repositories:
 
-1. **AI-Hub Scalp Pathology and Hair Loss Dataset (`aihub.or.kr`)**:
+1. **[AI-Hub Scalp Pathology and Hair Loss Dataset (`aihub.or.kr`)](https://www.aihub.or.kr/)**:
    - Compiled under South Korean health research initiatives in collaboration with clinical dermatologists from Seoul National University Hospital and Seoul National University Bundang Hospital.
-   - Contains over 100,000 standardized scalp and microscopic images ($640 	imes 480$ resolution).
+   - Contains over 100,000 standardized scalp and microscopic images ($640 \times 480$ resolution).
    - Multi-label annotations across 4 discrete clinical axes:
      - *Dandruff / Flaking*: Grade 0 (Clean) to Grade 3 (Severe hyperkeratosis).
      - *Sebum / Lipid Shine*: Grade 0 (Matte) to Grade 3 (Excessive sebum pooling).
      - *Erythema / Redness*: Grade 0 (Normal vascular tone) to Grade 3 (Severe confluent erythema).
      - *Hair Thinning / Alopecia*: Grade 0 (Healthy density) to Grade 3 (Extensive miniaturization).
-2. **Kaggle Scalp Disease & Trichoscopy Repositories**:
-   - Curated clinical image sets covering Alopecia Areata, Folliculitis, Seborrheic Dermatitis, and Healthy Scalp baselines.
-   - Serves as the primary rapid-ingestion format in `training/follica_training_colab.ipynb`.
-3. **DermNet NZ & Open Dermatological Archives**:
-   - Dermatologist-validated clinical photographs covering diverse skin phototypes (Fitzpatrick I-VI) for Seborrheic Dermatitis, Scalp Psoriasis, and Dissecting Folliculitis.
+2. **[Kaggle Hair Diseases Dataset (Sundar Annamalai, n = 12,000)](https://www.kaggle.com/datasets/sundarannamalai/hair-diseases)**:
+   - Curated 10-class image corpus (9,600 train / 1,200 val / 1,200 test) covering Alopecia Areata, Contact Dermatitis, Folliculitis, Head Lice, Lichen Planus, Male Pattern Baldness, Psoriasis, Seborrheic Dermatitis, Telogen Effluvium, and Tinea Capitis.
+   - Serves as the primary training and held-out benchmark corpus in `training/train.py` and `training/follica_training_colab.ipynb`.
+3. **[DermNet NZ Scalp Disorders Archive](https://dermnetnz.org/topics/scalp-disorders)**:
+   - Dermatologist-validated clinical photographs and clinical scale references ([SALT Score](https://doi.org/10.1016/j.jaad.2004.04.008), [SDASI](https://doi.org/10.1371/journal.pone.0331030)) covering diverse skin phototypes (Fitzpatrick I-VI).
 
 ### B. Engineering Strategy for 95% Classification Accuracy
 In clinical computer vision, achieving >= 95% accuracy on raw smartphone captures is impossible without strict optical gating and confidence thresholding. Follica achieves >= 95% effective precision on accepted predictions through four architectural stages:

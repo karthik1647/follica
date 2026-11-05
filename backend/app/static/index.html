@@ -1337,7 +1337,99 @@
             color: var(--text-secondary);
         }
 
-        /* Camera Modal */
+        /* External & Source Link Pills */
+        .ext-links-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+            margin-top: 9px;
+        }
+
+        .ext-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            font-weight: 500;
+            color: var(--accent-strong);
+            background: rgba(0, 212, 190, 0.09);
+            border: 1px solid rgba(0, 212, 190, 0.28);
+            border-radius: 999px;
+            padding: 4px 10px;
+            text-decoration: none;
+            transition: all 0.16s ease;
+            line-height: 1.2;
+        }
+
+        .ext-pill:hover {
+            background: rgba(0, 212, 190, 0.18);
+            border-color: rgba(0, 230, 207, 0.6);
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        .ext-pill.secondary-link {
+            color: var(--text-secondary);
+            background: rgba(22, 30, 43, 0.85);
+            border-color: var(--border-mid);
+        }
+
+        .ext-pill.secondary-link:hover {
+            color: var(--accent-strong);
+            border-color: rgba(0, 212, 190, 0.45);
+        }
+
+        .inline-ext-link {
+            color: var(--accent-strong);
+            text-decoration: none;
+            border-bottom: 1px dashed rgba(0, 230, 207, 0.45);
+            transition: color 0.15s ease, border-color 0.15s ease;
+        }
+
+        .inline-ext-link:hover {
+            color: #ffffff;
+            border-bottom-color: #ffffff;
+        }
+
+        .table-run-btn {
+            background: rgba(0, 212, 190, 0.11);
+            border: 1px solid rgba(0, 212, 190, 0.3);
+            color: var(--accent-strong);
+            font-family: var(--font-mono);
+            font-size: 0.71rem;
+            font-weight: 600;
+            padding: 3px 9px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+
+        .table-run-btn:hover {
+            background: var(--accent);
+            color: #031513;
+        }
+
+        .referral-banner {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            flex-wrap: wrap;
+            padding: 11px 15px;
+            margin-bottom: 10px;
+            border-radius: var(--radius-md);
+            background: linear-gradient(90deg, rgba(244, 63, 94, 0.14) 0%, rgba(22, 30, 43, 0.92) 100%);
+            border: 1px solid rgba(244, 63, 94, 0.38);
+        }
+
+        .referral-banner.routine {
+            background: linear-gradient(90deg, rgba(245, 158, 11, 0.12) 0%, rgba(22, 30, 43, 0.92) 100%);
+            border-color: rgba(245, 158, 11, 0.34);
+        }
+
+        /* Camera & Lightbox Modals */
         .modal-backdrop {
             display: none;
             position: fixed;
@@ -1404,10 +1496,12 @@
             </nav>
 
             <div class="header-utilities">
-                <div class="engine-status" title="MobileNetV4 ONNX + OpenCV Classical Pipeline">
+                <a href="/api/v1/system/status" target="_blank" rel="noopener noreferrer" class="engine-status" style="text-decoration:none;" title="Inspect live MobileNetV4 ONNX + OpenCV status JSON">
                     <span class="status-dot" id="hdr-status-dot"></span>
                     <span id="hdr-status-text">ONNX + CV Ready</span>
-                </div>
+                </a>
+                <a href="/docs" target="_blank" rel="noopener noreferrer" class="btn-ghost" style="text-decoration:none;" title="OpenAPI Swagger Documentation">API Docs &nearr;</a>
+                <a href="https://github.com/karthik1647/follica" target="_blank" rel="noopener noreferrer" class="btn-ghost" style="text-decoration:none;" title="Follica GitHub Repository">GitHub &nearr;</a>
                 <button type="button" id="btn-install-pwa" class="btn-ghost" onclick="installMobileApp()">Install App</button>
             </div>
         </div>
@@ -1670,6 +1764,19 @@
                             </div>
                         </div>
 
+                        <div id="res-referral-banner" class="referral-banner">
+                            <div style="flex:1; min-width:240px;">
+                                <div style="display:flex; align-items:center; gap:8px; margin-bottom:3px;">
+                                    <span id="res-referral-urgency" class="mono" style="font-size:0.71rem; font-weight:600; color:#fb7185; text-transform:uppercase;">Clinical Referral Recommended</span>
+                                    <span id="res-referral-target" style="font-size:0.78rem; color:var(--text-secondary);">--</span>
+                                </div>
+                                <div id="res-referral-notes" style="font-size:0.81rem; color:var(--text-primary); line-height:1.42;">--</div>
+                            </div>
+                            <a id="res-referral-link" href="https://www.google.com/maps/search/dermatologist+near+me" target="_blank" rel="noopener noreferrer" class="btn-secondary" style="text-decoration:none; padding:7px 13px; font-size:0.79rem; border-color:rgba(244,63,94,0.45);">
+                                Locate Dermatologist Near Me &nearr;
+                            </a>
+                        </div>
+
                         <div class="subnav-bar" style="margin-bottom:8px;">
                             <div class="segmented-pills">
                                 <button type="button" class="seg-pill active" onclick="switchReportPane('scores', this)">Micro-Features (4)</button>
@@ -1805,7 +1912,7 @@
                                     <div id="under-18-notice"><strong>Guardian Notice:</strong> Follica is designed for adult educational awareness. For individuals under 18, symptoms should be reviewed with a parent or legal guardian and evaluated by a paediatric physician or dermatologist.</div>
                                 </div>
                                 <div class="form-row">
-                                    <span class="field-label">Biological Sex (Norwood vs. Ludwig Pattern Reference)</span>
+                                    <span class="field-label">Biological Sex (<a href="https://dermnetnz.org/topics/male-pattern-hair-loss" target="_blank" rel="noopener noreferrer" class="inline-ext-link">Norwood &nearr;</a> vs. <a href="https://dermnetnz.org/topics/female-pattern-hair-loss" target="_blank" rel="noopener noreferrer" class="inline-ext-link">Ludwig &nearr;</a> Reference)</span>
                                     <div class="chip-group">
                                         <div class="chip-item"><input type="radio" id="sex-m" name="biological_sex" value="male" checked><label for="sex-m" class="chip-label">Male</label></div>
                                         <div class="chip-item"><input type="radio" id="sex-f" name="biological_sex" value="female"><label for="sex-f" class="chip-label">Female</label></div>
@@ -1936,7 +2043,7 @@
                             </div>
                             <div class="form-grid-2">
                                 <div class="form-row">
-                                    <span class="field-label">Gentle 50-Fiber Pull Test</span>
+                                    <span class="field-label">Gentle 50-Fiber Pull Test (<a href="https://dermnetnz.org/topics/hair-pull-test" target="_blank" rel="noopener noreferrer" class="inline-ext-link">Clinical Protocol &nearr;</a>)</span>
                                     <div class="chip-group">
                                         <div class="chip-item"><input type="radio" id="pull-1" name="hair_pull_test" value="negative_under_3" checked><label for="pull-1" class="chip-label">&lt; 3 Fibers (Negative)</label></div>
                                         <div class="chip-item"><input type="radio" id="pull-2" name="hair_pull_test" value="borderline_3_5"><label for="pull-2" class="chip-label">3 - 5 Fibers (Borderline)</label></div>
@@ -1980,13 +2087,14 @@
                 <div class="info-grid-2">
                     <div class="surface-card">
                         <div class="section-title">Population Survey Trigger Pipeline</div>
-                        <div class="section-subtitle">Batch-evaluates collected questionnaire cohorts via <span class="mono">POST /api/v1/survey/cohort-summary</span> to quantify modifiable campus risk drivers per scalp condition.</div>
+                        <div class="section-subtitle">Batch-evaluates collected questionnaire cohorts via <a href="/docs" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">POST /api/v1/survey/cohort-summary &nearr;</a> to quantify modifiable campus risk drivers per scalp condition.</div>
                         <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;">
                             <button type="button" class="btn-primary" onclick="runCampusCohortDemo()">Evaluate Campus Benchmark Cohort (n = 24)</button>
                             <label class="btn-ghost" style="cursor:pointer;">
                                 Import Survey JSON / CSV
                                 <input type="file" accept=".json,.csv" style="display:none;" onchange="handleCohortFileUpload(event)">
                             </label>
+                            <button type="button" class="btn-ghost" onclick="downloadCohortCsvTemplate()">Download CSV Template &darr;</button>
                         </div>
                         <div id="cohort-summary-stats" class="metrics-summary-grid" style="margin-top:18px;">
                             <div class="metric-cell">
@@ -2003,7 +2111,7 @@
                             </div>
                         </div>
                         <div class="rationale-box">
-                            <strong style="color:var(--text-primary); display:block; margin-bottom:3px;">Pipeline Design Rationale</strong>
+                            <strong style="color:var(--text-primary); display:block; margin-bottom:3px;">Pipeline Design Rationale (<a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/survey_risk_engine.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">survey_risk_engine.py &nearr;</a>)</strong>
                             Rather than blending unvalidated self-reports into image-derived scores, Follica conditions survey interpretation on the visually identified pattern so modifiable triggers (hard borewell water, helmet occlusion, acute stress, protein deficit) can be ranked cleanly.
                         </div>
                     </div>
@@ -2012,6 +2120,19 @@
                         <div class="section-title">Top Modifiable Cohort Triggers</div>
                         <div id="cohort-triggers-list" style="margin-top:14px; font-size:0.84rem; color:var(--text-secondary);">
                             Select "Evaluate Campus Benchmark Cohort" or import your survey CSV/JSON to compute population trigger rankings.
+                        </div>
+                        <div id="cohort-conditions-box" style="display:none; margin-top:16px; padding-top:14px; border-top:1px solid var(--border-subtle);">
+                            <div style="font-family:var(--font-display); font-size:0.92rem; font-weight:700; color:var(--text-primary); margin-bottom:8px;">Per-Condition Cohort Breakdown</div>
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Condition Pattern</th>
+                                        <th>n</th>
+                                        <th>Mean Trigger Risk</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cohort-conditions-tbody"></tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -2027,7 +2148,11 @@
                     <button type="button" class="seg-pill active" onclick="switchArchMode('pipeline', this)">Dual-Pipeline &amp; Safety Architecture</button>
                     <button type="button" class="seg-pill" onclick="switchArchMode('progress', this)">Longitudinal ORB/SSIM Comparator</button>
                 </div>
-                <a href="/static/Follica_Biomedical_Design_Flow_Report.pdf" download class="btn-ghost" style="text-decoration:none;">Download Biomedical Design Flow (PDF)</a>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <a href="/docs" target="_blank" rel="noopener noreferrer" class="btn-ghost" style="text-decoration:none;">Swagger OpenAPI &nearr;</a>
+                    <a href="/redoc" target="_blank" rel="noopener noreferrer" class="btn-ghost" style="text-decoration:none;">ReDoc Schema &nearr;</a>
+                    <a href="/static/Follica_Biomedical_Design_Flow_Report.pdf" download class="btn-ghost" style="text-decoration:none;">Biomedical Design Flow (PDF) &darr;</a>
+                </div>
             </div>
 
             <div id="arch-mode-pipeline" class="info-grid-2">
@@ -2038,35 +2163,35 @@
                         <div class="stage-row">
                             <span class="stage-tag">STAGE 00</span>
                             <div>
-                                <strong style="font-size:0.88rem; color:var(--text-primary);">Pre-Inference Optical Gate (<span class="mono">quality_gate.py</span>)</strong>
+                                <strong style="font-size:0.88rem; color:var(--text-primary);">Pre-Inference Optical Gate (<a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/quality_gate.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">quality_gate.py &nearr;</a>)</strong>
                                 <div style="font-size:0.81rem; color:var(--text-secondary); margin-top:2px;">8x8 patch-max 2D Laplacian focus check (&ge;60), Rec.601 luminance bounds (35-225), and HSV specular flash-glare rejection (&le;15% area).</div>
                             </div>
                         </div>
                         <div class="stage-row">
                             <span class="stage-tag">STAGE 01</span>
                             <div>
-                                <strong style="font-size:0.88rem; color:var(--text-primary);">MobileNetV4-Conv-Small ONNX Classifier (<span class="mono">classifier_service.py</span>)</strong>
+                                <strong style="font-size:0.88rem; color:var(--text-primary);">MobileNetV4-Conv-Small ONNX Classifier (<a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/classifier_service.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">classifier_service.py &nearr;</a>)</strong>
                                 <div style="font-size:0.81rem; color:var(--text-secondary); margin-top:2px;">10-class macroscopic pathology recognition in FP32 ONNX Runtime (&lt;50 ms CPU latency) with dominance-margin calibration.</div>
                             </div>
                         </div>
                         <div class="stage-row">
                             <span class="stage-tag">STAGE 02</span>
                             <div>
-                                <strong style="font-size:0.88rem; color:var(--text-primary);">Classical CV Micro-Feature Extractor (<span class="mono">cv_pipeline.py</span>)</strong>
+                                <strong style="font-size:0.88rem; color:var(--text-primary);">Classical CV Micro-Feature Extractor (<a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/cv_pipeline.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">cv_pipeline.py &nearr;</a>)</strong>
                                 <div style="font-size:0.81rem; color:var(--text-secondary); margin-top:2px;">Gray-World white balance, CLAHE, YCrCb/HSV skin-hair segmentation, focal patch erythema contrast, and 6x6 bare-tile alopecia detection.</div>
                             </div>
                         </div>
                         <div class="stage-row">
                             <span class="stage-tag">STAGE 03</span>
                             <div>
-                                <strong style="font-size:0.88rem; color:var(--text-primary);">Confidence Safety Gate &amp; Escalation Matrix (<span class="mono">triage_engine.py</span>)</strong>
+                                <strong style="font-size:0.88rem; color:var(--text-primary);">Confidence Safety Gate &amp; Escalation Matrix (<a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/triage_engine.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">triage_engine.py &nearr;</a>)</strong>
                                 <div style="font-size:0.81rem; color:var(--text-secondary); margin-top:2px;">Predictions below <span class="mono">0.65</span> confidence are intercepted server-side to Level 2 Indeterminate; scarring, fungal, and pustular patterns escalate to Level 3.</div>
                             </div>
                         </div>
                         <div class="stage-row">
                             <span class="stage-tag">STAGE 04</span>
                             <div>
-                                <strong style="font-size:0.88rem; color:var(--text-primary);">Post-Identification Trigger Engine &amp; Clinical PDF (<span class="mono">survey_risk_engine.py</span>)</strong>
+                                <strong style="font-size:0.88rem; color:var(--text-primary);">Post-Identification Trigger Engine &amp; Clinical PDF (<a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/survey_risk_engine.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">survey_risk_engine.py &nearr;</a> · <a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/report_generator.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">report_generator.py &nearr;</a>)</strong>
                                 <div style="font-size:0.81rem; color:var(--text-secondary); margin-top:2px;">Ranks modifiable environmental/systemic drivers conditioned on the identified pattern and exports a 1-page generic ReportLab physician handoff pass.</div>
                             </div>
                         </div>
@@ -2122,6 +2247,13 @@
                         <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">Zero-Retention Ephemeral Privacy Posture</strong>
                         Uploaded scalp frames are decoded strictly in volatile RAM and discarded upon HTTP completion. Consent records in local SQLite store only salted SHA-256 client pseudonyms and retention timestamps — never raw photographs or diagnostic labels.
                     </div>
+
+                    <div class="ext-links-row" style="margin-top:12px;">
+                        <a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/docs/privacy.md" target="_blank" rel="noopener noreferrer" class="ext-pill">Privacy Governance (privacy.md) &nearr;</a>
+                        <a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/docs/thresholds.md" target="_blank" rel="noopener noreferrer" class="ext-pill">CV Thresholds Spec (thresholds.md) &nearr;</a>
+                        <a href="/api/v1/system/status" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">System Status JSON &nearr;</a>
+                        <a href="https://github.com/karthik1647/follica" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">GitHub Repository &nearr;</a>
+                    </div>
                 </div>
             </div>
 
@@ -2129,8 +2261,8 @@
             <div id="arch-mode-progress" style="display:none; flex:1; min-height:0;">
                 <div class="info-grid-2">
                     <div class="surface-card">
-                        <div class="section-title">Longitudinal Scan Registration (<span class="mono">/api/v1/progress/compare</span>)</div>
-                        <div class="section-subtitle">Aligns Day-0 baseline and follow-up scalp frames via ORB feature matching + RANSAC perspective homography to compute objective sub-score deltas.</div>
+                        <div class="section-title">Longitudinal Scan Registration (<a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/progress_tracker.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">progress_tracker.py &nearr;</a>)</div>
+                        <div class="section-subtitle">Aligns Day-0 baseline and follow-up scalp frames via ORB feature matching + RANSAC perspective homography (<a href="/docs" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">/api/v1/progress/compare &nearr;</a>) to compute objective sub-score deltas.</div>
 
                         <div class="form-grid-2" style="margin-top:16px;">
                             <div>
@@ -2152,7 +2284,7 @@
                     <div class="surface-card" id="progress-result-box" style="overflow-y:auto;">
                         <div class="section-title">Homography Alignment &amp; Delta Output</div>
                         <div id="progress-output-body" style="margin-top:12px; font-size:0.85rem; color:var(--text-secondary);">
-                            Select "Run Verified 14-Day Sample Pair" to execute live ORB + RANSAC alignment between <span class="mono">sample_baseline.jpg</span> and <span class="mono">sample_followup.jpg</span>.
+                            Select "Run Verified 14-Day Sample Pair" to execute live ORB + RANSAC alignment between <a href="/static/sample_baseline.jpg" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">sample_baseline.jpg &nearr;</a> and <a href="/static/sample_followup.jpg" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">sample_followup.jpg &nearr;</a>.
                         </div>
                     </div>
                 </div>
@@ -2169,69 +2301,157 @@
                     <button type="button" class="seg-pill" onclick="switchCorpusMode('dataset', this)">12,000-Image Corpus &amp; Training</button>
                     <button type="button" class="seg-pill" onclick="switchCorpusMode('benchmarks', this)">Confusion Matrix &amp; Limitations</button>
                 </div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <a href="https://www.kaggle.com/datasets/sundarannamalai/hair-diseases" target="_blank" rel="noopener noreferrer" class="btn-ghost" style="text-decoration:none;">Kaggle Corpus &nearr;</a>
+                    <a href="https://dermnetnz.org/topics/scalp-disorders" target="_blank" rel="noopener noreferrer" class="btn-ghost" style="text-decoration:none;">DermNet Scalp Atlas &nearr;</a>
+                </div>
             </div>
 
             <div id="corpus-mode-papers" class="info-grid-2">
                 <div class="paper-card">
                     <div>
-                        <div class="paper-venue">Frontiers in Medicine · 2022 · DOI: 10.3389/fmed.2022.981884</div>
-                        <div class="paper-title" style="margin-top:5px;">Deep Learning Differentiation of Scalp Psoriasis vs. Seborrheic Dermatitis</div>
-                        <p class="paper-body" style="margin-top:7px;">Demonstrated CNN trichoscopic/macroscopic discrimination between overlapping erythematous-squamous scalp disorders (AUC 0.922, sensitivity 96.1%, specificity 88.2%), outperforming non-specialist visual inspection.</p>
+                        <div class="paper-venue">Frontiers in Medicine · Nov 2022 · Zhang, Shen, Han, Yu &amp; Wang</div>
+                        <div class="paper-title" style="margin-top:5px;">
+                            <a href="https://doi.org/10.3389/fmed.2022.965423" target="_blank" rel="noopener noreferrer" style="color:inherit; text-decoration:none;">A Deep Learning-Based Approach Toward Differentiating Scalp Psoriasis and Seborrheic Dermatitis From Dermoscopic Images &nearr;</a>
+                        </div>
+                        <p class="paper-body" style="margin-top:7px;">Demonstrated CNN discrimination between clinically overlapping erythematous-squamous scalp disorders (AUC 0.922, sensitivity 96.1%, specificity 88.2%), outperforming non-specialist visual inspection.</p>
+                        <div class="ext-links-row">
+                            <a href="https://doi.org/10.3389/fmed.2022.965423" target="_blank" rel="noopener noreferrer" class="ext-pill">DOI: 10.3389/fmed.2022.965423 &nearr;</a>
+                            <a href="https://www.frontiersin.org/articles/10.3389/fmed.2022.965423/full" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">Frontiers Full Text &nearr;</a>
+                            <a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/triage_engine.py" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">triage_engine.py &nearr;</a>
+                        </div>
                     </div>
                     <div class="paper-map"><strong>Follica Implementation:</strong> Motivates pairing neural class probabilities with explicit plaque/flake and focal erythema sub-scores to separate Psoriasis (Level 3 escalation) from Seborrheic Dermatitis (Level 2 monitored).</div>
                 </div>
 
                 <div class="paper-card">
                     <div>
-                        <div class="paper-venue">Computers in Biology and Medicine / IEEE Access · 2022-2023</div>
-                        <div class="paper-title" style="margin-top:5px;">Lightweight MobileNet &amp; EfficientNet Backbones for Multi-Class Scalp Pathology</div>
-                        <p class="paper-body" style="margin-top:7px;">Benchmarked depthwise-separable convolutional architectures across multi-class scalp lesions (folliculitis, alopecia, fungal tinea, dermatitis), achieving &gt;91% multi-class accuracy at smartphone inference budgets.</p>
+                        <div class="paper-venue">Skin Research &amp; Technology (2024) · ECCV (2024, Qin et al.)</div>
+                        <div class="paper-title" style="margin-top:5px;">
+                            <a href="https://doi.org/10.1111/srt.13660" target="_blank" rel="noopener noreferrer" style="color:inherit; text-decoration:none;">Deep Neural Networks for Multi-Class Hair &amp; Scalp Disorders + MobileNetV4 Universal Backbone &nearr;</a>
+                        </div>
+                        <p class="paper-body" style="margin-top:7px;">Benchmarked deep convolutional architectures across multi-class scalp lesions (folliculitis, alopecia, fungal tinea, dermatitis) alongside Universal Inverted Bottleneck blocks optimized for edge inference.</p>
+                        <div class="ext-links-row">
+                            <a href="https://doi.org/10.1111/srt.13660" target="_blank" rel="noopener noreferrer" class="ext-pill">DOI: 10.1111/srt.13660 &nearr;</a>
+                            <a href="https://arxiv.org/abs/2404.10518" target="_blank" rel="noopener noreferrer" class="ext-pill">MobileNetV4 (arXiv:2404.10518) &nearr;</a>
+                            <a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/classifier_service.py" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">classifier_service.py &nearr;</a>
+                        </div>
                     </div>
                     <div class="paper-map"><strong>Follica Implementation:</strong> Grounds our selection of <span class="mono">timm</span> MobileNetV4-Conv-Small two-stage transfer learning exported to standalone ONNX Runtime for sub-50 ms CPU execution.</div>
                 </div>
 
                 <div class="paper-card">
                     <div>
-                        <div class="paper-venue">Scientific Reports / Journal of Dermatological Science · 2023</div>
-                        <div class="paper-title" style="margin-top:5px;">Automated Trichoscopic Hair Coverage &amp; Alopecia Feature Segmentation</div>
-                        <p class="paper-body" style="margin-top:7px;">Established morphological dark-fiber segmentation and spatial follicular void analysis for grading patchy Alopecia Areata (AUC 0.97) and androgenetic vertex thinning.</p>
+                        <div class="paper-venue">JDDG (2025) &amp; Acta Dermato-Venereologica (2021)</div>
+                        <div class="paper-title" style="margin-top:5px;">
+                            <a href="https://doi.org/10.1111/ddg.15847" target="_blank" rel="noopener noreferrer" style="color:inherit; text-decoration:none;">Deep Trichoscopic Activity Assessment of Alopecia Areata &amp; Quantitative Androgenetic Alopecia Grading &nearr;</a>
+                        </div>
+                        <p class="paper-body" style="margin-top:7px;">Established automated trichoscopic follicular analysis and spatial hair-void quantification to distinguish patchy Alopecia Areata activity from patterned androgenetic vertex miniaturization.</p>
+                        <div class="ext-links-row">
+                            <a href="https://doi.org/10.1111/ddg.15847" target="_blank" rel="noopener noreferrer" class="ext-pill">AA Study DOI: 10.1111/ddg.15847 &nearr;</a>
+                            <a href="https://doi.org/10.2340/actadv.v101.564" target="_blank" rel="noopener noreferrer" class="ext-pill">AGA Model DOI: 10.2340/actadv.v101.564 &nearr;</a>
+                            <a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/cv_pipeline.py" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">cv_pipeline.py &nearr;</a>
+                        </div>
                     </div>
                     <div class="paper-map"><strong>Follica Implementation:</strong> Directly informs our <span class="mono">compute_density_score</span> morphological Black-Hat fiber mask and 6x6 interior bare-skin tile detector for focal scarring/patchy alopecia voids.</div>
                 </div>
 
                 <div class="paper-card">
                     <div>
-                        <div class="paper-venue">Sensors / MDPI Diagnostics · 2023</div>
-                        <div class="paper-title" style="margin-top:5px;">Color-Constancy Normalization &amp; Hybrid CV-Neural Fusion Under Ambient Lighting</div>
-                        <p class="paper-body" style="margin-top:7px;">Showed that fusing deep embeddings with Gray-World / CIELAB / HSV chrominance descriptors improves cross-camera robustness under uncalibrated consumer illumination.</p>
+                        <div class="paper-venue">Skin Research &amp; Technology (2023) · J. Franklin Inst. (Buchsbaum, 1980)</div>
+                        <div class="paper-title" style="margin-top:5px;">
+                            <a href="https://doi.org/10.1111/srt.13508" target="_blank" rel="noopener noreferrer" style="color:inherit; text-decoration:none;">AI Color-Constancy Normalization in Cutaneous Imaging &amp; Gray-World Chrominance Calibration &nearr;</a>
+                        </div>
+                        <p class="paper-body" style="margin-top:7px;">Demonstrated that color-constancy illumination normalization prevents camera white-balance shifts and flash artifacts from corrupting erythema and scaling estimation.</p>
+                        <div class="ext-links-row">
+                            <a href="https://doi.org/10.1111/srt.13508" target="_blank" rel="noopener noreferrer" class="ext-pill">Color Constancy DOI: 10.1111/srt.13508 &nearr;</a>
+                            <a href="https://doi.org/10.1016/0016-0032(80)90058-7" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">Gray-World (1980) &nearr;</a>
+                            <a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/quality_gate.py" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">quality_gate.py &nearr;</a>
+                        </div>
                     </div>
-                    <div class="paper-map"><strong>Follica Implementation:</strong> Drives our Gray-World channel gain clamping ([0.75, 1.35]), specular hotspot masking, and SDASI/SALT-inspired severity range anchoring.</div>
+                    <div class="paper-map"><strong>Follica Implementation:</strong> Drives our Gray-World channel gain clamping ([0.75, 1.35]), HSV specular hotspot masking, and SDASI/SALT-inspired severity range anchoring.</div>
                 </div>
             </div>
 
             <div id="corpus-mode-dataset" style="display:none;" class="info-grid-2">
                 <div class="surface-card" style="overflow-y:auto;">
-                    <div class="section-title">Primary Training &amp; Evaluation Corpus</div>
-                    <div class="section-subtitle">12,000 macroscopic scalp &amp; hair photographs balanced across 10 dermatological classes (<span class="mono">9,600</span> train / <span class="mono">1,200</span> val / <span class="mono">1,200</span> test).</div>
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap;">
+                        <div>
+                            <div class="section-title">Primary Training &amp; Evaluation Corpus</div>
+                            <div class="section-subtitle">12,000 macroscopic scalp &amp; hair photographs balanced across 10 dermatological classes (<span class="mono">9,600</span> train / <span class="mono">1,200</span> val / <span class="mono">1,200</span> test).</div>
+                        </div>
+                        <a href="https://www.kaggle.com/datasets/sundarannamalai/hair-diseases" target="_blank" rel="noopener noreferrer" class="ext-pill">Kaggle: Hair Diseases (n=12k) &nearr;</a>
+                    </div>
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>Class Index &amp; Pathology</th>
+                                <th>Class Index &amp; Clinical Reference</th>
                                 <th>Train / Val / Test</th>
-                                <th>Triage Routing</th>
+                                <th>Triage</th>
+                                <th>Live Test</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr><td>00 · Alopecia Areata</td><td class="mono">960 / 120 / 120</td><td>Level 3 Escalation</td></tr>
-                            <tr><td>01 · Contact Dermatitis</td><td class="mono">960 / 120 / 120</td><td>Level 2 Monitored</td></tr>
-                            <tr><td>02 · Folliculitis</td><td class="mono">960 / 120 / 120</td><td>Level 3 Escalation</td></tr>
-                            <tr><td>03 · Pediculosis (Head Lice)</td><td class="mono">960 / 120 / 120</td><td>Level 2 Monitored</td></tr>
-                            <tr><td>04 · Lichen Planus</td><td class="mono">960 / 120 / 120</td><td>Level 3 Escalation</td></tr>
-                            <tr><td>05 · Male Pattern Baldness</td><td class="mono">960 / 120 / 120</td><td>Level 2 Monitored</td></tr>
-                            <tr><td>06 · Scalp Psoriasis</td><td class="mono">960 / 120 / 120</td><td>Level 3 Escalation</td></tr>
-                            <tr><td>07 · Seborrheic Dermatitis</td><td class="mono">960 / 120 / 120</td><td>Level 2 Monitored</td></tr>
-                            <tr><td>08 · Telogen Effluvium</td><td class="mono">960 / 120 / 120</td><td>Level 2 Monitored</td></tr>
-                            <tr><td>09 · Tinea Capitis</td><td class="mono">960 / 120 / 120</td><td>Level 3 Escalation</td></tr>
+                            <tr>
+                                <td>00 · <a href="https://dermnetnz.org/topics/alopecia-areata" target="_blank" rel="noopener noreferrer" class="inline-ext-link">Alopecia Areata &nearr;</a></td>
+                                <td class="mono">960 / 120 / 120</td>
+                                <td>Level 3</td>
+                                <td><button type="button" class="table-run-btn" onclick="runReferenceSample('/static/samples/alopecia_areata_0026.jpg', 'alopecia_areata_0026.jpg')">Run &rarr;</button></td>
+                            </tr>
+                            <tr>
+                                <td>01 · <a href="https://dermnetnz.org/topics/contact-dermatitis" target="_blank" rel="noopener noreferrer" class="inline-ext-link">Contact Dermatitis &nearr;</a></td>
+                                <td class="mono">960 / 120 / 120</td>
+                                <td>Level 2</td>
+                                <td><button type="button" class="table-run-btn" onclick="runReferenceSample('/static/samples/contact_dermatitis_0036.jpg', 'contact_dermatitis_0036.jpg')">Run &rarr;</button></td>
+                            </tr>
+                            <tr>
+                                <td>02 · <a href="https://dermnetnz.org/topics/folliculitis" target="_blank" rel="noopener noreferrer" class="inline-ext-link">Folliculitis &nearr;</a></td>
+                                <td class="mono">960 / 120 / 120</td>
+                                <td>Level 3</td>
+                                <td><button type="button" class="table-run-btn" onclick="runReferenceSample('/static/samples/folliculitis_0062.jpg', 'folliculitis_0062.jpg')">Run &rarr;</button></td>
+                            </tr>
+                            <tr>
+                                <td>03 · <a href="https://dermnetnz.org/topics/head-lice" target="_blank" rel="noopener noreferrer" class="inline-ext-link">Pediculosis (Head Lice) &nearr;</a></td>
+                                <td class="mono">960 / 120 / 120</td>
+                                <td>Level 2</td>
+                                <td><button type="button" class="table-run-btn" onclick="runReferenceSample('/static/samples/head_lice_0036.jpg', 'head_lice_0036.jpg')">Run &rarr;</button></td>
+                            </tr>
+                            <tr>
+                                <td>04 · <a href="https://dermnetnz.org/topics/lichen-planopilaris" target="_blank" rel="noopener noreferrer" class="inline-ext-link">Lichen Planus &nearr;</a></td>
+                                <td class="mono">960 / 120 / 120</td>
+                                <td>Level 3</td>
+                                <td><button type="button" class="table-run-btn" onclick="runReferenceSample('/static/samples/lichen_planus_0026.jpg', 'lichen_planus_0026.jpg')">Run &rarr;</button></td>
+                            </tr>
+                            <tr>
+                                <td>05 · <a href="https://dermnetnz.org/topics/male-pattern-hair-loss" target="_blank" rel="noopener noreferrer" class="inline-ext-link">Male Pattern Baldness &nearr;</a></td>
+                                <td class="mono">960 / 120 / 120</td>
+                                <td>Level 2</td>
+                                <td><button type="button" class="table-run-btn" onclick="runReferenceSample('/static/samples/male_pattern_baldness_0026.jpg', 'male_pattern_baldness_0026.jpg')">Run &rarr;</button></td>
+                            </tr>
+                            <tr>
+                                <td>06 · <a href="https://dermnetnz.org/topics/scalp-psoriasis" target="_blank" rel="noopener noreferrer" class="inline-ext-link">Scalp Psoriasis &nearr;</a></td>
+                                <td class="mono">960 / 120 / 120</td>
+                                <td>Level 3</td>
+                                <td><button type="button" class="table-run-btn" onclick="runReferenceSample('/static/samples/psoriasis_0026.jpg', 'psoriasis_0026.jpg')">Run &rarr;</button></td>
+                            </tr>
+                            <tr>
+                                <td>07 · <a href="https://dermnetnz.org/topics/seborrhoeic-dermatitis" target="_blank" rel="noopener noreferrer" class="inline-ext-link">Seborrheic Dermatitis &nearr;</a></td>
+                                <td class="mono">960 / 120 / 120</td>
+                                <td>Level 2</td>
+                                <td><button type="button" class="table-run-btn" onclick="loadDemoScenario()">Run &rarr;</button></td>
+                            </tr>
+                            <tr>
+                                <td>08 · <a href="https://dermnetnz.org/topics/telogen-effluvium" target="_blank" rel="noopener noreferrer" class="inline-ext-link">Telogen Effluvium &nearr;</a></td>
+                                <td class="mono">960 / 120 / 120</td>
+                                <td>Level 2</td>
+                                <td><button type="button" class="table-run-btn" onclick="runReferenceSample('/static/samples/telogen_effluvium_0026.jpg', 'telogen_effluvium_0026.jpg')">Run &rarr;</button></td>
+                            </tr>
+                            <tr>
+                                <td>09 · <a href="https://dermnetnz.org/topics/tinea-capitis" target="_blank" rel="noopener noreferrer" class="inline-ext-link">Tinea Capitis &nearr;</a></td>
+                                <td class="mono">960 / 120 / 120</td>
+                                <td>Level 3</td>
+                                <td><button type="button" class="table-run-btn" onclick="runReferenceSample('/static/samples/tinea_capitis_0026.jpg', 'tinea_capitis_0026.jpg')">Run &rarr;</button></td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -2244,20 +2464,36 @@
                             <div>
                                 <strong style="font-size:0.88rem; color:var(--text-primary);">AI-Hub Korea Scalp Dataset &amp; SDASI/SALT Alignment</strong>
                                 <div style="font-size:0.81rem; color:var(--text-secondary); margin-top:2px;">Adopts the 4 orthogonal clinical micro-feature axes (Scaling, Erythema, Sebum, Alopecia Coverage) mapped onto [0, 25] sub-scores and condition-anchored severity brackets.</div>
+                                <div class="ext-links-row">
+                                    <a href="https://www.aihub.or.kr/" target="_blank" rel="noopener noreferrer" class="ext-pill">AI-Hub Korea Portal &nearr;</a>
+                                    <a href="https://doi.org/10.1016/j.jaad.2004.04.008" target="_blank" rel="noopener noreferrer" class="ext-pill">SALT Scale (Olsen 2004) &nearr;</a>
+                                    <a href="https://doi.org/10.1371/journal.pone.0331030" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">SDASI Validation &nearr;</a>
+                                </div>
                             </div>
                         </div>
                         <div class="stage-row">
                             <span class="stage-tag">BACKBONE</span>
                             <div>
                                 <strong style="font-size:0.88rem; color:var(--text-primary);">MobileNetV4-Conv-Small (<span class="mono">224x224</span> RGB, ImageNet Normalized)</strong>
-                                <div style="font-size:0.81rem; color:var(--text-secondary); margin-top:2px;">Two-stage fine-tuning in PyTorch (<span class="mono">training/train.py</span>): classifier head warmup followed by full-backbone cosine-annealed AdamW with <span class="mono">label_smoothing=0.1</span>.</div>
+                                <div style="font-size:0.81rem; color:var(--text-secondary); margin-top:2px;">Two-stage fine-tuning in PyTorch: classifier head warmup followed by full-backbone cosine-annealed AdamW with <span class="mono">label_smoothing=0.1</span>.</div>
+                                <div class="ext-links-row">
+                                    <a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/training/train.py" target="_blank" rel="noopener noreferrer" class="ext-pill">training/train.py &nearr;</a>
+                                    <a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/training/follica_training_colab.ipynb" target="_blank" rel="noopener noreferrer" class="ext-pill">Colab Notebook (.ipynb) &nearr;</a>
+                                    <a href="https://github.com/huggingface/pytorch-image-models" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">HuggingFace timm &nearr;</a>
+                                    <a href="https://onnxruntime.ai/" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">ONNX Runtime &nearr;</a>
+                                </div>
                             </div>
                         </div>
                         <div class="stage-row">
                             <span class="stage-tag">AUGMENT</span>
                             <div>
                                 <strong style="font-size:0.88rem; color:var(--text-primary);">Photometric &amp; Geometric Invariance</strong>
-                                <div style="font-size:0.81rem; color:var(--text-secondary); margin-top:2px;">Random flips, rotations, affine crops, and brightness/contrast jitter to tolerate handheld smartphone camera variance.</div>
+                                <div style="font-size:0.81rem; color:var(--text-secondary); margin-top:2px;">Random flips, rotations, affine crops, CLAHE, and brightness/contrast jitter to tolerate handheld smartphone camera variance.</div>
+                                <div class="ext-links-row">
+                                    <a href="https://albumentations.ai/" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">Albumentations Pipeline &nearr;</a>
+                                    <a href="https://opencv.org/" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">OpenCV 4.x &nearr;</a>
+                                    <a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/training/README.md" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">Training Docs &nearr;</a>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -2266,11 +2502,14 @@
 
             <div id="corpus-mode-benchmarks" style="display:none;" class="info-grid-2">
                 <div class="surface-card" style="display:flex; flex-direction:column; align-items:center; justify-content:center; overflow-y:auto;">
-                    <div style="width:100%; display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <div style="width:100%; display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; gap:8px; flex-wrap:wrap;">
                         <span class="section-title" style="font-size:1.05rem;">10-Class Held-Out Confusion Matrix (n = 1,200)</span>
-                        <a href="/static/confusion_matrix.png" target="_blank" class="mono" style="font-size:0.76rem; color:var(--accent-strong); text-decoration:none;">Open Full Size &rarr;</a>
+                        <div style="display:flex; gap:8px;">
+                            <button type="button" class="table-run-btn" onclick="openMatrixLightbox()">Zoom Matrix</button>
+                            <a href="/static/confusion_matrix.png" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">Raw PNG &nearr;</a>
+                        </div>
                     </div>
-                    <img src="/static/confusion_matrix.png" alt="10-Class Confusion Matrix" style="max-width:100%; max-height:350px; object-fit:contain; border-radius:var(--radius-sm); border:1px solid var(--border-mid); background:#fff; padding:4px;">
+                    <img src="/static/confusion_matrix.png" alt="10-Class Confusion Matrix" onclick="openMatrixLightbox()" title="Click to inspect full-resolution confusion matrix" style="cursor:zoom-in; max-width:100%; max-height:350px; object-fit:contain; border-radius:var(--radius-sm); border:1px solid var(--border-mid); background:#fff; padding:4px;">
                 </div>
 
                 <div class="surface-card" style="overflow-y:auto;">
@@ -2280,27 +2519,27 @@
                             <tr>
                                 <th>Evaluation Suite</th>
                                 <th>Result</th>
-                                <th>Notes</th>
+                                <th>Notes &amp; Source</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td>Held-Out Test Split (1,200 images)</td>
+                                <td><a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/training/README.md" target="_blank" rel="noopener noreferrer" class="inline-ext-link">Held-Out Test Split (1,200 images) &nearr;</a></td>
                                 <td class="mono" style="color:var(--status-opt); font-weight:600;">100.0% (1200/1200)</td>
                                 <td>Macro F1 = 1.00 across 10 classes</td>
                             </tr>
                             <tr>
-                                <td>Perturbation Stress Benchmark</td>
+                                <td><a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/classifier_service.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link">Perturbation Stress Benchmark &nearr;</a></td>
                                 <td class="mono" style="color:var(--accent-strong); font-weight:600;">97.0% Top-1</td>
                                 <td>15 deg rotate + 85% crop + 0.75x dark + JPEG Q75</td>
                             </tr>
                             <tr>
-                                <td>Optical Quality Gate Pass Rate</td>
+                                <td><a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/quality_gate.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link">Optical Quality Gate Pass Rate &nearr;</a></td>
                                 <td class="mono">95.9% (1151/1200)</td>
                                 <td>Rejects 49 severely blurred/washed frames</td>
                             </tr>
                             <tr>
-                                <td>Automated Safety &amp; Persona Suite</td>
+                                <td><a href="https://github.com/karthik1647/follica/tree/feat/mobilenetv4-onnx-clinical-triage/backend/tests" target="_blank" rel="noopener noreferrer" class="inline-ext-link">Automated Pytest</a> + <a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/scripts/test_real_life_expectations.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link">20 Personas &nearr;</a></td>
                                 <td class="mono">114 pytest + 20/20</td>
                                 <td>Zero prescription or diagnostic leakage</td>
                             </tr>
@@ -2309,14 +2548,28 @@
 
                     <div class="rationale-box" style="margin-top:14px; border-left-color:var(--status-mod);">
                         <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">Academic Transparency &amp; Known Limitations</strong>
-                        1. <strong>Dataset Cross-Split Caveat:</strong> Near-100% clean test accuracy partially reflects pre-augmented image similarity in the public Kaggle Hair Diseases benchmark; real-world smartphone captures exhibit lower confidence, which is why our <span class="mono">0.65</span> server-side Confidence Gate is strictly enforced.<br>
-                        2. <strong>Provisional CV Thresholds:</strong> Classical CV sub-score formulas and SDASI/SALT severity brackets (<span class="mono">backend/docs/thresholds.md</span>) are engineering heuristics awaiting dermatologist-annotated clinical calibration.<br>
-                        3. <strong>Non-Diagnostic Scope:</strong> Follica surfaces pattern similarities and triage urgency; definitive diagnosis requires polarized dermoscopy or biopsy by a certified dermatologist.
+                        1. <strong>Dataset Cross-Split Caveat:</strong> Near-100% clean test accuracy partially reflects pre-augmented image similarity in the <a href="https://www.kaggle.com/datasets/sundarannamalai/hair-diseases" target="_blank" rel="noopener noreferrer" class="inline-ext-link">public Kaggle Hair Diseases benchmark &nearr;</a>; real-world smartphone captures exhibit lower confidence, which is why our <span class="mono">0.65</span> server-side Confidence Gate is strictly enforced.<br>
+                        2. <strong>Provisional CV Thresholds:</strong> Classical CV sub-score formulas and SDASI/SALT severity brackets (<a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/docs/thresholds.md" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">backend/docs/thresholds.md &nearr;</a>) are engineering heuristics awaiting dermatologist-annotated clinical calibration.<br>
+                        3. <strong>Non-Diagnostic Scope:</strong> Follica surfaces pattern similarities and triage urgency (<a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/docs/privacy.md" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">privacy.md &nearr;</a>); definitive diagnosis requires polarized dermoscopy or biopsy by a certified dermatologist.
                     </div>
                 </div>
             </div>
         </section>
     </main>
+
+    <!-- Confusion Matrix Lightbox Modal -->
+    <div id="matrix-modal" class="modal-backdrop" onclick="closeMatrixLightbox()">
+        <div class="modal-card" style="max-width:860px;" onclick="event.stopPropagation()">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <div class="section-title" style="font-size:1.08rem;">10-Class Held-Out Confusion Matrix (n = 1,200 Test Images)</div>
+                <div style="display:flex; gap:8px;">
+                    <a href="/static/confusion_matrix.png" target="_blank" rel="noopener noreferrer" class="btn-ghost" style="text-decoration:none;">Open New Tab &nearr;</a>
+                    <button type="button" class="btn-ghost" onclick="closeMatrixLightbox()">Close</button>
+                </div>
+            </div>
+            <img src="/static/confusion_matrix.png" alt="Full Confusion Matrix" style="width:100%; max-height:74vh; object-fit:contain; background:#fff; border-radius:var(--radius-sm); padding:6px;">
+        </div>
+    </div>
 
     <!-- Web Camera Capture Modal -->
     <div id="camera-modal" class="modal-backdrop">
@@ -2828,25 +3081,100 @@
             (data.recommended_ingredients || []).forEach(ing => {
                 const card = document.createElement('div');
                 card.className = 'ingredient-card';
-                card.innerHTML = '<div class="ingredient-name"><span>' + ing.name + '</span><span class="ingredient-cadence">' + ing.frequency + '</span></div><div class="ingredient-purpose">' + ing.purpose + '</div>';
+                const qTerm = encodeURIComponent(extractCompoundSearchTerm(ing.name));
+                card.innerHTML =
+                    '<div class="ingredient-name"><span>' + ing.name + '</span><span class="ingredient-cadence">' + ing.frequency + '</span></div>' +
+                    '<div class="ingredient-purpose">' + ing.purpose + '</div>' +
+                    '<div class="ext-links-row" style="margin-top:7px;">' +
+                    '<a href="https://pubchem.ncbi.nlm.nih.gov/#query=' + qTerm + '" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">PubChem Reference &nearr;</a>' +
+                    '</div>';
                 ingBox.appendChild(card);
             });
 
+            const refBanner = document.getElementById('res-referral-banner');
+            if (data.consultation_referral && (data.consultation_referral.required || data.triage_level.includes('Level 3'))) {
+                const ref = data.consultation_referral;
+                refBanner.style.display = 'flex';
+                refBanner.classList.toggle('routine', !data.triage_level.includes('Level 3'));
+                document.getElementById('res-referral-urgency').innerText = ref.urgency || 'Prompt Specialist Review';
+                document.getElementById('res-referral-urgency').style.color = data.triage_level.includes('Level 3') ? '#fb7185' : '#fbbf24';
+                document.getElementById('res-referral-target').innerText = '· ' + (ref.addressed_to || 'Certified Dermatologist');
+                document.getElementById('res-referral-notes').innerText = ref.clinical_hand_off_notes || '';
+                document.getElementById('res-referral-link').href = ref.search_url || 'https://www.google.com/maps/search/dermatologist+near+me';
+            } else {
+                refBanner.style.display = 'none';
+            }
+
             const lifeBox = document.getElementById('res-lifestyle-list');
-            lifeBox.innerHTML = (data.lifestyle_guidance || []).map(x => '<div style="margin-bottom:4px;">&bull; ' + x + '</div>').join('');
+            const searchHref = (data.consultation_referral && data.consultation_referral.search_url) || 'https://www.google.com/maps/search/dermatologist+near+me';
+            lifeBox.innerHTML = (data.lifestyle_guidance || []).map(x => '<div style="margin-bottom:4px;">&bull; ' + x + '</div>').join('') +
+                '<div class="ext-links-row" style="margin-top:10px;"><a href="' + searchHref + '" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">Find Certified Dermatologist Directory &nearr;</a></div>';
 
             const qm = lastQualityMetrics || {};
             const srpScore = data.survey_risk_profile ? (data.survey_risk_profile.risk_score.toFixed(1) + ' / 100 (' + data.survey_risk_profile.risk_band + ')') : 'N/A';
+            const ghBase = 'https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/';
             document.getElementById('inspector-tbody').innerHTML = `
-                <tr><td class="mono">Stage 00 · Optical Gate</td><td>2D Laplacian Sharpness (&ge; 60.0)</td><td class="mono">${qm.blur_score ?? 'Passed'}</td></tr>
-                <tr><td class="mono">Stage 00 · Luminance</td><td>Rec.601 Mean Brightness (35 - 225)</td><td class="mono">${qm.brightness_score ?? '--'} (Glare: ${qm.flash_glare_ratio ?? 0}%)</td></tr>
-                <tr><td class="mono">Stage 01 · Neural Vision</td><td>MobileNetV4-Conv-Small ONNX</td><td class="mono">${(data.confidence_score * 100).toFixed(2)}% (Gate: ${data.confidence_gated ? 'REROUTED' : 'PASSED'})</td></tr>
-                <tr><td class="mono">Stage 02 · Classical CV</td><td>Gray-World + CLAHE + YCrCb/HSV</td><td class="mono">F:${data.sub_scores.flake_score.toFixed(1)} + R:${data.sub_scores.redness_score.toFixed(1)} + S:${data.sub_scores.sebum_score.toFixed(1)} + D:${data.sub_scores.density_score.toFixed(1)} = ${data.scalp_health_score.toFixed(1)}</td></tr>
-                <tr><td class="mono">Stage 03 · Safety Matrix</td><td>Server-Side Escalation Rule</td><td class="mono">${data.triage_level}</td></tr>
-                <tr><td class="mono">Stage 04 · Survey Engine</td><td>Condition-Conditioned Trigger Load</td><td class="mono">${srpScore}</td></tr>
+                <tr><td class="mono">Stage 00 · Optical Gate</td><td><a href="${ghBase}quality_gate.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link">quality_gate.py &nearr;</a> (2D Laplacian &ge; 60.0)</td><td class="mono">${qm.blur_score ?? 'Passed'}</td></tr>
+                <tr><td class="mono">Stage 00 · Luminance</td><td><a href="${ghBase}quality_gate.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link">quality_gate.py &nearr;</a> (Rec.601 35 - 225)</td><td class="mono">${qm.brightness_score ?? '--'} (Glare: ${qm.flash_glare_ratio ?? 0}%)</td></tr>
+                <tr><td class="mono">Stage 01 · Neural Vision</td><td><a href="${ghBase}classifier_service.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link">classifier_service.py &nearr;</a> (MobileNetV4 ONNX)</td><td class="mono">${(data.confidence_score * 100).toFixed(2)}% (Gate: ${data.confidence_gated ? 'REROUTED' : 'PASSED'})</td></tr>
+                <tr><td class="mono">Stage 02 · Classical CV</td><td><a href="${ghBase}cv_pipeline.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link">cv_pipeline.py &nearr;</a> (Gray-World + CLAHE)</td><td class="mono">F:${data.sub_scores.flake_score.toFixed(1)} + R:${data.sub_scores.redness_score.toFixed(1)} + S:${data.sub_scores.sebum_score.toFixed(1)} + D:${data.sub_scores.density_score.toFixed(1)} = ${data.scalp_health_score.toFixed(1)}</td></tr>
+                <tr><td class="mono">Stage 03 · Safety Matrix</td><td><a href="${ghBase}triage_engine.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link">triage_engine.py &nearr;</a> (Escalation Rule)</td><td class="mono">${data.triage_level}</td></tr>
+                <tr><td class="mono">Stage 04 · Survey Engine</td><td><a href="${ghBase}survey_risk_engine.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link">survey_risk_engine.py &nearr;</a> (Trigger Load)</td><td class="mono">${srpScore}</td></tr>
             `;
 
             document.getElementById('res-disclaimer-text').innerText = data.disclaimer;
+        }
+
+        function extractCompoundSearchTerm(rawName) {
+            const lower = (rawName || '').toLowerCase();
+            if (lower.includes('ketoconazole')) return 'Ketoconazole';
+            if (lower.includes('piroctone')) return 'Piroctone Olamine';
+            if (lower.includes('zinc pyrithione') || lower.includes('pyrithione')) return 'Zinc Pyrithione';
+            if (lower.includes('salicylic')) return 'Salicylic Acid';
+            if (lower.includes('selenium')) return 'Selenium Sulfide';
+            if (lower.includes('niacinamide')) return 'Niacinamide';
+            if (lower.includes('panthenol')) return 'Panthenol';
+            if (lower.includes('caffeine')) return 'Caffeine';
+            if (lower.includes('oat') || lower.includes('avenanthramide')) return 'Avenanthramide';
+            if (lower.includes('permethrin')) return 'Permethrin';
+            if (lower.includes('dimethicone')) return 'Dimethicone';
+            return (rawName || 'Panthenol').split('(')[0].replace(/[0-9.%+-]/g, '').trim();
+        }
+
+        function openMatrixLightbox() {
+            document.getElementById('matrix-modal').style.display = 'flex';
+        }
+
+        function closeMatrixLightbox() {
+            document.getElementById('matrix-modal').style.display = 'none';
+        }
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                closeMatrixLightbox();
+                closeCameraModal();
+            }
+        });
+
+        function downloadCohortCsvTemplate() {
+            const csv = [
+                'condition,water_environment,daily_helmet_wearer,stress_level,diet_pattern',
+                'Pattern Suggestive of Seborrheic Dermatitis,hard_borewell,true,high,balanced_protein',
+                'Pattern Suggestive of Seborrheic Dermatitis,hard_borewell,true,moderate,balanced_protein',
+                'Pattern Suggestive of Telogen Effluvium / Diffuse Shedding,normal,false,high,low_protein_crash_diet',
+                'Pattern Suggestive of Androgenetic Thinning,hard_borewell,false,moderate,balanced_protein',
+                'Pattern Suggestive of Folliculitis,hard_borewell,true,moderate,balanced_protein',
+                'Pattern Consistent with Balanced / Healthy Scalp,normal,false,low,balanced_protein'
+            ].join('\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'follica_survey_cohort_template.csv';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
         }
 
         async function runCampusCohortDemo() {
@@ -2924,6 +3252,22 @@
                         </div>
                     `;
                 }).join('');
+
+                const condBox = document.getElementById('cohort-conditions-box');
+                const condBody = document.getElementById('cohort-conditions-tbody');
+                const entries = Object.entries(data.condition_breakdown || {});
+                if (entries.length > 0) {
+                    condBox.style.display = 'block';
+                    condBody.innerHTML = entries.map(([condName, stats]) => `
+                        <tr>
+                            <td>${condName.replace('Pattern Suggestive of ', '').replace('Pattern Consistent with ', '')}</td>
+                            <td class="mono">${stats.count}</td>
+                            <td class="mono">${Number(stats.mean_risk_score).toFixed(1)} / 100</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    condBox.style.display = 'none';
+                }
             } catch (err) {
                 alert('Cohort analysis request failed: ' + err.message);
             }
@@ -2933,6 +3277,8 @@
             const out = document.getElementById('progress-output-body');
             out.innerText = 'Computing ORB keypoint descriptors and RANSAC homography warp...';
             const fd = new FormData();
+            let basePreview = '/static/sample_baseline.jpg';
+            let followPreview = '/static/sample_followup.jpg';
             try {
                 if (useSample) {
                     const [bRes, fRes] = await Promise.all([
@@ -2948,6 +3294,8 @@
                         out.innerText = 'Please select both Baseline and Follow-Up images first.';
                         return;
                     }
+                    basePreview = URL.createObjectURL(bFile);
+                    followPreview = URL.createObjectURL(fFile);
                     fd.append('baseline_image', bFile);
                     fd.append('followup_image', fFile);
                 }
@@ -2958,6 +3306,16 @@
                 if (!res.ok) throw new Error(JSON.stringify(data));
 
                 out.innerHTML = `
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+                        <a href="${basePreview}" target="_blank" rel="noopener noreferrer" style="text-decoration:none; background:rgba(13,18,27,0.85); border:1px solid var(--border-subtle); border-radius:8px; padding:7px; display:flex; align-items:center; gap:9px;">
+                            <img src="${basePreview}" alt="Day 0 Baseline" style="width:44px; height:44px; object-fit:cover; border-radius:6px; border:1px solid var(--border-mid);">
+                            <div><strong style="font-size:0.79rem; color:var(--text-primary); display:block;">Day 0 Baseline</strong><span class="mono" style="font-size:0.7rem; color:var(--accent-strong);">Inspect Frame &nearr;</span></div>
+                        </a>
+                        <a href="${followPreview}" target="_blank" rel="noopener noreferrer" style="text-decoration:none; background:rgba(13,18,27,0.85); border:1px solid var(--border-subtle); border-radius:8px; padding:7px; display:flex; align-items:center; gap:9px;">
+                            <img src="${followPreview}" alt="Follow-Up" style="width:44px; height:44px; object-fit:cover; border-radius:6px; border:1px solid var(--border-mid);">
+                            <div><strong style="font-size:0.79rem; color:var(--text-primary); display:block;">Day ${data.days_elapsed} Follow-Up</strong><span class="mono" style="font-size:0.7rem; color:var(--accent-strong);">Inspect Frame &nearr;</span></div>
+                        </a>
+                    </div>
                     <div class="metrics-summary-grid" style="margin-top:4px;">
                         <div class="metric-cell"><div class="metric-cell-label">Alignment Quality</div><div class="metric-cell-value">${data.alignment_quality.toUpperCase()}</div></div>
                         <div class="metric-cell"><div class="metric-cell-label">Flake Reduction</div><div class="metric-cell-value">${data.flake_reduction_delta_pct.toFixed(1)}%</div></div>

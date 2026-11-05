@@ -11,6 +11,8 @@ import {
   StatusBar,
   Image,
   Platform,
+  Linking,
+  Alert,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import {
@@ -22,61 +24,111 @@ import {
 const UNIVERSAL_DISCLAIMER =
   "This assessment is for informational and educational purposes only and suggests potential scalp care routines. It does not constitute medical diagnosis, formal medical advice, or treatment. If symptoms persist, cause discomfort, or worsen, please consult a certified dermatologist.";
 
+const GH_BLOB =
+  "https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/";
+
 const PAPERS_DATA = [
   {
-    venue: "Frontiers in Medicine · 2022 · DOI: 10.3389/fmed.2022.981884",
-    title: "CNN Differentiation of Scalp Psoriasis vs. Seborrheic Dermatitis",
+    venue: "Frontiers in Medicine · Nov 2022 · Zhang, Shen, Han, Yu & Wang",
+    title:
+      "A Deep Learning-Based Approach Toward Differentiating Scalp Psoriasis and Seborrheic Dermatitis From Dermoscopic Images",
     summary:
-      "Demonstrated AUC 0.922 discrimination across erythematous-squamous scalp conditions; motivates pairing neural classification with explicit scaling and erythema sub-scores.",
+      "Demonstrated AUC 0.922 discrimination (96.1% sensitivity, 88.2% specificity) across overlapping erythematous-squamous scalp conditions; motivates pairing neural classification with scaling and erythema sub-scores.",
+    links: [
+      { label: "DOI: 10.3389/fmed.2022.965423", url: "https://doi.org/10.3389/fmed.2022.965423" },
+      { label: "Frontiers Full Text", url: "https://www.frontiersin.org/articles/10.3389/fmed.2022.965423/full" },
+      { label: "triage_engine.py", url: `${GH_BLOB}backend/app/services/triage_engine.py` },
+    ],
   },
   {
-    venue: "Computers in Biology and Medicine / IEEE Access · 2022-2023",
-    title: "MobileNet & EfficientNet Backbones for Multi-Class Scalp Pathology",
+    venue: "Skin Research & Technology (2024) · ECCV (2024, Qin et al.)",
+    title:
+      "Deep Neural Networks for Multi-Class Hair & Scalp Disorders + MobileNetV4 Universal Backbone",
     summary:
-      "Grounds MobileNetV4-Conv-Small transfer learning exported to standalone ONNX Runtime for sub-50 ms CPU execution.",
+      "Grounds MobileNetV4-Conv-Small two-stage transfer learning exported to standalone ONNX Runtime for sub-50 ms CPU execution across 10 scalp pathologies.",
+    links: [
+      { label: "DOI: 10.1111/srt.13660", url: "https://doi.org/10.1111/srt.13660" },
+      { label: "MobileNetV4 (arXiv:2404.10518)", url: "https://arxiv.org/abs/2404.10518" },
+      { label: "classifier_service.py", url: `${GH_BLOB}backend/app/services/classifier_service.py` },
+    ],
   },
   {
-    venue: "Scientific Reports / J. Dermatological Science · 2023",
-    title: "Automated Trichoscopic Coverage & Alopecia Void Segmentation",
+    venue: "JDDG (2025) & Acta Dermato-Venereologica (2021)",
+    title:
+      "Deep Trichoscopic Activity Assessment of Alopecia Areata & Quantitative Androgenetic Alopecia Grading",
     summary:
-      "Establishes morphological fiber segmentation and spatial 6x6 bare-tile void grading for patchy Alopecia Areata (AUC 0.97) and vertex thinning.",
+      "Establishes morphological dark-fiber segmentation and spatial 6x6 bare-tile void grading for patchy Alopecia Areata and androgenetic vertex miniaturization.",
+    links: [
+      { label: "AA DOI: 10.1111/ddg.15847", url: "https://doi.org/10.1111/ddg.15847" },
+      { label: "AGA DOI: 10.2340/actadv.v101.564", url: "https://doi.org/10.2340/actadv.v101.564" },
+      { label: "cv_pipeline.py", url: `${GH_BLOB}backend/app/services/cv_pipeline.py` },
+    ],
   },
   {
-    venue: "Sensors / MDPI Diagnostics · 2023",
-    title: "Color-Constancy Normalization & Hybrid CV-Neural Fusion",
+    venue: "Skin Research & Technology (2023) · J. Franklin Inst. (1980)",
+    title:
+      "AI Color-Constancy Normalization in Cutaneous Imaging & Gray-World Chrominance Calibration",
     summary:
-      "Drives Gray-World white-balance clamping, HSV specular glare rejection, and SDASI/SALT-anchored severity bracketing.",
+      "Drives Gray-World white-balance clamping ([0.75, 1.35]), HSV specular glare rejection, and SDASI/SALT-anchored severity bracketing.",
+    links: [
+      { label: "DOI: 10.1111/srt.13508", url: "https://doi.org/10.1111/srt.13508" },
+      { label: "Gray-World (1980)", url: "https://doi.org/10.1016/0016-0032(80)90058-7" },
+      { label: "quality_gate.py", url: `${GH_BLOB}backend/app/services/quality_gate.py` },
+    ],
   },
+];
+
+const CORPUS_CLASSES_DATA = [
+  ["00 · Alopecia Areata", "Level 3", "https://dermnetnz.org/topics/alopecia-areata"],
+  ["01 · Contact Dermatitis", "Level 2", "https://dermnetnz.org/topics/contact-dermatitis"],
+  ["02 · Folliculitis", "Level 3", "https://dermnetnz.org/topics/folliculitis"],
+  ["03 · Pediculosis Capitis", "Level 2", "https://dermnetnz.org/topics/head-lice"],
+  ["04 · Lichen Planus", "Level 3", "https://dermnetnz.org/topics/lichen-planopilaris"],
+  ["05 · Male Pattern Baldness", "Level 2", "https://dermnetnz.org/topics/male-pattern-hair-loss"],
+  ["06 · Scalp Psoriasis", "Level 3", "https://dermnetnz.org/topics/scalp-psoriasis"],
+  ["07 · Seborrheic Dermatitis", "Level 2", "https://dermnetnz.org/topics/seborrhoeic-dermatitis"],
+  ["08 · Telogen Effluvium", "Level 2", "https://dermnetnz.org/topics/telogen-effluvium"],
+  ["09 · Tinea Capitis", "Level 3", "https://dermnetnz.org/topics/tinea-capitis"],
 ];
 
 const PIPELINE_STAGES = [
   {
     tag: "STAGE 00",
     name: "Pre-Inference Optical Gate",
+    file: "quality_gate.py",
+    url: `${GH_BLOB}backend/app/services/quality_gate.py`,
     detail:
       "8x8 patch-max 2D Laplacian focus check (>= 60), luminance bounds (35-225), and HSV flash-glare rejection (<= 15%).",
   },
   {
     tag: "STAGE 01",
     name: "MobileNetV4-Conv-Small ONNX",
+    file: "classifier_service.py",
+    url: `${GH_BLOB}backend/app/services/classifier_service.py`,
     detail:
       "10-class macroscopic pathology recognition in FP32 ONNX Runtime with dominance-margin calibration.",
   },
   {
     tag: "STAGE 02",
     name: "Classical CV Micro-Features",
+    file: "cv_pipeline.py",
+    url: `${GH_BLOB}backend/app/services/cv_pipeline.py`,
     detail:
       "Gray-World white balance, CLAHE, YCrCb/HSV skin-hair isolation, focal erythema contrast, and bare-tile alopecia detection.",
   },
   {
     tag: "STAGE 03",
     name: "Confidence & Escalation Matrix",
+    file: "triage_engine.py",
+    url: `${GH_BLOB}backend/app/services/triage_engine.py`,
     detail:
       "Predictions below 0.65 confidence reroute to Level 2 Indeterminate; scarring, fungal, and pustular patterns escalate to Level 3.",
   },
   {
     tag: "STAGE 04",
     name: "Post-Identification Trigger Engine",
+    file: "survey_risk_engine.py",
+    url: `${GH_BLOB}backend/app/services/survey_risk_engine.py`,
     detail:
       "Ranks modifiable campus/environmental triggers conditioned on the identified pattern and exports a 1-page physician PDF.",
   },
@@ -352,6 +404,26 @@ export default function App() {
     }
   };
 
+  const openExternalUrl = async (url) => {
+    try {
+      await Linking.openURL(url);
+    } catch (_) {
+      Alert.alert("External Link", url);
+    }
+  };
+
+  const extractCompoundQuery = (rawName = "") => {
+    const lower = rawName.toLowerCase();
+    if (lower.includes("ketoconazole")) return "Ketoconazole";
+    if (lower.includes("piroctone")) return "Piroctone Olamine";
+    if (lower.includes("pyrithione")) return "Zinc Pyrithione";
+    if (lower.includes("salicylic")) return "Salicylic Acid";
+    if (lower.includes("selenium")) return "Selenium Sulfide";
+    if (lower.includes("panthenol")) return "Panthenol";
+    if (lower.includes("oat")) return "Avenanthramide";
+    return rawName.split("(")[0].replace(/[0-9.%+-]/g, "").trim() || "Panthenol";
+  };
+
   const runLiveAnalysis = async () => {
     if (!selectedImageUri) {
       runOfflinePreset("seborrheic");
@@ -373,8 +445,16 @@ export default function App() {
       setPrimaryTab("triage");
       setTriageMode("report");
     } catch (err) {
-      setServerState("Offline Fallback");
-      runOfflinePreset("seborrheic");
+      const msg = String(err?.message || "");
+      if (msg.includes("(400)") || msg.includes("(422)")) {
+        Alert.alert(
+          "Optical Quality Gate",
+          "Captured frame did not pass focus, exposure, or flash-glare checks. Please wipe lens, use diffuse room light without flash, and retake at 10-15 cm."
+        );
+      } else {
+        setServerState("Offline Fallback");
+        runOfflinePreset("seborrheic");
+      }
     } finally {
       setLoading(false);
     }
@@ -659,6 +739,33 @@ export default function App() {
                 );
               })()}
 
+              {(analysisResult.consultation_referral?.required ||
+                String(analysisResult.triage_level || "").includes("Level 3")) && (
+                <View style={styles.referralBanner}>
+                  <Text style={styles.referralOverline}>
+                    {analysisResult.consultation_referral?.urgency ||
+                      "PROMPT DERMATOLOGY REFERRAL"}
+                  </Text>
+                  <Text style={styles.referralBody}>
+                    {analysisResult.consultation_referral?.clinical_hand_off_notes ||
+                      "Visual pattern warrants in-person polarized dermoscopy by a certified dermatologist."}
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.referralBtn}
+                    onPress={() =>
+                      openExternalUrl(
+                        analysisResult.consultation_referral?.search_url ||
+                          "https://www.google.com/maps/search/dermatologist+near+me"
+                      )
+                    }
+                  >
+                    <Text style={styles.referralBtnText}>
+                      {"Locate Dermatologist Near Me ->"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
               {/* 3-CELL METRIC SUMMARY */}
               <View style={styles.metricRow3}>
                 <View style={styles.metricCell}>
@@ -760,12 +867,37 @@ export default function App() {
 
               {reportPane === "molecules" && (
                 <View style={{ marginTop: 12 }}>
-                  {(analysisResult.active_ingredients || []).map((ing, i) => (
-                    <View key={i} style={styles.listCard}>
-                      <Text style={styles.listCardTitle}>{ing.molecule}</Text>
-                      <Text style={styles.listCardAccent}>{ing.frequency}</Text>
-                      <Text style={styles.listCardBody}>{ing.mechanism}</Text>
-                    </View>
+                  {(analysisResult.active_ingredients || []).map((ing, i) => {
+                    const q = encodeURIComponent(extractCompoundQuery(ing.molecule));
+                    return (
+                      <View key={i} style={styles.listCard}>
+                        <Text style={styles.listCardTitle}>{ing.molecule}</Text>
+                        <Text style={styles.listCardAccent}>{ing.frequency}</Text>
+                        <Text style={styles.listCardBody}>{ing.mechanism}</Text>
+                        <View style={styles.extRow}>
+                          <TouchableOpacity
+                            style={styles.extPillSecondary}
+                            onPress={() =>
+                              openExternalUrl(
+                                `https://pubchem.ncbi.nlm.nih.gov/#query=${q}`
+                              )
+                            }
+                          >
+                            <Text style={styles.extPillSecondaryText}>
+                              {"PubChem Compound ->"}
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    );
+                  })}
+                  {(analysisResult.lifestyle_advice || []).map((tip, idx) => (
+                    <Text
+                      key={idx}
+                      style={[styles.cardSub, { fontSize: 12.5, marginTop: 4 }]}
+                    >
+                      • {tip}
+                    </Text>
                   ))}
                 </View>
               )}
@@ -1067,7 +1199,12 @@ export default function App() {
 
             {PIPELINE_STAGES.map((st) => (
               <View key={st.tag} style={styles.listCard}>
-                <Text style={styles.listCardAccent}>{st.tag}</Text>
+                <View style={styles.rowBetween}>
+                  <Text style={styles.listCardAccent}>{st.tag}</Text>
+                  <TouchableOpacity onPress={() => openExternalUrl(st.url)}>
+                    <Text style={styles.inlineLinkText}>{`${st.file} ->`}</Text>
+                  </TouchableOpacity>
+                </View>
                 <Text style={styles.listCardTitle}>{st.name}</Text>
                 <Text style={styles.listCardBody}>{st.detail}</Text>
               </View>
@@ -1077,6 +1214,31 @@ export default function App() {
               <Text style={styles.rationaleText}>
                 Zero-Retention Privacy: Scalp photographs are processed strictly in volatile RAM and discarded immediately. Consent records store salted SHA-256 pseudonyms only.
               </Text>
+            </View>
+
+            <View style={styles.extRow}>
+              <TouchableOpacity
+                style={styles.extPill}
+                onPress={() =>
+                  openExternalUrl("https://github.com/karthik1647/follica")
+                }
+              >
+                <Text style={styles.extPillText}>{"GitHub Repository ->"}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.extPillSecondary}
+                onPress={() => openExternalUrl(`${GH_BLOB}backend/docs/privacy.md`)}
+              >
+                <Text style={styles.extPillSecondaryText}>{"privacy.md ->"}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.extPillSecondary}
+                onPress={() =>
+                  openExternalUrl(`${GH_BLOB}backend/docs/thresholds.md`)
+                }
+              >
+                <Text style={styles.extPillSecondaryText}>{"thresholds.md ->"}</Text>
+              </TouchableOpacity>
             </View>
           </View>
         )}
@@ -1116,12 +1278,35 @@ export default function App() {
               PAPERS_DATA.map((p, i) => (
                 <View key={i} style={styles.card}>
                   <Text style={styles.listCardAccent}>{p.venue}</Text>
-                  <Text style={[styles.cardTitle, { marginTop: 4 }]}>
-                    {p.title}
-                  </Text>
+                  <TouchableOpacity
+                    onPress={() => p.links?.[0] && openExternalUrl(p.links[0].url)}
+                  >
+                    <Text style={[styles.cardTitle, { marginTop: 4 }]}>
+                      {p.title}
+                    </Text>
+                  </TouchableOpacity>
                   <Text style={[styles.cardSub, { marginTop: 6 }]}>
                     {p.summary}
                   </Text>
+                  <View style={styles.extRow}>
+                    {(p.links || []).map((lnk, j) => (
+                      <TouchableOpacity
+                        key={j}
+                        style={j === 0 ? styles.extPill : styles.extPillSecondary}
+                        onPress={() => openExternalUrl(lnk.url)}
+                      >
+                        <Text
+                          style={
+                            j === 0
+                              ? styles.extPillText
+                              : styles.extPillSecondaryText
+                          }
+                        >
+                          {`${lnk.label} ->`}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
                 </View>
               ))}
 
@@ -1133,22 +1318,64 @@ export default function App() {
                 <Text style={styles.cardSub}>
                   9,600 Train / 1,200 Val / 1,200 Held-Out Test (1,200 images per pathology) paired with AI-Hub Korea & SDASI/SALT 4-axis severity grading:
                 </Text>
-                {[
-                  "00 · Alopecia Areata (Level 3 Escalation)",
-                  "01 · Contact Dermatitis (Level 2 Monitored)",
-                  "02 · Folliculitis (Level 3 Escalation)",
-                  "03 · Pediculosis Capitis (Level 2 Monitored)",
-                  "04 · Lichen Planus (Level 3 Escalation)",
-                  "05 · Male Pattern Baldness (Level 2 Monitored)",
-                  "06 · Scalp Psoriasis (Level 3 Escalation)",
-                  "07 · Seborrheic Dermatitis (Level 2 Monitored)",
-                  "08 · Telogen Effluvium (Level 2 Monitored)",
-                  "09 · Tinea Capitis (Level 3 Escalation)",
-                ].map((row) => (
-                  <View key={row} style={styles.corpusRow}>
-                    <Text style={styles.corpusRowText}>{row}</Text>
-                  </View>
-                ))}
+
+                <View style={styles.extRow}>
+                  <TouchableOpacity
+                    style={styles.extPill}
+                    onPress={() =>
+                      openExternalUrl(
+                        "https://www.kaggle.com/datasets/sundarannamalai/hair-diseases"
+                      )
+                    }
+                  >
+                    <Text style={styles.extPillText}>
+                      {"Kaggle: Hair Diseases (12k) ->"}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.extPillSecondary}
+                    onPress={() => openExternalUrl("https://www.aihub.or.kr/")}
+                  >
+                    <Text style={styles.extPillSecondaryText}>{"AI-Hub Korea ->"}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.extPillSecondary}
+                    onPress={() =>
+                      openExternalUrl("https://doi.org/10.1016/j.jaad.2004.04.008")
+                    }
+                  >
+                    <Text style={styles.extPillSecondaryText}>{"SALT Scale ->"}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.extPillSecondary}
+                    onPress={() =>
+                      openExternalUrl("https://doi.org/10.1371/journal.pone.0331030")
+                    }
+                  >
+                    <Text style={styles.extPillSecondaryText}>{"SDASI Scale ->"}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.extPillSecondary}
+                    onPress={() => openExternalUrl(`${GH_BLOB}training/train.py`)}
+                  >
+                    <Text style={styles.extPillSecondaryText}>{"train.py ->"}</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={{ marginTop: 10 }}>
+                  {CORPUS_CLASSES_DATA.map(([clsLabel, tier, refUrl]) => (
+                    <TouchableOpacity
+                      key={clsLabel}
+                      style={[styles.corpusRow, styles.rowBetween]}
+                      onPress={() => openExternalUrl(refUrl)}
+                    >
+                      <Text style={styles.corpusRowText}>
+                        {clsLabel} ({tier})
+                      </Text>
+                      <Text style={styles.inlineLinkText}>{"DermNet ->"}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </View>
             )}
 
@@ -1163,13 +1390,41 @@ export default function App() {
                     100.0% (1,200 / 1,200) · Macro F1 = 1.00
                   </Text>
                   <Text style={styles.listCardBody}>
-                    97.0% top-1 accuracy under simultaneous rotation, 85% crop, 0.75x darkening, and JPEG Q75 compression; 95.9% optical quality gate pass rate.
+                    97.0% top-1 accuracy under simultaneous rotation, 85% crop, 0.75x darkening, and JPEG Q75 compression; 95.9% optical quality gate pass rate; 114 pytest + 20/20 clinical personas passing.
                   </Text>
                 </View>
                 <View style={styles.rationaleBox}>
                   <Text style={styles.rationaleText}>
                     Academic Limitations: Public Kaggle cross-split augmentation inflates clean split accuracy; real handheld photos exhibit broader variance, mitigated via our 0.65 server-side Confidence Gate. Classical CV and SDASI/SALT brackets remain uncalibrated engineering estimates.
                   </Text>
+                </View>
+                <View style={styles.extRow}>
+                  <TouchableOpacity
+                    style={styles.extPill}
+                    onPress={() => openExternalUrl(`${GH_BLOB}training/README.md`)}
+                  >
+                    <Text style={styles.extPillText}>{"Training Report ->"}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.extPillSecondary}
+                    onPress={() =>
+                      openExternalUrl(`${GH_BLOB}backend/docs/thresholds.md`)
+                    }
+                  >
+                    <Text style={styles.extPillSecondaryText}>{"thresholds.md ->"}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.extPillSecondary}
+                    onPress={() =>
+                      openExternalUrl(
+                        `${GH_BLOB}scripts/test_real_life_expectations.py`
+                      )
+                    }
+                  >
+                    <Text style={styles.extPillSecondaryText}>
+                      {"20-Persona Suite ->"}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
               </View>
             )}
@@ -1852,6 +2107,81 @@ const styles = StyleSheet.create({
     color: "#cbd5e1",
     fontFamily: MONO,
     fontSize: 12,
+  },
+  extRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 7,
+    marginTop: 10,
+  },
+  extPill: {
+    backgroundColor: "rgba(0, 212, 190, 0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(0, 230, 207, 0.36)",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  extPillText: {
+    color: "#00e6cf",
+    fontFamily: MONO,
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  extPillSecondary: {
+    backgroundColor: "#16202f",
+    borderWidth: 1,
+    borderColor: "#28374d",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  extPillSecondaryText: {
+    color: "#cbd5e1",
+    fontFamily: MONO,
+    fontSize: 11,
+  },
+  inlineLinkText: {
+    color: "#00e6cf",
+    fontFamily: MONO,
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  referralBanner: {
+    marginTop: 11,
+    padding: 12,
+    borderRadius: 11,
+    backgroundColor: "rgba(244, 63, 94, 0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(244, 63, 94, 0.38)",
+  },
+  referralOverline: {
+    color: "#fb7185",
+    fontFamily: MONO,
+    fontSize: 10.5,
+    fontWeight: "700",
+    marginBottom: 4,
+  },
+  referralBody: {
+    color: "#f1f5f9",
+    fontSize: 12.5,
+    lineHeight: 18,
+  },
+  referralBtn: {
+    marginTop: 9,
+    backgroundColor: "#1a2536",
+    borderWidth: 1,
+    borderColor: "rgba(244, 63, 94, 0.45)",
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    alignSelf: "flex-start",
+  },
+  referralBtnText: {
+    color: "#fda4af",
+    fontFamily: MONO,
+    fontSize: 11.5,
+    fontWeight: "700",
   },
   bottomDockOuter: {
     backgroundColor: "#080b10",
