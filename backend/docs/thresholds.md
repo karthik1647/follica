@@ -171,6 +171,30 @@ All cut-offs below are provisional heuristics. No clinical calibration has been 
 
 ---
 
+---
+
+## 12. Condition-Anchored Severity Brackets & Focal CV Modifiers (`services/cv_pipeline.py`, `services/triage_engine.py`)
+
+> Anchors raw optical `[0, 25]` sub-scores into clinically plausible ranges modelled on SDASI (Seborrheic Dermatitis Area & Severity Index, 0-3 ordinal scale per sign) and SALT / Sinclair Hair Density grades when `confidence >= 0.65`. `CONDITION_NORMAL` and confidence-gated cases are untouched. All brackets are **uncalibrated** engineering benchmarks.
+
+| File | Constant / Expression | Value | Controls | Status |
+|------|-----------------------|-------|----------|--------|
+| `backend/app/services/cv_pipeline.py` | `focal_erythema_delta > 12.0` (`p90 - p40` skin red-excess) | `12.0`, slope `0.45`, cap `10.0` | Penalizes localized erythematous patches against surrounding normal skin without penalizing flat warm ambient lighting. | **uncalibrated** |
+| `backend/app/services/cv_pipeline.py` | `bare_tiles >= 2` (`tile_h < 0.04`, `tile_s > 0.60`, `coverage >= 0.22`) | `1.6 pts/tile`, cap `14.0` | Penalizes focal bare-skin alopecia patches surrounded by border hair in 6x6 interior grid. | **uncalibrated** |
+| `backend/app/services/triage_engine.py` | `CONDITION_BENCHMARK_BRACKETS` | Per-condition `[floor, ceiling]` tuples | Affine range mapping `lo + (raw/25)*(hi-lo)` weighted by confidence `[0.70, 1.0]` across the 10 condition classes + dry scalp. | **uncalibrated** |
+
+---
+
+## 13. Post-Identification Survey Risk Engine (`services/survey_risk_engine.py`)
+
+> Layer-2 pipeline (`survey_risk_profile`) executed after condition classification. Kept strictly separate from image-derived `scalp_health_score`.
+
+| File | Constant / Expression | Value | Controls | Status |
+|------|-----------------------|-------|----------|--------|
+| `backend/app/services/survey_risk_engine.py` | `SEVERITY_WEIGHTS` | `high=22, moderate=12, low=6`, norm `110.0` | Converts condition-conditioned lifestyle triggers into `risk_score` `[0, 100]`. | **uncalibrated** |
+| `backend/app/services/survey_risk_engine.py` | `risk_band` cut-offs | `<20 low`, `<45 moderate`, `<70 elevated`, `>=70 high` | Categorical band for modifiable + systemic survey trigger load. | **uncalibrated** |
+
+
 ## Change Log
 
 | Date | Change |
@@ -180,3 +204,4 @@ All cut-offs below are provisional heuristics. No clinical calibration has been 
 | 2026-10-30 (risk indicators) | Section 10 added: questionnaire-derived risk indicators object added to `AnalysisResponse`, computed via transparent count rules (`low` / `moderate` / `elevated`) without blending into image-only `scalp_health_score`. All thresholds **uncalibrated**. |
 | 2026-10-30 (questionnaire usage) | Removed unused `scan_angle`. Wired `biological_sex` + `age_group` into non-numeric correlation text notes (Norwood vs Ludwig, under-18 guardian advisory). Wired `washing_frequency`, `chemical_heat_styling`, `stress_level`, `sleep_quality` into tailored lifestyle text. Added frontend form selectors for `stress_level` and `sleep_quality`. All advisory rules are qualitative and **uncalibrated**. |
 | 2026-10-30 (condition classification fixes) | Section 11 added: heuristic fallback rules updated. Family history + crown/vertex mapped to `CONDITION_ANDROGENETIC_ALOPECIA` (Level 2 triage). `patchy_spots` mapped to `CONDITION_ALOPECIA_AREATA` (Level 3). `plaque_crusty` mapped to `CONDITION_SCALP_PSORIASIS`. Added `plaque_crusty` option in frontend form. Documented that CNN `CLASSES` (5 classes) is constrained and requires model retraining. All fallback rules **uncalibrated**. |
+| 2026-11-05 (SDASI benchmark anchors + Survey Pipeline) | Added Section 12 (focal patch erythema/void modifiers and SDASI/SALT affine condition severity brackets) and Section 13 (post-identification `SurveyRiskEngine` + cohort analytics). All parameters marked **uncalibrated**. |

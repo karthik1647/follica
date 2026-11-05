@@ -9,9 +9,19 @@ import {
   ActivityIndicator,
   SafeAreaView,
   StatusBar,
+  Image,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { checkSystemStatus, submitScalpAnalysis, DEFAULT_API_BASE } from "./src/services/api";
+
+const UNIVERSAL_DISCLAIMER =
+  "This assessment is for informational and educational purposes only and suggests potential scalp care routines. It does not constitute medical diagnosis, formal medical advice, or treatment. If symptoms persist, cause discomfort, or worsen, please consult a certified dermatologist.";
+
+function scoreAccent(val) {
+  if (val >= 20.0) return { color: "#00d2be", label: "OPTIMAL" };
+  if (val >= 14.0) return { color: "#f59e0b", label: "MODERATE" };
+  return { color: "#ef4444", label: "ELEVATED" };
+}
 
 export default function App() {
   const [apiBaseUrl, setApiBaseUrl] = useState(DEFAULT_API_BASE);
@@ -21,32 +31,35 @@ export default function App() {
   const [selectedImageUri, setSelectedImageUri] = useState(null);
   const [analysisResult, setAnalysisResult] = useState(null);
 
-  // Questionnaire state
   const [intake, setIntake] = useState({
     biological_sex: "male",
     age_group: "18_25",
-    primary_concern_zone: "crown_vertex",
-    water_environment: "hard_borewell",
-    daily_helmet_wearer: true,
-    washing_frequency: "2_3_times_week",
-    hair_pull_test: "normal_under_3",
-    flake_type: "greasy_yellow",
-    sensation: "itching",
-    duration_months: 6,
-    duration_weeks: 24,
-    gut_health: "frequent_bloating_acidity",
-    metabolic_energy: "chronic_sluggish_fatigue",
+    primary_concern_zone: "routine_healthy_check",
+    water_environment: "normal",
+    daily_helmet_wearer: false,
+    washing_frequency: "2_3_per_week",
+    hair_pull_test: "negative_under_3",
+    flake_type: "none",
+    sensation: "painless",
+    stress_level: "moderate",
+    diet_pattern: "balanced_protein",
+    duration_months: 1,
+    duration_weeks: 4,
+    gut_health: "optimal",
+    metabolic_energy: "balanced",
     hormonal_profile: "none",
   });
 
   const testServerConnection = async () => {
     try {
       setLoading(true);
-      setStatusMessage("Checking server connectivity...");
+      setStatusMessage("Pinging telemetry backend...");
       const status = await checkSystemStatus(apiBaseUrl);
-      setStatusMessage(`Connected: ${status.app} v${status.version} (Model ready: ${status.model_loaded})`);
+      setStatusMessage(
+        `ONLINE | ${status.model_architecture || "ONNX"} Ready (${status.model_loaded ? "Loaded" : "Standby"})`
+      );
     } catch (err) {
-      setStatusMessage(`Connection failed: ${err.message}`);
+      setStatusMessage(`OFFLINE | ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -58,11 +71,11 @@ export default function App() {
       : ImagePicker.launchImageLibraryAsync;
     const res = await fn({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.85,
+      quality: 0.88,
     });
     if (!res.canceled && res.assets && res.assets.length > 0) {
       setSelectedImageUri(res.assets[0].uri);
-      setStatusMessage("Scalp photograph selected and ready for analysis.");
+      setStatusMessage("Scalp frame locked and ready for dual-pipeline triage.");
     }
   };
 
@@ -74,7 +87,6 @@ export default function App() {
         const ingredients = (live.recommended_ingredients || []).map((item) => ({
           molecule: item.name,
           frequency: item.frequency,
-          contact_time: "Standard leave-on",
           mechanism: item.purpose,
         }));
         setAnalysisResult({
@@ -85,7 +97,7 @@ export default function App() {
         setCurrentStep(3);
         return;
       } catch (err) {
-        setStatusMessage(`Live API error: ${err.message}`);
+        setStatusMessage(`API Error: ${err.message}`);
       } finally {
         setLoading(false);
       }
@@ -94,211 +106,361 @@ export default function App() {
   };
 
   const runMockAnalysis = () => {
-    // Allows immediate mobile UI demonstration with authentic clinical triage payload
     setLoading(true);
     setTimeout(() => {
       setAnalysisResult({
-        scalp_health_score: 54.5,
-        suggested_condition: "Pattern Suggestive of Seborrheic Dermatitis / Fungal Flaking",
-        triage_level: "Level 2: Monitored Active Routine",
-        triage_reason: "Elevated flake clustering and mild vascular erythema detected alongside hard water exposure.",
+        scalp_health_score: 54.6,
+        confidence_score: 0.95,
+        suggested_condition: "Pattern Suggestive of Seborrheic Dermatitis",
+        triage_level: "Level 2: Monitored Routine",
+        triage_reason:
+          "Visual indications suggest active sebum/microbial flaking. Recommends an active ingredient schedule and structured 14-day progress tracking.",
         sub_scores: {
-          flake_score: 11.2,
-          redness_score: 13.5,
-          sebum_score: 14.8,
-          density_score: 15.0,
+          flake_score: 12.4,
+          redness_score: 14.8,
+          sebum_score: 11.2,
+          density_score: 16.2,
         },
-        risk_indicators: {
-          level: "moderate",
-          count: 3,
-          details: ["Daily helmet wear", "Hard borewell water", "Reported pruritus / itching"],
+        survey_risk_profile: {
+          risk_score: 58.2,
+          risk_band: "elevated",
+          modifiable_count: 3,
+          summary:
+            "Condition-anchored survey analysis indicates an ELEVATED modifiable trigger load (3 actionable factors). Primary addressable drivers: Hard Water Mineral Load, Daily Helmet / Sweat Occlusion.",
+          intervention_queue: [
+            {
+              priority: 1,
+              title: "Eliminate High-Impact Trigger: Hard Water Mineral Load",
+              detail:
+                "Install a shower softening filter or incorporate a weekly chelating rinse to clear mineral buildup.",
+              expected_timeline: "2-4 weeks",
+            },
+            {
+              priority: 2,
+              title: "Eliminate High-Impact Trigger: Daily Helmet / Sweat Occlusion",
+              detail:
+                "Use a washable antibacterial helmet liner, wash every 2-3 days, and air-dry scalp after rides.",
+              expected_timeline: "2-4 weeks",
+            },
+          ],
         },
         active_ingredients: [
           {
-            molecule: "Ketoconazole 2% Wash",
-            frequency: "2x per week",
-            contact_time: "5 minutes leave-on",
-            mechanism: "Inhibits fungal ergosterol synthesis in Malassezia yeast overgrowth.",
+            molecule: "Ketoconazole 1%-2% or Piroctone Olamine Cleanser",
+            frequency: "2x per week (5-min scalp contact)",
+            mechanism: "Targets Malassezia lipid hydrolysis and reduces microbial scaling.",
           },
           {
-            molecule: "Salicylic Acid 2% Exfoliant",
+            molecule: "Salicylic Acid 1.8%-2% Scalp Wash",
             frequency: "1x per week",
-            contact_time: "Rinse thoroughly",
-            mechanism: "Keratolytic descaling to remove stratum corneum crust and insoluble mineral deposits.",
+            mechanism: "Keratolytic descaling to clear adherent sebum-keratin buildup.",
           },
         ],
         lifestyle_advice: [
-          "Wash helmet padding weekly to prevent trapped sebum and heat microbial amplification.",
-          "Use a chelating or clarified wash cadence to counteract borewell calcium/magnesium buildup.",
+          "Wash helmet liners every 2-3 days to reduce occluded heat and sweat retention.",
+          "Retake standardized photo in 14 days under identical natural lighting.",
         ],
+        disclaimer: UNIVERSAL_DISCLAIMER,
       });
       setLoading(false);
       setCurrentStep(3);
-    }, 1200);
+    }, 650);
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#0f172a" />
+      <StatusBar barStyle="light-content" backgroundColor="#06080a" />
 
-      {/* Header */}
+      {/* Top Carbon AMG Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>FOLLICA</Text>
-        <Text style={styles.subtitle}>Scalp Health Assessment & Clinical Triage</Text>
+        <View style={styles.brandRow}>
+          <View style={styles.logoMark}>
+            <Text style={styles.logoMarkText}>F</Text>
+          </View>
+          <View>
+            <Text style={styles.title}>FOLLICA</Text>
+            <Text style={styles.subtitle}>CLINICAL SCALP TELEMETRY</Text>
+          </View>
+        </View>
+        <TouchableOpacity style={styles.demoChip} onPress={runMockAnalysis}>
+          <Text style={styles.demoChipText}>DEMO</Text>
+        </TouchableOpacity>
       </View>
 
-      {/* Step Indicator */}
+      {/* Segmented Navigation Bar */}
       <View style={styles.stepBar}>
-        <TouchableOpacity
-          style={[styles.stepItem, currentStep === 1 && styles.stepItemActive]}
-          onPress={() => setCurrentStep(1)}
-        >
-          <Text style={[styles.stepText, currentStep === 1 && styles.stepTextActive]}>1. Setup</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.stepItem, currentStep === 2 && styles.stepItemActive]}
-          onPress={() => setCurrentStep(2)}
-        >
-          <Text style={[styles.stepText, currentStep === 2 && styles.stepTextActive]}>2. Intake</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.stepItem, currentStep === 3 && styles.stepItemActive]}
-          onPress={() => setCurrentStep(3)}
-        >
-          <Text style={[styles.stepText, currentStep === 3 && styles.stepTextActive]}>3. Report</Text>
-        </TouchableOpacity>
+        {[
+          { id: 1, label: "01 CAPTURE" },
+          { id: 2, label: "02 SURVEY" },
+          { id: 3, label: "03 TELEMETRY" },
+        ].map((tab) => (
+          <TouchableOpacity
+            key={tab.id}
+            style={[styles.stepItem, currentStep === tab.id && styles.stepItemActive]}
+            onPress={() => setCurrentStep(tab.id)}
+          >
+            <Text style={[styles.stepText, currentStep === tab.id && styles.stepTextActive]}>
+              {tab.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Step 1: Camera Guidance & Server URL */}
+        {/* STEP 1: CAPTURE & CONNECTION */}
         {currentStep === 1 && (
-          <View style={styles.card}>
-            <Text style={styles.cardHeader}>Standardized Capture Protocol</Text>
-            <Text style={styles.cardDescription}>
-              High-accuracy triage requires clear, uncorrupted photographs. Follow the 4 optical rules:
-            </Text>
-
-            <View style={styles.ruleBox}>
-              <Text style={styles.ruleTitle}>1. Clean Camera Lens</Text>
-              <Text style={styles.ruleDesc}>Wipe off oil, fingerprints, and pocket dust before shooting.</Text>
-
-              <Text style={styles.ruleTitle}>2. Natural or Overhead Light Only</Text>
-              <Text style={styles.ruleDesc}>Avoid direct phone flash hotspots to prevent glare false-positives.</Text>
-
-              <Text style={styles.ruleTitle}>3. Expose Parting Line Clearly</Text>
-              <Text style={styles.ruleDesc}>Part hair to expose bare scalp skin at the area of concern.</Text>
-
-              <Text style={styles.ruleTitle}>4. 10 to 15 cm Distance</Text>
-              <Text style={styles.ruleDesc}>Hold phone parallel to scalp; ensure focus lock before capture.</Text>
+          <View>
+            <View style={styles.heroStrip}>
+              <Text style={styles.heroOverline}>ONNX VISION + SDASI CALIBRATION</Text>
+              <Text style={styles.heroHeadline}>PRECISION SCALP TRIAGE</Text>
+              <View style={styles.tealRule} />
+              <Text style={styles.heroSub}>
+                Capture a clear, flash-free scalp frame for 10-class pattern triage and Layer-2 survey analysis.
+              </Text>
             </View>
 
-            <Text style={[styles.fieldLabel, { marginTop: 16 }]}>Backend Server Endpoint</Text>
-            <TextInput
-              style={styles.input}
-              value={apiBaseUrl}
-              onChangeText={setApiBaseUrl}
-              placeholder="http://10.0.2.2:8000/api/v1"
-              placeholderTextColor="#64748b"
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
+            <View style={styles.card}>
+              <View style={styles.cardTitleRow}>
+                <Text style={styles.cardSectionTag}>OPTICAL PROTOCOL</Text>
+                <Text style={styles.cardStepBadge}>STEP 01</Text>
+              </View>
 
-            <TouchableOpacity style={styles.secondaryButton} onPress={testServerConnection} disabled={loading}>
-              <Text style={styles.secondaryButtonText}>Test Server Connection</Text>
-            </TouchableOpacity>
+              <View style={styles.protocolGrid}>
+                <View style={styles.protocolTile}>
+                  <Text style={styles.protocolNum}>01</Text>
+                  <Text style={styles.protocolHead}>Clean Lens</Text>
+                  <Text style={styles.protocolSub}>Wipe oil smudges first.</Text>
+                </View>
+                <View style={styles.protocolTile}>
+                  <Text style={styles.protocolNum}>02</Text>
+                  <Text style={styles.protocolHead}>No Flash</Text>
+                  <Text style={styles.protocolSub}>Daylight or room light.</Text>
+                </View>
+                <View style={styles.protocolTile}>
+                  <Text style={styles.protocolNum}>03</Text>
+                  <Text style={styles.protocolHead}>Part Hair</Text>
+                  <Text style={styles.protocolSub}>Expose scalp clearly.</Text>
+                </View>
+                <View style={styles.protocolTile}>
+                  <Text style={styles.protocolNum}>04</Text>
+                  <Text style={styles.protocolHead}>10-15 cm</Text>
+                  <Text style={styles.protocolSub}>Tap to lock focus.</Text>
+                </View>
+              </View>
 
-            <TouchableOpacity style={styles.secondaryButton} onPress={() => pickImage(true)} disabled={loading}>
-              <Text style={styles.secondaryButtonText}>Capture Scalp Photo (Camera)</Text>
-            </TouchableOpacity>
+              {selectedImageUri && (
+                <View style={styles.previewFrame}>
+                  <Image source={{ uri: selectedImageUri }} style={styles.previewImage} resizeMode="cover" />
+                  <Text style={styles.previewCaption}>SCALP FRAME LOCKED</Text>
+                </View>
+              )}
 
-            <TouchableOpacity style={styles.secondaryButton} onPress={() => pickImage(false)} disabled={loading}>
-              <Text style={styles.secondaryButtonText}>Select Scalp Photo (Gallery)</Text>
-            </TouchableOpacity>
+              <View style={styles.dualBtnRow}>
+                <TouchableOpacity
+                  style={[styles.outlineButton, { flex: 1, marginRight: 6 }]}
+                  onPress={() => pickImage(true)}
+                  disabled={loading}
+                >
+                  <Text style={styles.outlineButtonText}>CAMERA</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.outlineButton, { flex: 1, marginLeft: 6 }]}
+                  onPress={() => pickImage(false)}
+                  disabled={loading}
+                >
+                  <Text style={styles.outlineButtonText}>GALLERY</Text>
+                </TouchableOpacity>
+              </View>
 
-            {statusMessage ? <Text style={styles.statusText}>{statusMessage}</Text> : null}
+              {selectedImageUri && (
+                <TouchableOpacity
+                  style={styles.primaryButton}
+                  onPress={runLiveOrMockAnalysis}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <ActivityIndicator color="#041010" />
+                  ) : (
+                    <Text style={styles.primaryButtonText}>ANALYZE PHOTO NOW</Text>
+                  )}
+                </TouchableOpacity>
+              )}
 
-            <TouchableOpacity style={styles.primaryButton} onPress={() => setCurrentStep(2)}>
-              <Text style={styles.primaryButtonText}>Continue to Clinical Questionnaire</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.secondaryButton, { marginTop: 10 }]}
+                onPress={() => setCurrentStep(2)}
+              >
+                <Text style={styles.secondaryButtonText}>NEXT: CONFIGURE CLINICAL SURVEY</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.card}>
+              <Text style={styles.cardSectionTag}>TELEMETRY ENDPOINT</Text>
+              <TextInput
+                style={styles.input}
+                value={apiBaseUrl}
+                onChangeText={setApiBaseUrl}
+                placeholder="http://10.0.2.2:8000/api/v1"
+                placeholderTextColor="#5b6675"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+              <TouchableOpacity style={styles.secondaryButton} onPress={testServerConnection} disabled={loading}>
+                <Text style={styles.secondaryButtonText}>VERIFY SERVER LINK</Text>
+              </TouchableOpacity>
+              {statusMessage ? <Text style={styles.statusText}>{statusMessage}</Text> : null}
+            </View>
           </View>
         )}
 
-        {/* Step 2: Clinical Intake Questionnaire */}
+        {/* STEP 2: CLINICAL & LIFESTYLE SURVEY */}
         {currentStep === 2 && (
           <View style={styles.card}>
-            <Text style={styles.cardHeader}>Clinical Context & Lifestyle Intake</Text>
+            <View style={styles.cardTitleRow}>
+              <Text style={styles.cardSectionTag}>LAYER-2 INTAKE SURVEY</Text>
+              <Text style={styles.cardStepBadge}>STEP 02</Text>
+            </View>
             <Text style={styles.cardDescription}>
-              Scalp disorders are driven by environmental, nutritional, and systemic factors.
+              Post-identification survey signals refine modifiable triggers and prioritise your care queue.
             </Text>
 
-            {/* Concern Zone */}
-            <Text style={styles.fieldLabel}>Primary Concern Zone</Text>
-            <View style={styles.chipRow}>
-              {["crown_vertex", "hairline_temples", "central_parting", "diffuse_overall"].map((zone) => (
-                <TouchableOpacity
-                  key={zone}
-                  style={[styles.chip, intake.primary_concern_zone === zone && styles.chipActive]}
-                  onPress={() => setIntake({ ...intake, primary_concern_zone: zone })}
-                >
-                  <Text style={[styles.chipText, intake.primary_concern_zone === zone && styles.chipTextActive]}>
-                    {zone.replace("_", " ")}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            {/* Water Source */}
-            <Text style={styles.fieldLabel}>Water Environment</Text>
+            <Text style={styles.fieldLabel}>PRIMARY CONCERN ZONE</Text>
             <View style={styles.chipRow}>
               {[
-                { label: "Hard Borewell", val: "hard_borewell" },
-                { label: "Treated Tap", val: "soft_tap" },
-                { label: "Relocated Recently", val: "relocated_recently" },
+                { l: "Routine Baseline", v: "routine_healthy_check" },
+                { l: "Crown / Vertex", v: "crown_vertex" },
+                { l: "Hairline / Temples", v: "hairline_temples" },
+                { l: "Parting Line", v: "central_parting" },
+                { l: "Diffuse Thinning", v: "diffuse_all_over" },
+                { l: "Patchy Spots", v: "patchy_spots" },
               ].map((item) => (
                 <TouchableOpacity
-                  key={item.val}
-                  style={[styles.chip, intake.water_environment === item.val && styles.chipActive]}
-                  onPress={() => setIntake({ ...intake, water_environment: item.val })}
+                  key={item.v}
+                  style={[styles.chip, intake.primary_concern_zone === item.v && styles.chipActive]}
+                  onPress={() => setIntake({ ...intake, primary_concern_zone: item.v })}
                 >
-                  <Text style={[styles.chipText, intake.water_environment === item.val && styles.chipTextActive]}>
-                    {item.label}
+                  <Text style={[styles.chipText, intake.primary_concern_zone === item.v && styles.chipTextActive]}>
+                    {item.l}
                   </Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            {/* Friction & Helmet */}
-            <Text style={styles.fieldLabel}>Daily Motorcycle Helmet / Commuter Friction</Text>
+            <Text style={styles.fieldLabel}>SCALP SENSATION</Text>
             <View style={styles.chipRow}>
+              {[
+                { l: "Painless", v: "painless" },
+                { l: "Itching", v: "itching" },
+                { l: "Burning / Tender", v: "burning_or_tender" },
+                { l: "Painful Bumps", v: "painful_bumps" },
+              ].map((item) => (
+                <TouchableOpacity
+                  key={item.v}
+                  style={[styles.chip, intake.sensation === item.v && styles.chipActive]}
+                  onPress={() => setIntake({ ...intake, sensation: item.v })}
+                >
+                  <Text style={[styles.chipText, intake.sensation === item.v && styles.chipTextActive]}>
+                    {item.l}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={styles.fieldLabel}>FLAKE PRESENTATION</Text>
+            <View style={styles.chipRow}>
+              {[
+                { l: "None", v: "none" },
+                { l: "Dry White", v: "dry_white_fine" },
+                { l: "Greasy Yellow", v: "greasy_yellow_thick" },
+                { l: "Thick Plaque", v: "plaque_crusty" },
+              ].map((item) => (
+                <TouchableOpacity
+                  key={item.v}
+                  style={[styles.chip, intake.flake_type === item.v && styles.chipActive]}
+                  onPress={() => setIntake({ ...intake, flake_type: item.v })}
+                >
+                  <Text style={[styles.chipText, intake.flake_type === item.v && styles.chipTextActive]}>
+                    {item.l}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={styles.fieldLabel}>WATER SOURCE &amp; HEADWEAR</Text>
+            <View style={styles.chipRow}>
+              {[
+                { l: "Normal Tap", v: "normal" },
+                { l: "Hard Borewell", v: "hard_borewell" },
+                { l: "Recent Move", v: "recent_relocation" },
+              ].map((item) => (
+                <TouchableOpacity
+                  key={item.v}
+                  style={[styles.chip, intake.water_environment === item.v && styles.chipActive]}
+                  onPress={() => setIntake({ ...intake, water_environment: item.v })}
+                >
+                  <Text style={[styles.chipText, intake.water_environment === item.v && styles.chipTextActive]}>
+                    {item.l}
+                  </Text>
+                </TouchableOpacity>
+              ))}
               <TouchableOpacity
                 style={[styles.chip, intake.daily_helmet_wearer && styles.chipActive]}
-                onPress={() => setIntake({ ...intake, daily_helmet_wearer: true })}
+                onPress={() => setIntake({ ...intake, daily_helmet_wearer: !intake.daily_helmet_wearer })}
               >
-                <Text style={[styles.chipText, intake.daily_helmet_wearer && styles.chipTextActive]}>Yes (Daily)</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.chip, !intake.daily_helmet_wearer && styles.chipActive]}
-                onPress={() => setIntake({ ...intake, daily_helmet_wearer: false })}
-              >
-                <Text style={[styles.chipText, !intake.daily_helmet_wearer && styles.chipTextActive]}>No / Rare</Text>
+                <Text style={[styles.chipText, intake.daily_helmet_wearer && styles.chipTextActive]}>
+                  Daily Helmet: {intake.daily_helmet_wearer ? "YES" : "NO"}
+                </Text>
               </TouchableOpacity>
             </View>
 
-            {/* Gut & Metabolism */}
-            <Text style={styles.fieldLabel}>Digestive Health (Systemic Absorption)</Text>
+            <Text style={styles.fieldLabel}>STRESS &amp; DIET PROFILE</Text>
             <View style={styles.chipRow}>
               {[
-                { label: "Optimal", val: "optimal" },
-                { label: "Bloating / Acidity", val: "frequent_bloating_acidity" },
-                { label: "Constipation", val: "chronic_constipation" },
+                { l: "Low Stress", v: "low" },
+                { l: "Moderate Stress", v: "moderate" },
+                { l: "High Stress", v: "high" },
               ].map((item) => (
                 <TouchableOpacity
-                  key={item.val}
-                  style={[styles.chip, intake.gut_health === item.val && styles.chipActive]}
-                  onPress={() => setIntake({ ...intake, gut_health: item.val })}
+                  key={item.v}
+                  style={[styles.chip, intake.stress_level === item.v && styles.chipActive]}
+                  onPress={() => setIntake({ ...intake, stress_level: item.v })}
                 >
-                  <Text style={[styles.chipText, intake.gut_health === item.val && styles.chipTextActive]}>
-                    {item.label}
+                  <Text style={[styles.chipText, intake.stress_level === item.v && styles.chipTextActive]}>
+                    {item.l}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+              {[
+                { l: "Balanced Protein", v: "balanced_protein" },
+                { l: "Veg / Vegan", v: "vegetarian_vegan" },
+                { l: "Low Protein", v: "low_protein_crash_diet" },
+              ].map((item) => (
+                <TouchableOpacity
+                  key={item.v}
+                  style={[styles.chip, intake.diet_pattern === item.v && styles.chipActive]}
+                  onPress={() => setIntake({ ...intake, diet_pattern: item.v })}
+                >
+                  <Text style={[styles.chipText, intake.diet_pattern === item.v && styles.chipTextActive]}>
+                    {item.l}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={styles.fieldLabel}>GUT &amp; ENDOCRINE AXIS</Text>
+            <View style={styles.chipRow}>
+              {[
+                { l: "Optimal Gut", v: "optimal" },
+                { l: "Bloating / Acidity", v: "frequent_bloating_acidity" },
+                { l: "IBS / Irregular", v: "irregular_ibs" },
+              ].map((item) => (
+                <TouchableOpacity
+                  key={item.v}
+                  style={[styles.chip, intake.gut_health === item.v && styles.chipActive]}
+                  onPress={() => setIntake({ ...intake, gut_health: item.v })}
+                >
+                  <Text style={[styles.chipText, intake.gut_health === item.v && styles.chipTextActive]}>
+                    {item.l}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -306,67 +468,139 @@ export default function App() {
 
             <TouchableOpacity style={styles.primaryButton} onPress={runLiveOrMockAnalysis} disabled={loading}>
               {loading ? (
-                <ActivityIndicator color="#ffffff" />
+                <ActivityIndicator color="#041010" />
               ) : (
-                <Text style={styles.primaryButtonText}>Run Dual-Pipeline Analysis</Text>
+                <Text style={styles.primaryButtonText}>RUN DUAL-PIPELINE TELEMETRY</Text>
               )}
             </TouchableOpacity>
           </View>
         )}
 
-        {/* Step 3: Clinical Triage Report */}
-        {currentStep === 3 && analysisResult && (
-          <View style={styles.card}>
-            <Text style={styles.cardHeader}>Scalp Health Assessment</Text>
-
-            {/* Health Score Hero Dial */}
-            <View style={styles.scoreHero}>
-              <Text style={styles.scoreNumber}>{analysisResult.scalp_health_score}</Text>
-              <Text style={styles.scoreDenom}>/ 100</Text>
-              <Text style={styles.scoreLabel}>Composite Scalp Health Score (SHS)</Text>
-            </View>
-
-            {/* Condition & Level */}
-            <View style={styles.triageBox}>
-              <Text style={styles.triageLevel}>{analysisResult.triage_level}</Text>
-              <Text style={styles.conditionText}>{analysisResult.suggested_condition}</Text>
-              <Text style={styles.triageReason}>{analysisResult.triage_reason}</Text>
-            </View>
-
-            {/* Sub-Score Telemetry */}
-            <Text style={[styles.fieldLabel, { marginTop: 16 }]}>Computer Vision Sub-Scores (0-25)</Text>
-            <View style={styles.subScoreGrid}>
-              <View style={styles.subScoreItem}>
-                <Text style={styles.subScoreName}>Flake & Scaling</Text>
-                <Text style={styles.subScoreVal}>{analysisResult.sub_scores.flake_score} / 25</Text>
+        {/* STEP 3: CLINICAL TELEMETRY REPORT */}
+        {currentStep === 3 && (
+          <View>
+            {!analysisResult ? (
+              <View style={styles.card}>
+                <Text style={styles.cardSectionTag}>NO TELEMETRY RECORDED</Text>
+                <Text style={[styles.cardDescription, { marginTop: 8 }]}>
+                  Upload a scalp photograph in Step 01 or launch the Demo telemetry scenario.
+                </Text>
+                <TouchableOpacity style={styles.primaryButton} onPress={() => setCurrentStep(1)}>
+                  <Text style={styles.primaryButtonText}>GO TO STEP 01 CAPTURE</Text>
+                </TouchableOpacity>
               </View>
-              <View style={styles.subScoreItem}>
-                <Text style={styles.subScoreName}>Erythema Redness</Text>
-                <Text style={styles.subScoreVal}>{analysisResult.sub_scores.redness_score} / 25</Text>
-              </View>
-              <View style={styles.subScoreItem}>
-                <Text style={styles.subScoreName}>Sebum Balance</Text>
-                <Text style={styles.subScoreVal}>{analysisResult.sub_scores.sebum_score} / 25</Text>
-              </View>
-              <View style={styles.subScoreItem}>
-                <Text style={styles.subScoreName}>Hair Coverage</Text>
-                <Text style={styles.subScoreVal}>{analysisResult.sub_scores.density_score} / 25</Text>
-              </View>
-            </View>
+            ) : (
+              <View style={styles.card}>
+                <View style={styles.cardTitleRow}>
+                  <Text style={styles.cardSectionTag}>CLINICAL TELEMETRY REPORT</Text>
+                  <Text style={styles.cardStepBadge}>SDASI / SALT</Text>
+                </View>
 
-            {/* Molecule-First Regimen */}
-            <Text style={[styles.fieldLabel, { marginTop: 16 }]}>Active Chemical Molecule Schedule</Text>
-            {analysisResult.active_ingredients.map((item, idx) => (
-              <View key={idx} style={styles.moleculeCard}>
-                <Text style={styles.moleculeTitle}>{item.molecule}</Text>
-                <Text style={styles.moleculeCadence}>{item.frequency} - {item.contact_time}</Text>
-                <Text style={styles.moleculeMech}>{item.mechanism}</Text>
-              </View>
-            ))}
+                {/* SHS Speedometer Hero */}
+                <View style={styles.scoreHero}>
+                  <View>
+                    <Text style={styles.scoreOverline}>SCALP HEALTH SCORE</Text>
+                    <View style={{ flexDirection: "row", alignItems: "baseline" }}>
+                      <Text style={styles.scoreNumber}>
+                        {Number(analysisResult.scalp_health_score).toFixed(1)}
+                      </Text>
+                      <Text style={styles.scoreDenom}>/100</Text>
+                    </View>
+                  </View>
+                  <View style={styles.triagePill}>
+                    <Text style={styles.triagePillText}>{analysisResult.triage_level}</Text>
+                  </View>
+                </View>
 
-            <TouchableOpacity style={styles.secondaryButton} onPress={() => setCurrentStep(1)}>
-              <Text style={styles.secondaryButtonText}>Start New Evaluation</Text>
-            </TouchableOpacity>
+                {/* Condition Pattern Box */}
+                <View style={styles.triageBox}>
+                  <Text style={styles.patternOverline}>VISUAL ASSESSMENT PATTERN</Text>
+                  <Text style={styles.conditionText}>{analysisResult.suggested_condition}</Text>
+                  {analysisResult.confidence_score !== undefined && (
+                    <Text style={styles.confText}>
+                      Classifier Confidence: {(analysisResult.confidence_score * 100).toFixed(1)}%
+                    </Text>
+                  )}
+                  <Text style={styles.triageReason}>{analysisResult.triage_reason}</Text>
+                </View>
+
+                {/* 4-Axis CV Sub-Scores */}
+                <Text style={styles.fieldLabel}>MICRO-FEATURE SUB-SCORES (0-25)</Text>
+                <View style={styles.subScoreGrid}>
+                  {[
+                    { k: "flake_score", n: "FLAKE & SCALING", v: analysisResult.sub_scores.flake_score },
+                    { k: "redness_score", n: "ERYTHEMA REDNESS", v: analysisResult.sub_scores.redness_score },
+                    { k: "sebum_score", n: "SEBUM & LIPIDS", v: analysisResult.sub_scores.sebum_score },
+                    { k: "density_score", n: "HAIR COVERAGE", v: analysisResult.sub_scores.density_score },
+                  ].map((ax) => {
+                    const acc = scoreAccent(ax.v);
+                    return (
+                      <View key={ax.k} style={styles.subScoreItem}>
+                        <Text style={styles.subScoreName}>{ax.n}</Text>
+                        <View style={styles.subScoreValRow}>
+                          <Text style={styles.subScoreVal}>{Number(ax.v).toFixed(1)}/25</Text>
+                          <Text style={[styles.subScoreGrade, { color: acc.color }]}>{acc.label}</Text>
+                        </View>
+                        <View style={styles.barTrack}>
+                          <View
+                            style={[
+                              styles.barFill,
+                              { width: `${Math.min(100, (ax.v / 25) * 100)}%`, backgroundColor: acc.color },
+                            ]}
+                          />
+                        </View>
+                      </View>
+                    );
+                  })}
+                </View>
+
+                {/* Layer-2 Post-Diagnosis Survey Pipeline */}
+                {analysisResult.survey_risk_profile && (
+                  <View style={styles.surveyBox}>
+                    <View style={styles.cardTitleRow}>
+                      <Text style={styles.cardSectionTag}>POST-DX SURVEY PIPELINE</Text>
+                      <Text style={styles.cardStepBadge}>
+                        {String(analysisResult.survey_risk_profile.risk_band || "").toUpperCase()} LOAD (
+                        {Math.round(analysisResult.survey_risk_profile.risk_score || 0)}/100)
+                      </Text>
+                    </View>
+                    <Text style={styles.surveySummary}>{analysisResult.survey_risk_profile.summary}</Text>
+                    {(analysisResult.survey_risk_profile.intervention_queue || []).map((step) => (
+                      <View key={step.priority} style={styles.queueRow}>
+                        <View style={styles.queueBadge}>
+                          <Text style={styles.queueBadgeText}>P{step.priority}</Text>
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.queueTitle}>{step.title}</Text>
+                          <Text style={styles.queueDetail}>{step.detail}</Text>
+                          <Text style={styles.queueWindow}>WINDOW: {step.expected_timeline}</Text>
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                )}
+
+                {/* Molecule-First Care Schedule */}
+                <Text style={[styles.fieldLabel, { marginTop: 16 }]}>MOLECULE-FIRST CARE SCHEDULE</Text>
+                {(analysisResult.active_ingredients || []).map((item, idx) => (
+                  <View key={idx} style={styles.moleculeCard}>
+                    <View style={styles.cardTitleRow}>
+                      <Text style={styles.moleculeTitle}>{item.molecule}</Text>
+                    </View>
+                    <Text style={styles.moleculeCadence}>{item.frequency}</Text>
+                    <Text style={styles.moleculeMech}>{item.mechanism}</Text>
+                  </View>
+                ))}
+
+                <Text style={styles.disclaimerText}>
+                  {analysisResult.disclaimer || UNIVERSAL_DISCLAIMER}
+                </Text>
+
+                <TouchableOpacity style={styles.secondaryButton} onPress={() => setCurrentStep(1)}>
+                  <Text style={styles.secondaryButtonText}>NEW SCALP TELEMETRY SCAN</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         )}
       </ScrollView>
@@ -377,254 +611,523 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0f172a",
+    backgroundColor: "#06080a",
   },
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 16,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    backgroundColor: "#090c10",
     borderBottomWidth: 1,
-    borderBottomColor: "#1e293b",
+    borderBottomColor: "#1b222c",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  brandRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  logoMark: {
+    width: 34,
+    height: 34,
+    backgroundColor: "#00d2be",
+    borderRadius: 3,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 10,
+  },
+  logoMarkText: {
+    color: "#031010",
+    fontWeight: "900",
+    fontSize: 17,
   },
   title: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: "#f8fafc",
-    letterSpacing: 1.5,
+    fontSize: 18,
+    fontWeight: "900",
+    color: "#ffffff",
+    letterSpacing: 1.4,
   },
   subtitle: {
-    fontSize: 12,
-    color: "#94a3b8",
-    marginTop: 2,
+    fontSize: 9,
+    fontWeight: "800",
+    color: "#00d2be",
+    letterSpacing: 2,
+    marginTop: 1,
+  },
+  demoChip: {
+    borderWidth: 1,
+    borderColor: "rgba(0,210,190,0.45)",
+    backgroundColor: "rgba(0,210,190,0.10)",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 3,
+  },
+  demoChipText: {
+    color: "#00d2be",
+    fontSize: 11,
+    fontWeight: "900",
+    letterSpacing: 1,
   },
   stepBar: {
     flexDirection: "row",
-    backgroundColor: "#1e293b",
+    backgroundColor: "#090c10",
     borderBottomWidth: 1,
-    borderBottomColor: "#334155",
+    borderBottomColor: "#1b222c",
   },
   stepItem: {
     flex: 1,
     paddingVertical: 12,
     alignItems: "center",
+    borderBottomWidth: 2,
+    borderBottomColor: "transparent",
   },
   stepItemActive: {
-    borderBottomWidth: 2,
-    borderBottomColor: "#0ea5e9",
+    borderBottomColor: "#00d2be",
   },
   stepText: {
-    fontSize: 13,
-    color: "#64748b",
-    fontWeight: "600",
+    fontSize: 11,
+    color: "#5b6675",
+    fontWeight: "800",
+    letterSpacing: 1.2,
   },
   stepTextActive: {
-    color: "#38bdf8",
+    color: "#00d2be",
   },
   scrollContent: {
     padding: 16,
+    paddingBottom: 40,
+  },
+  heroStrip: {
+    marginBottom: 16,
+    paddingVertical: 8,
+  },
+  heroOverline: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: "#00d2be",
+    letterSpacing: 2.2,
+    marginBottom: 6,
+  },
+  heroHeadline: {
+    fontSize: 26,
+    fontWeight: "900",
+    color: "#ffffff",
+    letterSpacing: -0.5,
+  },
+  tealRule: {
+    width: 56,
+    height: 3,
+    backgroundColor: "#00d2be",
+    marginVertical: 10,
+  },
+  heroSub: {
+    fontSize: 12,
+    color: "#94a0b0",
+    lineHeight: 18,
   },
   card: {
-    backgroundColor: "#1e293b",
-    borderRadius: 12,
+    backgroundColor: "#0e1217",
+    borderRadius: 4,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#334155",
-  },
-  cardHeader: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#f1f5f9",
-    marginBottom: 6,
-  },
-  cardDescription: {
-    fontSize: 13,
-    color: "#94a3b8",
-    lineHeight: 18,
+    borderColor: "#1b222c",
     marginBottom: 16,
   },
-  ruleBox: {
-    backgroundColor: "#0f172a",
-    borderRadius: 8,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: "#334155",
-  },
-  ruleTitle: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#38bdf8",
-    marginTop: 6,
-  },
-  ruleDesc: {
-    fontSize: 12,
-    color: "#cbd5e1",
-    marginBottom: 6,
-  },
-  fieldLabel: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#e2e8f0",
-    marginBottom: 8,
-  },
-  input: {
-    backgroundColor: "#0f172a",
-    borderWidth: 1,
-    borderColor: "#334155",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    color: "#f8fafc",
-    fontSize: 13,
+  cardTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: 12,
   },
-  primaryButton: {
-    backgroundColor: "#0284c7",
-    paddingVertical: 14,
-    borderRadius: 8,
+  cardSectionTag: {
+    fontSize: 11,
+    fontWeight: "900",
+    color: "#00d2be",
+    letterSpacing: 1.6,
+  },
+  cardStepBadge: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: "#c8cfd8",
+    backgroundColor: "#151b24",
+    borderWidth: 1,
+    borderColor: "#26303d",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 2,
+    letterSpacing: 0.8,
+  },
+  cardDescription: {
+    fontSize: 12,
+    color: "#94a0b0",
+    lineHeight: 18,
+    marginBottom: 14,
+  },
+  protocolGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  protocolTile: {
+    width: "48.5%",
+    backgroundColor: "#090c10",
+    borderWidth: 1,
+    borderColor: "#1b222c",
+    padding: 10,
+    borderRadius: 3,
+    marginBottom: 8,
+  },
+  protocolNum: {
+    fontSize: 10,
+    fontWeight: "900",
+    color: "#00d2be",
+    marginBottom: 2,
+  },
+  protocolHead: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: "#f3f5f8",
+  },
+  protocolSub: {
+    fontSize: 11,
+    color: "#94a0b0",
+    marginTop: 2,
+  },
+  previewFrame: {
+    borderWidth: 1,
+    borderColor: "rgba(0,210,190,0.45)",
+    backgroundColor: "#090c10",
+    padding: 8,
+    borderRadius: 3,
+    marginBottom: 12,
     alignItems: "center",
-    marginTop: 16,
+  },
+  previewImage: {
+    width: "100%",
+    height: 190,
+    borderRadius: 2,
+  },
+  previewCaption: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: "#00d2be",
+    letterSpacing: 1.5,
+    marginTop: 8,
+  },
+  dualBtnRow: {
+    flexDirection: "row",
+    marginTop: 4,
+  },
+  outlineButton: {
+    borderWidth: 1,
+    borderColor: "#00d2be",
+    backgroundColor: "rgba(0,210,190,0.08)",
+    paddingVertical: 12,
+    borderRadius: 3,
+    alignItems: "center",
+  },
+  outlineButtonText: {
+    color: "#00d2be",
+    fontWeight: "900",
+    fontSize: 12,
+    letterSpacing: 1,
+  },
+  primaryButton: {
+    backgroundColor: "#00d2be",
+    paddingVertical: 14,
+    borderRadius: 3,
+    alignItems: "center",
+    marginTop: 14,
   },
   primaryButtonText: {
-    color: "#ffffff",
-    fontWeight: "700",
-    fontSize: 14,
+    color: "#031010",
+    fontWeight: "900",
+    fontSize: 13,
+    letterSpacing: 1.2,
   },
   secondaryButton: {
-    backgroundColor: "#334155",
+    backgroundColor: "#141a22",
+    borderWidth: 1,
+    borderColor: "#26303d",
     paddingVertical: 12,
-    borderRadius: 8,
+    borderRadius: 3,
     alignItems: "center",
     marginTop: 10,
   },
   secondaryButtonText: {
-    color: "#f8fafc",
-    fontWeight: "600",
-    fontSize: 13,
+    color: "#f3f5f8",
+    fontWeight: "800",
+    fontSize: 12,
+    letterSpacing: 1,
+  },
+  input: {
+    backgroundColor: "#090c10",
+    borderWidth: 1,
+    borderColor: "#26303d",
+    borderRadius: 3,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    color: "#f3f5f8",
+    fontSize: 12,
+    marginTop: 10,
   },
   statusText: {
-    fontSize: 12,
-    color: "#38bdf8",
-    marginTop: 8,
+    fontSize: 11,
+    color: "#00d2be",
+    fontWeight: "700",
+    marginTop: 10,
     textAlign: "center",
+    letterSpacing: 0.5,
+  },
+  fieldLabel: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: "#94a0b0",
+    letterSpacing: 1.3,
+    marginBottom: 8,
+    marginTop: 6,
   },
   chipRow: {
     flexDirection: "row",
     flexWrap: "wrap",
-    marginBottom: 12,
+    marginBottom: 10,
   },
   chip: {
-    backgroundColor: "#0f172a",
+    backgroundColor: "#090c10",
     borderWidth: 1,
-    borderColor: "#334155",
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    marginRight: 8,
-    marginBottom: 8,
+    borderColor: "#26303d",
+    borderRadius: 3,
+    paddingHorizontal: 11,
+    paddingVertical: 7,
+    marginRight: 7,
+    marginBottom: 7,
   },
   chipActive: {
-    backgroundColor: "#0369a1",
-    borderColor: "#38bdf8",
+    backgroundColor: "rgba(0,210,190,0.14)",
+    borderColor: "#00d2be",
   },
   chipText: {
-    fontSize: 12,
-    color: "#94a3b8",
+    fontSize: 11,
+    color: "#94a0b0",
+    fontWeight: "700",
   },
   chipTextActive: {
-    color: "#ffffff",
-    fontWeight: "600",
+    color: "#00d2be",
+    fontWeight: "800",
   },
   scoreHero: {
+    flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 16,
+    justifyContent: "space-between",
+    paddingVertical: 14,
+    borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderBottomColor: "#334155",
-    marginBottom: 16,
+    borderColor: "#1b222c",
+    marginBottom: 14,
+  },
+  scoreOverline: {
+    fontSize: 9,
+    fontWeight: "800",
+    color: "#94a0b0",
+    letterSpacing: 1.5,
   },
   scoreNumber: {
-    fontSize: 48,
+    fontSize: 44,
     fontWeight: "900",
-    color: "#38bdf8",
+    color: "#ffffff",
   },
   scoreDenom: {
-    fontSize: 16,
-    color: "#64748b",
-  },
-  scoreLabel: {
-    fontSize: 12,
-    color: "#94a3b8",
-    marginTop: 4,
-  },
-  triageBox: {
-    backgroundColor: "#0f172a",
-    padding: 12,
-    borderRadius: 8,
-    borderLeftWidth: 4,
-    borderLeftColor: "#eab308",
-    marginBottom: 16,
-  },
-  triageLevel: {
-    fontSize: 12,
+    fontSize: 15,
     fontWeight: "700",
-    color: "#eab308",
+    color: "#5b6675",
+    marginLeft: 4,
+  },
+  triagePill: {
+    borderWidth: 1,
+    borderColor: "#00d2be",
+    backgroundColor: "rgba(0,210,190,0.10)",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 3,
+    maxWidth: "48%",
+  },
+  triagePillText: {
+    color: "#00d2be",
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 0.6,
     textTransform: "uppercase",
   },
+  triageBox: {
+    backgroundColor: "#090c10",
+    padding: 12,
+    borderRadius: 3,
+    borderLeftWidth: 3,
+    borderLeftColor: "#00d2be",
+    borderWidth: 1,
+    borderColor: "#1b222c",
+    marginBottom: 16,
+  },
+  patternOverline: {
+    fontSize: 9,
+    fontWeight: "800",
+    color: "#00d2be",
+    letterSpacing: 1.5,
+  },
   conditionText: {
-    fontSize: 14,
+    fontSize: 15,
+    fontWeight: "900",
+    color: "#ffffff",
+    marginTop: 4,
+  },
+  confText: {
+    fontSize: 11,
     fontWeight: "700",
-    color: "#f8fafc",
-    marginTop: 2,
+    color: "#c8cfd8",
+    marginTop: 3,
   },
   triageReason: {
     fontSize: 12,
-    color: "#cbd5e1",
-    marginTop: 4,
+    color: "#94a0b0",
+    marginTop: 6,
+    lineHeight: 17,
   },
   subScoreGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
+    marginBottom: 10,
   },
   subScoreItem: {
-    width: "48%",
-    backgroundColor: "#0f172a",
-    padding: 10,
-    borderRadius: 6,
-    marginBottom: 8,
+    width: "48.5%",
+    backgroundColor: "#090c10",
+    padding: 11,
+    borderRadius: 3,
+    marginBottom: 9,
     borderWidth: 1,
-    borderColor: "#334155",
+    borderColor: "#1b222c",
   },
   subScoreName: {
-    fontSize: 11,
-    color: "#94a3b8",
+    fontSize: 9,
+    fontWeight: "800",
+    color: "#94a0b0",
+    letterSpacing: 0.8,
+  },
+  subScoreValRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginVertical: 5,
   },
   subScoreVal: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#f1f5f9",
-    marginTop: 2,
+    fontSize: 14,
+    fontWeight: "900",
+    color: "#ffffff",
+  },
+  subScoreGrade: {
+    fontSize: 9,
+    fontWeight: "900",
+    letterSpacing: 0.6,
+  },
+  barTrack: {
+    height: 4,
+    backgroundColor: "#1b222c",
+    borderRadius: 2,
+    overflow: "hidden",
+  },
+  barFill: {
+    height: "100%",
+    borderRadius: 2,
+  },
+  surveyBox: {
+    backgroundColor: "#090c10",
+    borderWidth: 1,
+    borderColor: "#1b222c",
+    borderLeftWidth: 3,
+    borderLeftColor: "#00d2be",
+    padding: 12,
+    borderRadius: 3,
+    marginTop: 6,
+  },
+  surveySummary: {
+    fontSize: 11,
+    color: "#94a0b0",
+    lineHeight: 16,
+    marginBottom: 10,
+  },
+  queueRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    backgroundColor: "#0e1217",
+    borderWidth: 1,
+    borderColor: "#1b222c",
+    padding: 10,
+    borderRadius: 3,
+    marginBottom: 7,
+  },
+  queueBadge: {
+    backgroundColor: "#00d2be",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 2,
+    marginRight: 9,
+    marginTop: 1,
+  },
+  queueBadgeText: {
+    color: "#031010",
+    fontSize: 10,
+    fontWeight: "900",
+  },
+  queueTitle: {
+    color: "#ffffff",
+    fontSize: 12,
+    fontWeight: "800",
+    marginBottom: 2,
+  },
+  queueDetail: {
+    color: "#94a0b0",
+    fontSize: 11,
+    lineHeight: 16,
+  },
+  queueWindow: {
+    color: "#00d2be",
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 0.8,
+    marginTop: 4,
   },
   moleculeCard: {
-    backgroundColor: "#0f172a",
+    backgroundColor: "#090c10",
     padding: 12,
-    borderRadius: 8,
-    marginBottom: 10,
+    borderRadius: 3,
+    marginBottom: 8,
     borderWidth: 1,
-    borderColor: "#334155",
+    borderColor: "#1b222c",
   },
   moleculeTitle: {
     fontSize: 13,
-    fontWeight: "700",
-    color: "#38bdf8",
+    fontWeight: "800",
+    color: "#f3f5f8",
   },
   moleculeCadence: {
-    fontSize: 11,
-    color: "#fbbf24",
-    marginVertical: 2,
+    fontSize: 10,
+    fontWeight: "800",
+    color: "#00d2be",
+    letterSpacing: 0.6,
+    marginBottom: 4,
+    textTransform: "uppercase",
   },
   moleculeMech: {
-    fontSize: 12,
-    color: "#94a3b8",
+    fontSize: 11,
+    color: "#94a0b0",
     lineHeight: 16,
+  },
+  disclaimerText: {
+    fontSize: 10,
+    color: "#5b6675",
+    lineHeight: 15,
+    marginTop: 12,
+    marginBottom: 6,
   },
 });

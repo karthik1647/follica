@@ -144,7 +144,12 @@ def test_randomized_dual_pipeline_invariants(scenario_idx):
         "Pattern Suggestive of Androgenetic Alopecia / Pattern Thinning",
         "Pattern Suggestive of Folliculitis / Scalp Bumps",
         "Pattern Suggestive of Scalp Plaque / Scaling",
-        "Indeterminate Pattern / Requires Verification"
+        "Indeterminate Pattern / Requires Verification",
+        "Pattern Suggestive of Contact Dermatitis / Irritation",
+        "Pattern Suggestive of Head Lice / Infestation",
+        "Pattern Suggestive of Lichen Planus / Scarring Inflammation",
+        "Pattern Suggestive of Telogen Effluvium / Diffuse Shedding",
+        "Pattern Suggestive of Tinea Capitis / Fungal Scalp Infection"
     ]
     assert res["suggested_condition"] in valid_conditions, f"Invalid condition: {res['suggested_condition']}"
     assert "prescribe" not in str(res).lower()

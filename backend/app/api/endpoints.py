@@ -23,11 +23,16 @@ from app.models.schemas import (
     ConsentRequest,
     ConsentResponse,
     SystemStatusResponse,
-    ProgressComparisonResponse
+    ProgressComparisonResponse,
+    SurveyRiskProfile,
+    SurveySingleRequest,
+    SurveyCohortRequest,
+    SurveyCohortSummary,
 )
 from app.services.classifier_service import classifier_service
 from app.services.cv_pipeline import cv_pipeline, ImageDecodeError
 from app.services.triage_engine import triage_engine
+from app.services.survey_risk_engine import survey_risk_engine
 from app.services.pdf_service import pdf_service
 from app.services.quality_gate import quality_gate
 from app.services.registration import registration_service
@@ -463,3 +468,21 @@ async def export_clinical_pdf(
             "Content-Disposition": f"attachment; filename=follica_clinical_summary_{patient_ref_id}.pdf"
         }
     )
+@router.post("/survey/analyze", response_model=SurveyRiskProfile, tags=["Post-Diagnosis Survey Pipeline"])
+async def evaluate_post_diagnosis_survey(payload: SurveySingleRequest):
+    """
+    Standalone Layer-2 Survey Pipeline endpoint.
+    Given a confirmed or suspected scalp condition and intake survey answers,
+    computes condition-conditioned trigger rankings and a prioritised action queue.
+    """
+    return survey_risk_engine.analyze(condition=payload.condition, context=payload.context)
+
+
+@router.post("/survey/cohort-summary", response_model=SurveyCohortSummary, tags=["Post-Diagnosis Survey Pipeline"])
+async def evaluate_survey_cohort(payload: SurveyCohortRequest):
+    """
+    Batch analytics endpoint for collected survey datasets.
+    Aggregates modifiable trigger prevalence, risk band distributions, and mean
+    lifestyle risk load grouped by scalp condition.
+    """
+    return survey_risk_engine.analyze_cohort(payload)

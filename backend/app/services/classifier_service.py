@@ -133,8 +133,11 @@ class ScalpClassifierService:
                 )
             )
         )
-        if is_healthy_checkup:
-            return CONDITION_NORMAL, 0.94
+        # A photo-only user (default form, no symptoms ticked) must still have the photo
+        # evaluated. The healthy shortcut applies only when the photo model is NOT confident
+        # that it sees a condition (the model has no healthy class, so low confidence is the
+        # best available signal of "nothing recognisable").
+        PHOTO_OVERRIDE_CONFIDENCE = 0.75
 
         if self.onnx_session is not None:
             try:
@@ -158,6 +161,8 @@ class ScalpClassifierService:
 
                 class_idx = int(np.argmax(probs))
                 confidence = float(probs[class_idx])
+                if is_healthy_checkup and confidence < PHOTO_OVERRIDE_CONFIDENCE:
+                    return CONDITION_NORMAL, 0.94
                 if confidence >= settings.CONFIDENCE_GATE_THRESHOLD:
                     onnx_cond = self.MODEL_CLASSES[class_idx]
                     # Reconcile high-specificity acute clinical symptoms when they directly
@@ -175,6 +180,9 @@ class ScalpClassifierService:
                     return onnx_cond, round(confidence, 3)
             except Exception as e:
                 print(f"[Follica ML] Inference error: {e}. Falling back to contextual inference.")
+
+        if is_healthy_checkup:
+            return CONDITION_NORMAL, 0.94
 
         # Context-aware fallback classifier (when ONNX weights are absent or visual confidence < threshold)
         return self._heuristic_classify(img_bytes, context)

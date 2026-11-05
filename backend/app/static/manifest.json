@@ -6,9 +6,12 @@
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0f172a",
-  "theme_color": "#0284c7",
-  "categories": ["medical", "health"],
+  "background_color": "#06080A",
+  "theme_color": "#06080A",
+  "categories": [
+    "medical",
+    "health"
+  ],
   "icons": [
     {
       "src": "/static/icon-192.png",
