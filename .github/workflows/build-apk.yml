@@ -9,6 +9,9 @@ on:
       - "mobile/**"
       - ".github/workflows/build-apk.yml"
 
+permissions:
+  contents: write
+
 jobs:
   build-android-apk:
     runs-on: ubuntu-latest
@@ -27,16 +30,36 @@ jobs:
           distribution: "temurin"
           java-version: "17"
 
-      - name: Setup Android SDK (API 34)
-        uses: android-actions/setup-android@v3
+      - name: Configure Preinstalled Android SDK (API 34)
+        run: |
+          export ANDROID_HOME="${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}"
+          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> $GITHUB_ENV
+          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDKMANAGER" --licenses > /dev/null || true
+          "$SDKMANAGER" "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 
       - name: Install Mobile Dependencies & Prebuild Native Android Project
         working-directory: ./mobile
         run: |
           npm install --legacy-peer-deps
-          npx expo prebuild --platform android --clean
+          CI=1 npx expo prebuild --platform android --clean
 
-      - name: Generate Dedicated Release Keystore (Avoids Play Protect Debug-Key Block)
+      - name: Enable LAN HTTP Cleartext Support for Local FastAPI Pairing
+        working-directory: ./mobile/android/app/src/main
+        run: |
+          python3 -c '
+          p = "AndroidManifest.xml"
+          s = open(p, encoding="utf-8").read()
+          if "usesCleartextTraffic" in s:
+              s = s.replace("android:usesCleartextTraffic=\"false\"", "android:usesCleartextTraffic=\"true\"")
+          else:
+              s = s.replace("<application", "<application android:usesCleartextTraffic=\"true\"", 1)
+          open(p, "w", encoding="utf-8").write(s)
+          print("Updated AndroidManifest.xml usesCleartextTraffic=true")
+          '
+
+      - name: Generate Dedicated Release Keystore (V1 + V2 + V3)
         working-directory: ./mobile/android/app
         run: |
           keytool -genkeypair -v \
@@ -48,18 +71,20 @@ jobs:
             -keypass FollicaRelease2026! \
             -dname "CN=Follica Clinical Triage, OU=Biomedical Engineering, O=Follica Research, L=Bengaluru, S=KA, C=IN"
 
-      - name: Configure Gradle Release Signing (V1 + V2 + V3)
+      - name: Configure Gradle Release Signing
         working-directory: ./mobile/android
         run: |
-          cat << 'EOF' >> app/build.gradle
-
+          python3 -c '
+          p = "app/build.gradle"
+          s = open(p, encoding="utf-8").read()
+          signing_block = """
           android {
               signingConfigs {
-                  release {
-                      storeFile file('follica-release.keystore')
-                      storePassword 'FollicaRelease2026!'
-                      keyAlias 'follica-release-key'
-                      keyPassword 'FollicaRelease2026!'
+                  follicaRelease {
+                      storeFile file("follica-release.keystore")
+                      storePassword "FollicaRelease2026!"
+                      keyAlias "follica-release-key"
+                      keyPassword "FollicaRelease2026!"
                       v1SigningEnabled true
                       v2SigningEnabled true
                       v3SigningEnabled true
@@ -67,23 +92,40 @@ jobs:
               }
               buildTypes {
                   release {
-                      signingConfig signingConfigs.release
-                      minifyEnabled false
-                      shrinkResources false
+                      signingConfig signingConfigs.follicaRelease
                   }
               }
           }
-          EOF
+          """
+          open(p, "w", encoding="utf-8").write(s + "\n" + signing_block)
+          '
 
       - name: Assemble Signed Release APK
         working-directory: ./mobile/android
+        env:
+          NODE_ENV: production
         run: |
           chmod +x gradlew
-          ./gradlew assembleRelease --no-daemon
+          ./gradlew assembleRelease --no-daemon --stacktrace
+          cp app/build/outputs/apk/release/app-release.apk ../../Follica-Clinical-Triage-v1.0.0.apk
+          ls -lh ../../Follica-Clinical-Triage-v1.0.0.apk
 
       - name: Upload Signed Follica Release APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: follica-android-release-apk
-          path: mobile/android/app/build/outputs/apk/release/*.apk
+          path: mobile/Follica-Clinical-Triage-v1.0.0.apk
           retention-days: 30
+
+      - name: Publish Direct Download APK to GitHub Release (v1.0.0-apk)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view v1.0.0-apk >/dev/null 2>&1; then
+            gh release upload v1.0.0-apk mobile/Follica-Clinical-Triage-v1.0.0.apk --clobber
+          else
+            gh release create v1.0.0-apk mobile/Follica-Clinical-Triage-v1.0.0.apk \
+              --target "${{ github.sha }}" \
+              --title "Follica Android Clinical Triage App (v1.0.0 Signed APK)" \
+              --notes "Signed Android Release APK (V1+V2+V3 PKCS12) built automatically from feat/mobilenetv4-onnx-clinical-triage. Supports instant offline held-out clinical specimens and live Wi-Fi LAN / HTTPS FastAPI dual-pipeline inference."
+          fi

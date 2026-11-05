@@ -91,6 +91,81 @@ const CORPUS_CLASSES_DATA = [
   ["09 · Tinea Capitis", "Level 3", "https://dermnetnz.org/topics/tinea-capitis"],
 ];
 
+const FAQS_DATA = [
+  {
+    role: "clinician",
+    roleName: "Dermatologist / Clinician",
+    q: "Does Follica attempt to diagnose patients or prescribe drugs?",
+    a: "Never. Follica is strictly a pre-consultation triage tool. It never outputs definitive diagnoses or prescription drugs. Scarring, autoimmune, fungal, pustular, and plaque patterns automatically trigger Level 3 Specialist Escalation with a 1-page clinical handoff summary.",
+  },
+  {
+    role: "clinician",
+    roleName: "Dermatologist / Clinician",
+    q: "How do you avoid missing Psoriasis without polarized magnification?",
+    a: "Unpolarized RGB cannot resolve subsurface vessels. We address this via asymmetric risk routing: whenever Psoriasis or Lichen Planus crosses our confidence gate — or silvery crusting, burning trichodynia, or pustules are reported — triage_engine.py forces Level 3 Escalation for in-person polarized dermoscopy.",
+  },
+  {
+    role: "clinician",
+    roleName: "Dermatologist / Clinician",
+    q: "Why are questionnaire answers excluded from the Scalp Health Score (SHS)?",
+    a: "Blending subjective self-reports into an optical score corrupts measurement validity — an anxious patient with calm skin would falsely score as inflamed. Keeping SHS (0-100) purely image-derived while running a separate Post-Identification Trigger Engine preserves clean clinical separation.",
+  },
+  {
+    role: "prof",
+    roleName: "Professor / Biodesign Jury",
+    q: "Isn't 100% test accuracy on Kaggle inflated by cross-split augmentation?",
+    a: "Yes — and we explicitly disclose this caveat. Pre-augmented public benchmarks overestimate wild smartphone accuracy. We validate under out-of-distribution geometric/photometric perturbations (97.0%), enforce a 0.65 Confidence Gate, and document CV brackets as provisional heuristics awaiting IRB calibration.",
+  },
+  {
+    role: "prof",
+    roleName: "Professor / Biodesign Jury",
+    q: "What makes this a genuine Biodesign system rather than a generic CNN?",
+    a: "Every module traces to a clinical need constraint: Stage 00 Optical Gate prevents bad self-captures; Stage 03 Confidence Gate + Level-3 Override manages false-negative risk; Stage 04 converts campus/hostel exposures into ranked interventions; Molecule-First output removes commercial D2C prescribing bias.",
+  },
+  {
+    role: "prof",
+    roleName: "Professor / Biodesign Jury",
+    q: "How are pediatric safety and biometric privacy governed?",
+    a: "Selecting age <18 activates a mandatory Guardian & Pediatric Physician Notice (critical since pediatric Tinea Capitis requires systemic care). Raw photos are decoded in volatile RAM and discarded immediately. SQLite consent logs store only salted SHA-256 pseudonyms with instant right-to-erasure.",
+  },
+  {
+    role: "eng",
+    roleName: "ML / Systems Engineer",
+    q: "Why MobileNetV4 ONNX with OpenCV instead of a cloud Vision-LLM?",
+    a: "Multimodal LLMs introduce hallucination risk, 3-6s latency, biometric leakage, and non-repeatable numeric scores. MobileNetV4-Conv-Small in FP32 ONNX Runtime executes locally on CPU in <50 ms (~10 MB footprint), while deterministic OpenCV provides pixel-reproducible sub-scores.",
+  },
+  {
+    role: "eng",
+    roleName: "ML / Systems Engineer",
+    q: "How does the pipeline defend against blurry frames and flash hotspots?",
+    a: "Stage 00 (quality_gate.py) enforces 8x8 patch-max Laplacian sharpness (>=60.0), Rec.601 luminance (35-225), and HSV specular glare area (<=15%), returning HTTP 400 with retake guidance before inference. Ambiguous images are caught by dominance-margin calibration and the 0.65 Confidence Gate.",
+  },
+  {
+    role: "eng",
+    roleName: "ML / Systems Engineer",
+    q: "How do you prevent skin phototype or warm bulbs from biasing Redness?",
+    a: "Raw RGB R-channel thresholds fail across diverse skin phototypes and warm lighting. cv_pipeline.py applies clamped Gray-World color constancy followed by relative chrominance contrast — measuring top-quartile focal erythema relative to the subject's own median scalp skin tone.",
+  },
+  {
+    role: "patient",
+    roleName: "Patient / Student",
+    q: "Are my scalp photographs stored on a server or used for AI training?",
+    a: "No. Your photograph is processed in temporary server memory (RAM) for a fraction of a second to calculate your report and is permanently discarded the moment your assessment appears. Nothing is saved to disk, cloud buckets, or external databases.",
+  },
+  {
+    role: "patient",
+    roleName: "Patient / Student",
+    q: "Why does Follica recommend generic molecules instead of shampoo brands?",
+    a: "Many online tests exist solely to sell expensive bundled kits. Follica has zero commercial affiliations: we show the evidence-backed OTC active molecule, concentration, and contact schedule (with direct NIH PubChem references) so you can choose any affordable, accessible brand.",
+  },
+  {
+    role: "patient",
+    roleName: "Patient / Student",
+    q: "When should I skip home care and see an in-person dermatologist?",
+    a: "Seek prompt specialist care whenever Follica indicates Level 3: Clinical Escalation, or if you notice painful bumps/pustules, thick silvery plaques, sudden smooth patchy bald spots, scalp burning/tenderness, or no improvement after 2-4 weeks. Use Export Physician PDF for your appointment.",
+  },
+];
+
 const PIPELINE_STAGES = [
   {
     tag: "STAGE 00",
@@ -333,6 +408,8 @@ export default function App() {
   const [reportPane, setReportPane] = useState("scores");
   const [wizardStep, setWizardStep] = useState(0);
   const [corpusTab, setCorpusTab] = useState("papers");
+  const [trustTab, setTrustTab] = useState("biodesign");
+  const [faqFilter, setFaqFilter] = useState("all");
   const [loading, setLoading] = useState(false);
   const [selectedImageUri, setSelectedImageUri] = useState(null);
   const [analysisResult, setAnalysisResult] = useState(null);
@@ -1430,6 +1507,244 @@ export default function App() {
             )}
           </View>
         )}
+
+        {/* =====================================================
+            TAB 05: BIODESIGN, TRUST & FAQS
+           ===================================================== */}
+        {primaryTab === "trust" && (
+          <View>
+            <View style={[styles.segmentedRow, { marginBottom: 12 }]}>
+              {[
+                ["biodesign", "Biodesign"],
+                ["gateway", "Photo Gateway"],
+                ["faq", "FAQs"],
+                ["install", "Install & LAN"],
+              ].map(([k, l]) => (
+                <TouchableOpacity
+                  key={k}
+                  style={[
+                    styles.segBtn,
+                    trustTab === k && styles.segBtnActive,
+                  ]}
+                  onPress={() => setTrustTab(k)}
+                >
+                  <Text
+                    style={[
+                      styles.segBtnText,
+                      trustTab === k && styles.segBtnTextActive,
+                    ]}
+                  >
+                    {l}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {trustTab === "biodesign" && (
+              <View>
+                <View style={styles.card}>
+                  <Text style={styles.cardTitle}>
+                    Stanford Biodesign Trajectory
+                  </Text>
+                  <Text style={styles.cardSub}>
+                    Engineered around unmet clinical triage needs, risk-asymmetric safety gates, and transparent measurement boundaries.
+                  </Text>
+                  <View style={styles.rationaleBox}>
+                    <Text style={[styles.rationaleText, { color: "#00e6cf", fontWeight: "700" }]}>
+                      CLINICAL NEED STATEMENT
+                    </Text>
+                    <Text style={[styles.rationaleText, { marginTop: 4 }]}>
+                      A non-diagnostic, brand-neutral screening instrument for adults with scalp symptoms to objectively evaluate macroscopic morphology, escalate scarring or infectious pathologies early to certified dermatologists, and isolate modifiable triggers without commercial bias.
+                    </Text>
+                  </View>
+
+                  <View style={[styles.listCard, { marginTop: 10 }]}>
+                    <Text style={styles.listCardAccent}>IDENTIFY · THE CLINICAL GAP</Text>
+                    <Text style={styles.listCardBody}>
+                      Patients face commercial D2C quizzes selling proprietary kits without optical gating versus delayed appointments where scarring or fungal conditions progress untreated.
+                    </Text>
+                  </View>
+
+                  <View style={styles.listCard}>
+                    <Text style={styles.listCardAccent}>INVENT · FAIL-SAFE ARCHITECTURE</Text>
+                    <Text style={styles.listCardBody}>
+                      Decouples optical rejection (quality_gate.py), 10-class MobileNetV4 ONNX with 0.65 confidence abstention, explainable SDASI/SALT sub-scores, and trigger ranking.
+                    </Text>
+                  </View>
+
+                  <View style={styles.listCard}>
+                    <Text style={styles.listCardAccent}>IMPLEMENT · CDS & PRIVACY</Text>
+                    <Text style={styles.listCardBody}>
+                      Operates strictly as Clinical Decision Support — zero prescriptions, generic OTC active molecules linked to NIH PubChem, under-18 guardian notices, and zero-retention RAM biometrics.
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.card}>
+                  <Text style={styles.cardTitle}>Why Trust Follica?</Text>
+                  <View style={[styles.listCard, { marginTop: 8 }]}>
+                    <Text style={[styles.listCardAccent, { color: "#34d399" }]}>ASYMMETRIC SAFETY</Text>
+                    <Text style={styles.listCardBody}>
+                      Missing a scarring or pustular condition is costlier than over-referring. Any Lichen Planus, Alopecia Areata, Psoriasis, Folliculitis, or Tinea pattern deterministically triggers Level 3 Escalation regardless of composite score.
+                    </Text>
+                  </View>
+                  <View style={styles.listCard}>
+                    <Text style={styles.listCardAccent}>CONTROLLED ACCURACY</Text>
+                    <Text style={styles.listCardBody}>
+                      100.0% clean test split accuracy and 97.0% perturbation stress accuracy with an enforced 0.65 Confidence Gate that abstains whenever real-world smartphone photos are ambiguous.
+                    </Text>
+                  </View>
+                  <View style={styles.listCard}>
+                    <Text style={[styles.listCardAccent, { color: "#fbbf24" }]}>RELIABILITY & INVARIANCE</Text>
+                    <Text style={styles.listCardBody}>
+                      Clamped Gray-World color constancy, HSV flash-glare masking, and relative skin-baseline erythema contrast stabilize metrics across room lighting and Fitzpatrick phototypes. Verified by 114 pytest tests and 20/20 clinical personas.
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            )}
+
+            {trustTab === "gateway" && (
+              <View style={styles.card}>
+                <Text style={styles.cardTitle}>
+                  Pre-Inference Photo Gateway
+                </Text>
+                <Text style={styles.cardSub}>
+                  Why did we add it? In consumer digital health, unconstrained neural networks greedily classify blurry or flash-blinded photos, hallucinating false disease patterns. The Photo Gateway enforces an optical firewall before inference:
+                </Text>
+
+                <View style={[styles.listCard, { marginTop: 10 }]}>
+                  <Text style={styles.listCardAccent}>01 · LAPLACIAN FOCUS CHECK</Text>
+                  <Text style={styles.listCardTitle}>Patch-Max Variance &gt;= 60.0</Text>
+                  <Text style={styles.listCardBody}>
+                    Calculates 2nd spatial derivative of pixel intensity across an 8x8 grid to detect motion blur or focal failure before running neural classification.
+                  </Text>
+                </View>
+
+                <View style={styles.listCard}>
+                  <Text style={styles.listCardAccent}>02 · REC.601 LUMINANCE BOUNDS</Text>
+                  <Text style={styles.listCardTitle}>35.0 &lt;= Y_mean &lt;= 225.0</Text>
+                  <Text style={styles.listCardBody}>
+                    Guarantees adequate exposure; rejects pitch-black shadowed shots or washed-out overexposed frames.
+                  </Text>
+                </View>
+
+                <View style={styles.listCard}>
+                  <Text style={styles.listCardAccent}>03 · HSV FLASH GLARE FILTER</Text>
+                  <Text style={styles.listCardTitle}>Specular Area &lt;= 15.0%</Text>
+                  <Text style={styles.listCardBody}>
+                    Detects achromatic high-brightness camera flash reflections, preventing glare hotspots from corrupting flake detection and falsely mimicking severe dandruff.
+                  </Text>
+                </View>
+
+                <View style={styles.listCard}>
+                  <Text style={styles.listCardAccent}>04 · BIOMETRIC EPHEMERALITY</Text>
+                  <Text style={styles.listCardTitle}>Zero Disk / Cloud Retention</Text>
+                  <Text style={styles.listCardBody}>
+                    Photographs are decoded strictly in volatile memory and discarded upon HTTP completion. No raw images are stored.
+                  </Text>
+                </View>
+
+                <View style={styles.rationaleBox}>
+                  <Text style={styles.rationaleText}>
+                    Empirical Verification: The gateway achieves a 95.9% pass rate across the 1,200 held-out corpus and cleanly rejects 100% of blurry, dark, and flash-washed photos in Persona 5 tests.
+                  </Text>
+                </View>
+
+                <TouchableOpacity
+                  style={[styles.primaryBtn, { marginTop: 10 }]}
+                  onPress={() => {
+                    setPrimaryTab("triage");
+                    setTriageMode("studio");
+                  }}
+                >
+                  <Text style={styles.primaryBtnText}>
+                    {"Test Optical Viewfinder ->"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {trustTab === "faq" && (
+              <View>
+                <View style={[styles.chipWrap, { marginBottom: 10 }]}>
+                  {[
+                    ["all", "All (12)"],
+                    ["clinician", "Doctors (3)"],
+                    ["prof", "Professors (3)"],
+                    ["eng", "Engineers (3)"],
+                    ["patient", "Patients (3)"],
+                  ].map(([k, l]) =>
+                    renderChip(l, faqFilter === k, () => setFaqFilter(k))
+                  )}
+                </View>
+
+                {FAQS_DATA.filter(
+                  (f) => faqFilter === "all" || f.role === faqFilter
+                ).map((faq, i) => (
+                  <View key={i} style={styles.card}>
+                    <Text style={styles.listCardAccent}>{faq.roleName}</Text>
+                    <Text style={[styles.cardTitle, { fontSize: 15, marginTop: 4 }]}>
+                      {faq.q}
+                    </Text>
+                    <Text style={[styles.cardSub, { fontSize: 13, marginTop: 6 }]}>
+                      {faq.a}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {trustTab === "install" && (
+              <View style={styles.card}>
+                <Text style={styles.cardTitle}>Mobile Installation & LAN Guide</Text>
+                <Text style={styles.cardSub}>
+                  Run Follica on your smartphone with instant offline clinical specimens or live Wi-Fi camera triage:
+                </Text>
+
+                <View style={[styles.listCard, { marginTop: 10 }]}>
+                  <Text style={styles.listCardAccent}>STEP 01 · INSTALL SIGNED RELEASE APK</Text>
+                  <Text style={styles.listCardBody}>
+                    {"Download Follica-Clinical-Triage-v1.0.0.apk. Allow \"Install unknown apps\" if prompted. If Play Protect displays an unrecognized university-publisher prompt, tap \"More details -> Install anyway\"."}
+                  </Text>
+                  <TouchableOpacity
+                    style={[styles.primaryBtnSmall, { marginTop: 8 }]}
+                    onPress={() =>
+                      openExternalUrl(
+                        "https://github.com/karthik1647/follica/releases/download/v1.0.0-apk/Follica-Clinical-Triage-v1.0.0.apk"
+                      )
+                    }
+                  >
+                    <Text style={styles.primaryBtnText}>
+                      {"Download Signed APK ->"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.listCard}>
+                  <Text style={styles.listCardAccent}>STEP 02 · INSTANT OFFLINE RUN</Text>
+                  <Text style={styles.listCardBody}>
+                    Open the app! You can run all 5 held-out clinical presets (Healthy, Lichen Planus, Psoriasis, Seborrheic Dermatitis, Alopecia Areata) offline without connecting to any server.
+                  </Text>
+                </View>
+
+                <View style={styles.listCard}>
+                  <Text style={styles.listCardAccent}>STEP 03 · PAIR WI-FI / HOTSPOT FOR LIVE SCANS</Text>
+                  <Text style={styles.listCardBody}>
+                    Connect your phone and laptop to the same Wi-Fi or phone mobile hotspot. In the Follica backend folder, run: python -m uvicorn app.main:app --host 0.0.0.0 --port 8000.
+                  </Text>
+                </View>
+
+                <View style={styles.listCard}>
+                  <Text style={styles.listCardAccent}>STEP 04 · ENTER LAPTOP IP & PING</Text>
+                  <Text style={styles.listCardBody}>
+                    Check your laptop IPv4 (via ipconfig in PowerShell). In the app header, tap "API Config", enter http://&lt;LAPTOP_IP&gt;:8000/api/v1, and tap Ping. Status turns "ONNX Ready" for live camera triage!
+                  </Text>
+                </View>
+              </View>
+            )}
+          </View>
+        )}
       </ScrollView>
 
       {/* FLOATING PILL BOTTOM NAVIGATION DOCK */}
@@ -1440,6 +1755,7 @@ export default function App() {
             ["intake", "02", "Intake"],
             ["architecture", "03", "System"],
             ["corpus", "04", "Corpus"],
+            ["trust", "05", "Trust"],
           ].map(([key, idx, label]) => {
             const active = primaryTab === key;
             return (

@@ -157,16 +157,16 @@
             border: 1px solid transparent;
             color: var(--text-secondary);
             font-family: var(--font-sans);
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             font-weight: 500;
-            padding: 7px 15px;
+            padding: 7px 12px;
             border-radius: 8px;
             cursor: pointer;
             transition: all 0.18s ease;
             white-space: nowrap;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         .nav-tab:hover {
@@ -1429,6 +1429,96 @@
             border-color: rgba(245, 158, 11, 0.34);
         }
 
+        /* Biodesign & FAQ Components */
+        .faq-scroll-panel {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            padding-right: 4px;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            align-content: start;
+        }
+
+        @media (max-width: 980px) {
+            .faq-scroll-panel {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .faq-card {
+            background: linear-gradient(180deg, rgba(22, 30, 43, 0.92) 0%, rgba(14, 20, 29, 0.96) 100%);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+            transition: border-color 0.16s ease;
+        }
+
+        .faq-card:hover {
+            border-color: rgba(0, 212, 190, 0.38);
+        }
+
+        .faq-role-tag {
+            display: inline-block;
+            font-family: var(--font-mono);
+            font-size: 0.68rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            padding: 2px 8px;
+            border-radius: 999px;
+            margin-bottom: 6px;
+            background: rgba(0, 212, 190, 0.1);
+            color: var(--accent-strong);
+            border: 1px solid rgba(0, 212, 190, 0.25);
+        }
+
+        .faq-role-tag.role-clinician {
+            background: rgba(56, 189, 248, 0.12);
+            color: #7dd3fc;
+            border-color: rgba(56, 189, 248, 0.3);
+        }
+
+        .faq-role-tag.role-prof {
+            background: rgba(245, 158, 11, 0.12);
+            color: #fcd34d;
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+
+        .faq-role-tag.role-eng {
+            background: rgba(167, 139, 250, 0.12);
+            color: #c4b5fd;
+            border-color: rgba(167, 139, 250, 0.3);
+        }
+
+        .faq-q {
+            font-family: var(--font-display);
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.32;
+            margin-bottom: 6px;
+        }
+
+        .faq-a {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            line-height: 1.54;
+        }
+
+        .endpoint-copy-box {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 13px;
+            background: rgba(8, 11, 16, 0.9);
+            border: 1px solid rgba(0, 212, 190, 0.35);
+            border-radius: var(--radius-sm);
+            margin-top: 10px;
+        }
+
         /* Camera & Lightbox Modals */
         .modal-backdrop {
             display: none;
@@ -1493,6 +1583,9 @@
                 <button type="button" class="nav-tab" data-view="corpus" onclick="switchPrimaryView('corpus')">
                     <span class="nav-idx">04</span> Literature &amp; Corpus
                 </button>
+                <button type="button" class="nav-tab" data-view="trust" onclick="switchPrimaryView('trust')">
+                    <span class="nav-idx">05</span> Biodesign &amp; Trust
+                </button>
             </nav>
 
             <div class="header-utilities">
@@ -1500,9 +1593,8 @@
                     <span class="status-dot" id="hdr-status-dot"></span>
                     <span id="hdr-status-text">ONNX + CV Ready</span>
                 </a>
-                <a href="/docs" target="_blank" rel="noopener noreferrer" class="btn-ghost" style="text-decoration:none;" title="OpenAPI Swagger Documentation">API Docs &nearr;</a>
                 <a href="https://github.com/karthik1647/follica" target="_blank" rel="noopener noreferrer" class="btn-ghost" style="text-decoration:none;" title="Follica GitHub Repository">GitHub &nearr;</a>
-                <button type="button" id="btn-install-pwa" class="btn-ghost" onclick="installMobileApp()">Install App</button>
+                <button type="button" id="btn-install-pwa" class="btn-ghost" style="border-color:rgba(0,212,190,0.4); color:var(--accent-strong);" onclick="openMobileInstallHub()">Mobile App</button>
             </div>
         </div>
     </header>
@@ -2555,6 +2647,356 @@
                 </div>
             </div>
         </section>
+
+        <!-- =========================================================
+             VIEW 05: BIODESIGN PHILOSOPHY, TRUST, FAQS & MOBILE APP
+             ========================================================= -->
+        <section id="view-trust" class="view-section">
+            <div class="subnav-bar">
+                <div class="segmented-pills" id="trust-subnav-pills">
+                    <button type="button" class="seg-pill active" data-trust-mode="biodesign" onclick="switchTrustMode('biodesign', this)">Biodesign &amp; Reliability</button>
+                    <button type="button" class="seg-pill" data-trust-mode="gateway" onclick="switchTrustMode('gateway', this)">Photo Gateway (Why &amp; What)</button>
+                    <button type="button" class="seg-pill" data-trust-mode="faq" onclick="switchTrustMode('faq', this)">Stakeholder FAQs (12)</button>
+                    <button type="button" class="seg-pill" data-trust-mode="mobile" onclick="switchTrustMode('mobile', this)">Install Mobile App</button>
+                </div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <a href="https://github.com/karthik1647/follica/releases/download/v1.0.0-apk/Follica-Clinical-Triage-v1.0.0.apk" target="_blank" rel="noopener noreferrer" class="btn-primary" style="text-decoration:none; padding:7px 14px; font-size:0.8rem;">Download Android APK &darr;</a>
+                </div>
+            </div>
+
+            <!-- SUB-MODE 1: BIODESIGN & RELIABILITY -->
+            <div id="trust-mode-biodesign" class="info-grid-2">
+                <div class="surface-card" style="overflow-y:auto;">
+                    <div class="section-title">Stanford Biodesign Trajectory (Identify &rarr; Invent &rarr; Implement)</div>
+                    <div class="section-subtitle">Engineered around unmet clinical triage needs, risk-asymmetric safety gates, and transparent measurement boundaries.</div>
+
+                    <div class="rationale-box" style="margin-top:12px;">
+                        <strong style="color:var(--accent-strong); font-family:var(--font-mono); font-size:0.74rem; display:block; margin-bottom:3px;">FORMAL BIODESIGN NEED STATEMENT</strong>
+                        A non-diagnostic, brand-neutral screening instrument for adults with scalp symptoms to objectively evaluate macroscopic scalp morphology, escalate scarring or infectious pathologies early to certified dermatologists, and isolate modifiable environmental triggers without commercial bias.
+                    </div>
+
+                    <div class="stage-flow-list" style="margin-top:12px;">
+                        <div class="stage-row">
+                            <span class="stage-tag">IDENTIFY</span>
+                            <div>
+                                <strong style="font-size:0.88rem; color:var(--text-primary);">The Clinical Triage Gap</strong>
+                                <div style="font-size:0.81rem; color:var(--text-secondary); margin-top:2px;">Patients face two flawed extremes: commercial D2C hair quizzes that sell proprietary kits without optical inspection or escalation, versus delayed specialist visits where scarring (Lichen Planopilaris) or fungal (Tinea Capitis) conditions progress untreated.</div>
+                            </div>
+                        </div>
+                        <div class="stage-row">
+                            <span class="stage-tag">INVENT</span>
+                            <div>
+                                <strong style="font-size:0.88rem; color:var(--text-primary);">Orthogonal 4-Layer Fail-Safe Architecture</strong>
+                                <div style="font-size:0.81rem; color:var(--text-secondary); margin-top:2px;">Decouples pre-inference optical rejection (<span class="mono">quality_gate.py</span>), 10-class MobileNetV4 ONNX recognition with <span class="mono">0.65</span> confidence abstention, explainable SDASI/SALT OpenCV sub-scores, and post-identification environmental trigger ranking.</div>
+                            </div>
+                        </div>
+                        <div class="stage-row">
+                            <span class="stage-tag">IMPLEMENT</span>
+                            <div>
+                                <strong style="font-size:0.88rem; color:var(--text-primary);">Regulatory, Pediatric &amp; Privacy Guardrails</strong>
+                                <div style="font-size:0.81rem; color:var(--text-secondary); margin-top:2px;">Operates strictly as Clinical Decision Support (CDS) — zero prescriptions, generic OTC active molecules linked to NIH PubChem, guardian notice for users under 18, 1-page physician handoff PDF, and RAM-only zero-photo-retention biometrics.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="surface-card" style="overflow-y:auto;">
+                    <div class="section-title">Why Trust It? · Why Is It Accurate? · Is It Reliable?</div>
+                    <div class="section-subtitle">How Follica earns trust through refusal-to-guess engineering rather than unverified black-box claims.</div>
+
+                    <div class="stage-flow-list" style="margin-top:12px;">
+                        <div class="stage-row">
+                            <span class="stage-tag" style="color:#34d399;">TRUST</span>
+                            <div>
+                                <strong style="font-size:0.88rem; color:var(--text-primary);">Asymmetric Clinical Safety &amp; Zero Commercial Conflict</strong>
+                                <div style="font-size:0.81rem; color:var(--text-secondary); margin-top:2px;">Missing a scarring or pustular condition is far costlier than over-referring. Any Lichen Planus, Alopecia Areata, Scalp Psoriasis, Folliculitis, or Tinea Capitis pattern — or painful/crusty red flags — deterministically triggers <strong>Level 3 Dermatologist Escalation</strong> regardless of composite SHS.</div>
+                            </div>
+                        </div>
+                        <div class="stage-row">
+                            <span class="stage-tag" style="color:var(--accent-strong);">ACCURACY</span>
+                            <div>
+                                <strong style="font-size:0.88rem; color:var(--text-primary);">High Precision Within an Enforced Optical Envelope</strong>
+                                <div style="font-size:0.81rem; color:var(--text-secondary); margin-top:2px;">Achieves <span class="mono">100.0%</span> (<span class="mono">1,200/1,200</span>) on the held-out 10-class split and <span class="mono">97.0%</span> Top-1 under simultaneous rotation, crop, darkening, and JPEG Q75 stress. Crucially, we disclose Kaggle cross-split augmentation inflation and unpolarized lens limits — relying on our <span class="mono">0.65</span> Confidence Gate to abstain whenever real-world smartphone captures are ambiguous.</div>
+                            </div>
+                        </div>
+                        <div class="stage-row">
+                            <span class="stage-tag" style="color:#fbbf24;">RELIABILITY</span>
+                            <div>
+                                <strong style="font-size:0.88rem; color:var(--text-primary);">Illumination Invariance &amp; Multi-Persona Verification</strong>
+                                <div style="font-size:0.81rem; color:var(--text-secondary); margin-top:2px;">Gray-World channel gain clamping (<span class="mono">[0.75, 1.35]</span>), HSV flash-glare masking, and relative skin-baseline erythema contrast stabilize scores across indoor lighting and Fitzpatrick phototypes. Continuously verified by <span class="mono">114</span> automated <span class="mono">pytest</span> checks and <span class="mono">20/20</span> clinical &amp; camera-failure personas.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUB-MODE: OPTICAL PHOTO GATEWAY -->
+            <div id="trust-mode-gateway" style="display:none;" class="info-grid-2">
+                <div class="surface-card" style="overflow-y:auto;">
+                    <div class="section-title">Pre-Inference Optical Gateway: Why We Added It</div>
+                    <div class="section-subtitle">The clinical, mathematical, and Stanford Biodesign rationale for enforcing an upfront optical rejection firewall.</div>
+
+                    <div class="rationale-box" style="margin-top:12px;">
+                        <strong style="color:var(--accent-strong); font-family:var(--font-mono); font-size:0.74rem; display:block; margin-bottom:3px;">THE CLINICAL AI PARADOX: GARBAGE IN, CONFIDENT GARBAGE OUT</strong>
+                        Deep convolutional networks are trained on clean datasets and will greedily compute softmax probability distributions over whatever tensor they are fed. If a patient uploads a blurry, pitch-black, or flash-washed photo, an unconstrained neural network will still output a high-confidence prediction — falsely confusing camera flash for silvery psoriasis plaques, or motion blur for patchy alopecia.
+                    </div>
+
+                    <div class="stage-flow-list" style="margin-top:12px;">
+                        <div class="stage-row">
+                            <span class="stage-tag">PROBLEM 1</span>
+                            <div>
+                                <strong style="font-size:0.88rem; color:var(--text-primary);">Camera Flash Specular Glare Mimics Severe Flaking</strong>
+                                <div style="font-size:0.81rem; color:var(--text-secondary); margin-top:2px;">Curved scalp skin acts as a specular reflector. Direct smartphone camera flash produces saturated white hotspots (luminance &gt; 240, chroma &lt; 20) that blind color sensors and corrupt classical morphological flake filtering.</div>
+                            </div>
+                        </div>
+                        <div class="stage-row">
+                            <span class="stage-tag">PROBLEM 2</span>
+                            <div>
+                                <strong style="font-size:0.88rem; color:var(--text-primary);">Motion Blur Erases Micro-Feature Edges</strong>
+                                <div style="font-size:0.81rem; color:var(--text-secondary); margin-top:2px;">Hand tremor or close-range focal failure attenuates high-frequency spatial gradients, erasing follicular openings and perifollicular erythema halos essential for separating Seborrheic Dermatitis from Lichen Planus.</div>
+                            </div>
+                        </div>
+                        <div class="stage-row">
+                            <span class="stage-tag" style="color:var(--status-opt);">SOLUTION</span>
+                            <div>
+                                <strong style="font-size:0.88rem; color:var(--text-primary);">Refusal to Guess &amp; Immediate Constructive Guidance</strong>
+                                <div style="font-size:0.81rem; color:var(--text-secondary); margin-top:2px;">The Photo Gateway intercepts frames before model evaluation. If physical criteria are breached, it rejects the photo with HTTP 400 and actionable steps ("Wipe lens, use diffuse room light, 10-15 cm distance"), guaranteeing clinical reliability.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="surface-card" style="overflow-y:auto;">
+                    <div class="section-title">What Does The Photo Gateway Do? (Technical Defense Suite)</div>
+                    <div class="section-subtitle">Real-time deterministic filters executed in volatile RAM before neural classification:</div>
+
+                    <table class="data-table" style="margin-top:12px;">
+                        <thead>
+                            <tr>
+                                <th>Gateway Filter</th>
+                                <th>Mathematical Threshold</th>
+                                <th>Failure Mode Prevented</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/quality_gate.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">Laplacian Focus &nearr;</a></td>
+                                <td class="mono">8x8 patch-max Var &ge; 60.0</td>
+                                <td>Rejects motion &amp; out-of-focus blur</td>
+                            </tr>
+                            <tr>
+                                <td><a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/quality_gate.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">Rec.601 Luminance &nearr;</a></td>
+                                <td class="mono">35.0 &le; Y_mean &le; 225.0</td>
+                                <td>Rejects underexposure &amp; blowout</td>
+                            </tr>
+                            <tr>
+                                <td><a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/quality_gate.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">HSV Flash Glare &nearr;</a></td>
+                                <td class="mono">Specular Area &le; 15.0%</td>
+                                <td>Rejects flash-hotspot false dandruff</td>
+                            </tr>
+                            <tr>
+                                <td><a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/quality_gate.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">Spatial Envelope &nearr;</a></td>
+                                <td class="mono">&ge; 200 x 200 pixels</td>
+                                <td>Rejects low-res thumbnails</td>
+                            </tr>
+                            <tr>
+                                <td><a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/docs/privacy.md" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">Ephemeral RAM &nearr;</a></td>
+                                <td class="mono">Zero disk / cloud persistence</td>
+                                <td>Protects patient biometric privacy</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="rationale-box" style="margin-top:14px; border-left-color:var(--accent);">
+                        <strong style="color:var(--text-primary); display:block; margin-bottom:3px;">Empirical Gateway Performance</strong>
+                        Evaluated across the 1,200 held-out test split, the gateway achieves a <strong>95.9% pass rate (1,151/1,200)</strong>, cleanly rejecting 49 severely degraded captures. In our automated Persona 5 test suite, it achieves <strong>100% rejection</strong> on blurred, underexposed, and flash-washed smartphone failures.
+                    </div>
+
+                    <div class="ext-links-row" style="margin-top:12px;">
+                        <button type="button" class="btn-primary" style="padding:7px 14px; font-size:0.8rem;" onclick="switchPrimaryView('triage'); showCaptureStudio();">Test Optical Gateway Live &rarr;</button>
+                        <a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/quality_gate.py" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">quality_gate.py &nearr;</a>
+                        <a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/docs/thresholds.md" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">thresholds.md &nearr;</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUB-MODE 2: MULTI-STAKEHOLDER FAQS -->
+            <div id="trust-mode-faq" style="display:none; flex-direction:column; flex:1; min-height:0;">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
+                    <div class="chip-group" id="faq-filter-bar">
+                        <button type="button" class="btn-ghost" style="border-color:rgba(0,212,190,0.45); color:var(--accent-strong);" onclick="filterStakeholderFaq('all', this)">All Stakeholders (12)</button>
+                        <button type="button" class="btn-ghost" onclick="filterStakeholderFaq('clinician', this)">Dermatologists &amp; Doctors (3)</button>
+                        <button type="button" class="btn-ghost" onclick="filterStakeholderFaq('prof', this)">Professors &amp; Biodesign Jury (3)</button>
+                        <button type="button" class="btn-ghost" onclick="filterStakeholderFaq('eng', this)">ML &amp; Systems Engineers (3)</button>
+                        <button type="button" class="btn-ghost" onclick="filterStakeholderFaq('patient', this)">Patients &amp; Students (3)</button>
+                    </div>
+                </div>
+
+                <div class="faq-scroll-panel" id="faq-cards-grid">
+                    <div class="faq-card" data-role="clinician">
+                        <span class="faq-role-tag role-clinician">Dermatologist / Clinician</span>
+                        <div class="faq-q">Does Follica attempt to diagnose patients or prescribe pharmacological regimens?</div>
+                        <div class="faq-a">Never. Follica operates strictly as a pre-consultation triage and anamnesis structuring tool. It never outputs definitive diagnoses or prescription drugs (topical steroids, oral antifungals, finasteride, or antibiotics). Scarring, autoimmune, fungal, pustular, and plaque patterns automatically trigger Level 3 Specialist Escalation with a 1-page clinical handoff summary to streamline dermatology visits.</div>
+                    </div>
+
+                    <div class="faq-card" data-role="clinician">
+                        <span class="faq-role-tag role-clinician">Dermatologist / Clinician</span>
+                        <div class="faq-q">Smartphone cameras lack polarized magnification — how do you avoid missing Psoriasis or Scarring Alopecia?</div>
+                        <div class="faq-a">Unpolarized RGB cannot resolve subsurface peripilar casts or vascular patterns (dotted vs. arborizing vessels). We address this via asymmetric clinical risk routing: whenever Psoriasis or Lichen Planus crosses our confidence gate — or when silvery crusting, burning trichodynia, or painful pustules are reported — <span class="mono">triage_engine.py</span> forces Level 3 Escalation for confirmatory polarized dermoscopy.</div>
+                    </div>
+
+                    <div class="faq-card" data-role="clinician">
+                        <span class="faq-role-tag role-clinician">Dermatologist / Clinician</span>
+                        <div class="faq-q">Why are questionnaire answers excluded from the Scalp Health Score (SHS)?</div>
+                        <div class="faq-a">Blending subjective self-reports (stress, diet) into an optical score corrupts longitudinal measurement validity — an anxious patient with calm skin would falsely score as inflamed. Keeping SHS (<span class="mono">0-100</span>) purely image-derived across 4 SDASI/SALT-inspired axes while running a separate Post-Identification Trigger Engine preserves clean clinical separation between visible signs and historical cofactors.</div>
+                    </div>
+
+                    <div class="faq-card" data-role="prof">
+                        <span class="faq-role-tag role-prof">Professor / Biodesign Jury</span>
+                        <div class="faq-q">Isn't 100% test accuracy on the 12,000-image dataset inflated by cross-split augmentation?</div>
+                        <div class="faq-a">Yes — and we explicitly audit and report this caveat. Our training notebook includes perceptual-hash leakage checks and notes that pre-augmented public benchmarks overestimate wild smartphone accuracy. Consequently, we validate under out-of-distribution geometric/photometric perturbations (<span class="mono">97.0%</span> accuracy), enforce a <span class="mono">0.65</span> server-side Confidence Gate, and document CV brackets (<span class="mono">thresholds.md</span>) as provisional heuristics awaiting prospective IRB calibration.</div>
+                    </div>
+
+                    <div class="faq-card" data-role="prof">
+                        <span class="faq-role-tag role-prof">Professor / Biodesign Jury</span>
+                        <div class="faq-q">What makes this a genuine Biodesign system rather than a generic CNN wrapper?</div>
+                        <div class="faq-a">Every module traces directly to a need-specification constraint: Stage 00 Optical Gate prevents bad patient self-captures; Stage 03 Confidence Abstention + Level-3 Override manages clinical false-negative risk; Stage 04 Layer-2 Survey Engine converts campus/hostel exposures (hard borewell water, helmet sweat occlusion) into ranked interventions; Molecule-First output removes D2C prescribing bias; ORB/RANSAC registration closes the 14-day follow-up loop.</div>
+                    </div>
+
+                    <div class="faq-card" data-role="prof">
+                        <span class="faq-role-tag role-prof">Professor / Biodesign Jury</span>
+                        <div class="faq-q">How are pediatric safety, informed consent, and biometric data retention governed?</div>
+                        <div class="faq-a">Selecting age <span class="mono">&lt;18</span> activates a mandatory Guardian &amp; Pediatric Physician Notice (critical since pediatric Tinea Capitis requires systemic care). Raw scalp photos are decoded solely in volatile RAM and discarded immediately after HTTP response; SQLite consent logs store only salted SHA-256 client pseudonyms with instant <span class="mono">DELETE</span> right-to-erasure.</div>
+                    </div>
+
+                    <div class="faq-card" data-role="eng">
+                        <span class="faq-role-tag role-eng">ML / Systems Engineer</span>
+                        <div class="faq-q">Why pair MobileNetV4 ONNX with classical OpenCV instead of calling a cloud Vision-LLM?</div>
+                        <div class="faq-a">Multimodal LLMs introduce hallucination risk, 3-6 second API latency, external biometric transmission, and non-repeatable numeric estimates. <span class="mono">MobileNetV4-Conv-Small</span> in FP32 ONNX Runtime executes locally on CPU in <span class="mono">&lt;50 ms</span> (~10 MB footprint), while deterministic OpenCV provides pixel-reproducible sub-scores and ORB/RANSAC perspective alignment.</div>
+                    </div>
+
+                    <div class="faq-card" data-role="eng">
+                        <span class="faq-role-tag role-eng">ML / Systems Engineer</span>
+                        <div class="faq-q">How does the pipeline defend against blurry frames, flash hotspots, or out-of-distribution photos?</div>
+                        <div class="faq-a">Stage 00 (<span class="mono">quality_gate.py</span>) enforces 8x8 patch-max 2D Laplacian sharpness (<span class="mono">&ge;60.0</span>), Rec.601 luminance (<span class="mono">35-225</span>), and HSV specular glare area (<span class="mono">&le;15%</span>), returning HTTP <span class="mono">400</span> with retake guidance before inference. Any ambiguous image that passes optical checks but yields dispersed logits is caught by dominance-margin calibration and the <span class="mono">0.65</span> Confidence Gate.</div>
+                    </div>
+
+                    <div class="faq-card" data-role="eng">
+                        <span class="faq-role-tag role-eng">ML / Systems Engineer</span>
+                        <div class="faq-q">How do you prevent warm indoor bulbs or darker Fitzpatrick skin tones from biasing Redness scores?</div>
+                        <div class="faq-a">Raw RGB <span class="mono">R</span>-channel thresholds fail across diverse skin phototypes and warm lighting. Instead, <span class="mono">cv_pipeline.py</span> applies clamped Gray-World color constancy followed by relative chrominance contrast — measuring top-quartile focal erythema relative to the subject's own median scalp skin tone while masking hair shafts and specular glare pixels.</div>
+                    </div>
+
+                    <div class="faq-card" data-role="patient">
+                        <span class="faq-role-tag">Patient / Student</span>
+                        <div class="faq-q">Are my scalp photographs stored on a server or used to train AI models?</div>
+                        <div class="faq-a">No. Your photograph is processed in temporary server memory (RAM) for a fraction of a second to calculate your report and is permanently discarded the moment your assessment appears. Nothing is saved to disk, cloud buckets, or external databases.</div>
+                    </div>
+
+                    <div class="faq-card" data-role="patient">
+                        <span class="faq-role-tag">Patient / Student</span>
+                        <div class="faq-q">Why does Follica recommend generic molecules (like Ketoconazole) instead of shampoo brands?</div>
+                        <div class="faq-a">Many online hair tests exist solely to sell expensive bundled kits. Follica has zero commercial affiliations: we show the evidence-backed OTC active molecule, concentration, and contact schedule (with direct NIH PubChem references) so you or your pharmacist/dermatologist can choose any affordable, accessible formulation.</div>
+                    </div>
+
+                    <div class="faq-card" data-role="patient">
+                        <span class="faq-role-tag">Patient / Student</span>
+                        <div class="faq-q">When should I skip home care and book an in-person dermatologist immediately?</div>
+                        <div class="faq-a">Seek prompt specialist care whenever Follica indicates <strong>Level 3: Clinical Escalation</strong>, or if you notice painful bumps/pustules, thick silvery plaques, sudden smooth patchy bald spots, scalp burning/tenderness, or no improvement after 2-4 weeks of gentle routine care. Use <strong>Export Physician PDF</strong> to bring structured notes to your appointment.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUB-MODE 3: MOBILE APP INSTALLATION & LAN PAIRING -->
+            <div id="trust-mode-mobile" style="display:none;" class="info-grid-2">
+                <div class="surface-card" style="overflow-y:auto;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap;">
+                        <div>
+                            <div class="section-title">Install Follica Mobile App (Android &amp; iOS)</div>
+                            <div class="section-subtitle">Choose native signed Android APK installation or zero-sideload Progressive Web App (PWA) mode.</div>
+                        </div>
+                        <span class="cap-pill">v1.0.0 Signed</span>
+                    </div>
+
+                    <div class="stage-flow-list" style="margin-top:12px;">
+                        <div class="stage-row">
+                            <span class="stage-tag" style="color:var(--accent-strong);">ANDROID APK</span>
+                            <div style="flex:1;">
+                                <strong style="font-size:0.88rem; color:var(--text-primary);">Option A · Native Signed Release APK (Recommended on Android)</strong>
+                                <div style="font-size:0.81rem; color:var(--text-secondary); margin-top:3px;">
+                                    1. Tap <strong>Download Signed APK</strong> below on your Android phone.<br>
+                                    2. Open <span class="mono">Follica-Clinical-Triage-v1.0.0.apk</span> and allow <em>"Install unknown apps"</em> for your browser if prompted.<br>
+                                    3. If Google Play Protect displays an unrecognized academic publisher prompt, tap <em>"More details &rarr; Install anyway"</em> (standard for PKCS12 university-signed APKs outside Play Store).<br>
+                                    4. Launch Follica — only <span class="mono">CAMERA</span> permission is requested (storage, location, mic, and contacts are blocked at manifest level). Works offline immediately with built-in clinical specimens!
+                                </div>
+                                <div class="ext-links-row" style="margin-top:9px;">
+                                    <a href="https://github.com/karthik1647/follica/releases/download/v1.0.0-apk/Follica-Clinical-Triage-v1.0.0.apk" target="_blank" rel="noopener noreferrer" class="ext-pill">Download Signed APK (v1.0.0) &darr;</a>
+                                    <a href="https://github.com/karthik1647/follica/releases/tag/v1.0.0-apk" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">GitHub Release Page &nearr;</a>
+                                    <a href="https://github.com/karthik1647/follica/actions/workflows/build-apk.yml" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">CI Build Pipeline &nearr;</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="stage-row">
+                            <span class="stage-tag">PWA (iOS/ALL)</span>
+                            <div style="flex:1;">
+                                <strong style="font-size:0.88rem; color:var(--text-primary);">Option B · Instant Progressive Web App (iPhone / Android / Desktop)</strong>
+                                <div style="font-size:0.81rem; color:var(--text-secondary); margin-top:3px;">
+                                    Open this web URL on your phone browser. On <strong>Android Chrome</strong>, tap <strong>Install Standalone PWA</strong> below (or Menu &rarr; <em>Install app</em>). On <strong>iPhone Safari</strong>, tap <em>Share &rarr; Add to Home Screen</em> for a full-screen native-style experience.
+                                </div>
+                                <div class="ext-links-row" style="margin-top:9px;">
+                                    <button type="button" class="table-run-btn" onclick="installMobileApp()">Install Standalone PWA &rarr;</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="surface-card" style="overflow-y:auto;">
+                    <div class="section-title">Connect Mobile App to Live FastAPI Backend (Wi-Fi LAN)</div>
+                    <div class="section-subtitle">Pair the native Android APK with your laptop's MobileNetV4 ONNX + OpenCV server in 4 steps:</div>
+
+                    <div class="endpoint-copy-box">
+                        <div style="min-width:0;">
+                            <div style="font-size:0.71rem; color:var(--text-muted); font-family:var(--font-mono);">API ENDPOINT FORMAT FOR MOBILE APP</div>
+                            <div id="lan-api-endpoint" class="mono" style="font-size:0.83rem; color:var(--accent-strong); font-weight:600; overflow:hidden; text-overflow:ellipsis;">http://&lt;LAPTOP_WIFI_IPV4&gt;:8000/api/v1</div>
+                        </div>
+                        <button type="button" class="table-run-btn" onclick="copyLanEndpoint()">Copy URL</button>
+                    </div>
+
+                    <div class="stage-flow-list" style="margin-top:12px;">
+                        <div class="stage-row">
+                            <span class="stage-tag">STEP 01</span>
+                            <div>
+                                <strong style="font-size:0.86rem; color:var(--text-primary);">Join Same Wi-Fi or Phone Hotspot</strong>
+                                <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:2px;">Connect your laptop and phone to the same home Wi-Fi or <strong>your phone's mobile hotspot</strong> (recommended on university campuses, since enterprise hostel Wi-Fi often isolates peer devices).</div>
+                            </div>
+                        </div>
+                        <div class="stage-row">
+                            <span class="stage-tag">STEP 02</span>
+                            <div>
+                                <strong style="font-size:0.86rem; color:var(--text-primary);">Run Backend Bound to All Interfaces (<span class="mono">0.0.0.0</span>)</strong>
+                                <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:2px;">In <span class="mono">backend/</span>, run: <span class="mono">python -m uvicorn app.main:app --host 0.0.0.0 --port 8000</span> and allow Python on Windows Firewall if prompted.</div>
+                            </div>
+                        </div>
+                        <div class="stage-row">
+                            <span class="stage-tag">STEP 03</span>
+                            <div>
+                                <strong style="font-size:0.86rem; color:var(--text-primary);">Read Your Laptop IPv4 Address</strong>
+                                <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:2px;">Run <span class="mono">ipconfig</span> in PowerShell (or <span class="mono">ifconfig</span> on macOS/Linux) and copy the Wireless LAN IPv4 address (for example, <span class="mono">10.145.153.231</span> or <span class="mono">192.168.1.x</span>).</div>
+                            </div>
+                        </div>
+                        <div class="stage-row">
+                            <span class="stage-tag">STEP 04</span>
+                            <div>
+                                <strong style="font-size:0.86rem; color:var(--text-primary);">Paste into Mobile App &amp; Tap Ping</strong>
+                                <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:2px;">In the Follica Android app header, tap <strong>API Config</strong>, enter <span class="mono">http://&lt;YOUR_IPV4&gt;:8000/api/v1</span>, and tap <strong>Ping</strong>. Status updates to <strong>ONNX Ready</strong> for live camera triage!</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
 
     <!-- Confusion Matrix Lightbox Modal -->
@@ -2646,6 +3088,49 @@
             document.getElementById('corpus-mode-papers').style.display = (mode === 'papers') ? 'grid' : 'none';
             document.getElementById('corpus-mode-dataset').style.display = (mode === 'dataset') ? 'grid' : 'none';
             document.getElementById('corpus-mode-benchmarks').style.display = (mode === 'benchmarks') ? 'grid' : 'none';
+        }
+
+        function switchTrustMode(mode, btnEl) {
+            const container = document.getElementById('trust-subnav-pills');
+            if (container) {
+                container.querySelectorAll('.seg-pill').forEach(b => {
+                    b.classList.toggle('active', b.getAttribute('data-trust-mode') === mode);
+                });
+            }
+            document.getElementById('trust-mode-biodesign').style.display = (mode === 'biodesign') ? 'grid' : 'none';
+            document.getElementById('trust-mode-gateway').style.display = (mode === 'gateway') ? 'grid' : 'none';
+            document.getElementById('trust-mode-faq').style.display = (mode === 'faq') ? 'flex' : 'none';
+            document.getElementById('trust-mode-mobile').style.display = (mode === 'mobile') ? 'grid' : 'none';
+        }
+
+        function openMobileInstallHub() {
+            switchPrimaryView('trust');
+            switchTrustMode('mobile');
+        }
+
+        function filterStakeholderFaq(role, btnEl) {
+            if (btnEl) {
+                document.querySelectorAll('#faq-filter-bar button').forEach(b => {
+                    b.style.borderColor = '';
+                    b.style.color = '';
+                });
+                btnEl.style.borderColor = 'rgba(0,212,190,0.45)';
+                btnEl.style.color = 'var(--accent-strong)';
+            }
+            document.querySelectorAll('#faq-cards-grid .faq-card').forEach(card => {
+                const match = (role === 'all') || (card.getAttribute('data-role') === role);
+                card.style.display = match ? 'block' : 'none';
+            });
+        }
+
+        function copyLanEndpoint() {
+            const el = document.getElementById('lan-api-endpoint');
+            const txt = el ? el.innerText : 'http://192.168.1.x:8000/api/v1';
+            navigator.clipboard?.writeText(txt).then(() => {
+                alert('Copied API endpoint: ' + txt);
+            }).catch(() => {
+                alert('Endpoint format: ' + txt);
+            });
         }
 
         function goWizardStep(idx) {
