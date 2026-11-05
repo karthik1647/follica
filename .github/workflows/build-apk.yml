@@ -87,7 +87,6 @@ jobs:
                       keyPassword "FollicaRelease2026!"
                       v1SigningEnabled true
                       v2SigningEnabled true
-                      v3SigningEnabled true
                   }
               }
               buildTypes {
@@ -107,8 +106,10 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew assembleRelease --no-daemon --stacktrace
+          mkdir -p ../
+          cp app/build/outputs/apk/release/app-release.apk ../Follica-Clinical-Triage-v1.0.0.apk
           cp app/build/outputs/apk/release/app-release.apk ../../Follica-Clinical-Triage-v1.0.0.apk
-          ls -lh ../../Follica-Clinical-Triage-v1.0.0.apk
+          ls -lh ../Follica-Clinical-Triage-v1.0.0.apk
 
       - name: Upload Signed Follica Release APK Artifact
         uses: actions/upload-artifact@v4
