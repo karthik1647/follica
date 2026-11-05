@@ -1300,8 +1300,8 @@
                             <div class="form-row">
                                 <span class="field-label">Primary Concern Zone / Assessment Goal</span>
                                 <div class="chip-group">
-                                    <div class="chip-item"><input type="radio" id="zone-0" name="primary_concern_zone" value="routine_healthy_check" checked><label for="zone-0" class="chip-label">Routine Health Check (Baseline)</label></div>
-                                    <div class="chip-item"><input type="radio" id="zone-1" name="primary_concern_zone" value="crown_vertex"><label for="zone-1" class="chip-label">Crown / Vertex</label></div>
+                                    <div class="chip-item"><input type="radio" id="zone-0" name="primary_concern_zone" value="routine_healthy_check"><label for="zone-0" class="chip-label">Routine Health Check (Baseline)</label></div>
+                                    <div class="chip-item"><input type="radio" id="zone-1" name="primary_concern_zone" value="crown_vertex" checked><label for="zone-1" class="chip-label">Crown / Vertex</label></div>
                                     <div class="chip-item"><input type="radio" id="zone-2" name="primary_concern_zone" value="hairline_temples"><label for="zone-2" class="chip-label">Hairline / Temples</label></div>
                                     <div class="chip-item"><input type="radio" id="zone-3" name="primary_concern_zone" value="central_parting"><label for="zone-3" class="chip-label">Parting Line</label></div>
                                     <div class="chip-item"><input type="radio" id="zone-4" name="primary_concern_zone" value="diffuse_all_over"><label for="zone-4" class="chip-label">Diffuse Thinning</label></div>
@@ -1728,7 +1728,7 @@
             }
         }
 
-        async function loadDemoScenario() {
+        async function loadDemoScenario() { /* uses clinical symptom sample */
             document.getElementById('zone-1').checked = true;
             document.getElementById('water-2').checked = true;
             document.getElementById('helmet-check').checked = true;
@@ -1748,12 +1748,12 @@
             updateRiskCounter();
 
             try {
-                const response = await fetch('/static/sample_scalp_demo.jpg');
+                const response = await fetch('/static/sample_symptom_demo.jpg');
                 const blob = await response.blob();
-                selectedFile = new File([blob], 'sample_scalp_demo.jpg', { type: 'image/jpeg' });
+                selectedFile = new File([blob], 'sample_symptom_demo.jpg', { type: 'image/jpeg' });
                 
                 const previewImg = document.getElementById('preview-image');
-                previewImg.src = '/static/sample_scalp_demo.jpg';
+                previewImg.src = '/static/sample_symptom_demo.jpg';
                 document.getElementById('preview-holder').style.display = 'block';
                 
                 await submitAssessment();

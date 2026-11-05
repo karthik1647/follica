@@ -34,7 +34,7 @@ export default function App() {
   const [intake, setIntake] = useState({
     biological_sex: "male",
     age_group: "18_25",
-    primary_concern_zone: "routine_healthy_check",
+    primary_concern_zone: "crown_vertex",
     water_environment: "normal",
     daily_helmet_wearer: false,
     washing_frequency: "2_3_per_week",
