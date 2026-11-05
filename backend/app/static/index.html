@@ -2203,7 +2203,7 @@
                             </div>
                         </div>
                         <div class="rationale-box">
-                            <strong style="color:var(--text-primary); display:block; margin-bottom:3px;">Pipeline Design Rationale (<a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/survey_risk_engine.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">survey_risk_engine.py &nearr;</a>)</strong>
+                            <strong style="color:var(--text-primary); display:block; margin-bottom:3px;">Pipeline Design Rationale (<a href="https://github.com/karthik1647/follica/blob/main/backend/app/services/survey_risk_engine.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">survey_risk_engine.py &nearr;</a>)</strong>
                             Rather than blending unvalidated self-reports into image-derived scores, Follica conditions survey interpretation on the visually identified pattern so modifiable triggers (hard borewell water, helmet occlusion, acute stress, protein deficit) can be ranked cleanly.
                         </div>
                     </div>
@@ -2255,35 +2255,35 @@
                         <div class="stage-row">
                             <span class="stage-tag">STAGE 00</span>
                             <div>
-                                <strong style="font-size:0.88rem; color:var(--text-primary);">Pre-Inference Optical Gate (<a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/quality_gate.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">quality_gate.py &nearr;</a>)</strong>
+                                <strong style="font-size:0.88rem; color:var(--text-primary);">Pre-Inference Optical Gate (<a href="https://github.com/karthik1647/follica/blob/main/backend/app/services/quality_gate.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">quality_gate.py &nearr;</a>)</strong>
                                 <div style="font-size:0.81rem; color:var(--text-secondary); margin-top:2px;">8x8 patch-max 2D Laplacian focus check (&ge;60), Rec.601 luminance bounds (35-225), and HSV specular flash-glare rejection (&le;15% area).</div>
                             </div>
                         </div>
                         <div class="stage-row">
                             <span class="stage-tag">STAGE 01</span>
                             <div>
-                                <strong style="font-size:0.88rem; color:var(--text-primary);">MobileNetV4-Conv-Small ONNX Classifier (<a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/classifier_service.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">classifier_service.py &nearr;</a>)</strong>
+                                <strong style="font-size:0.88rem; color:var(--text-primary);">MobileNetV4-Conv-Small ONNX Classifier (<a href="https://github.com/karthik1647/follica/blob/main/backend/app/services/classifier_service.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">classifier_service.py &nearr;</a>)</strong>
                                 <div style="font-size:0.81rem; color:var(--text-secondary); margin-top:2px;">10-class macroscopic pathology recognition in FP32 ONNX Runtime (&lt;50 ms CPU latency) with dominance-margin calibration.</div>
                             </div>
                         </div>
                         <div class="stage-row">
                             <span class="stage-tag">STAGE 02</span>
                             <div>
-                                <strong style="font-size:0.88rem; color:var(--text-primary);">Classical CV Micro-Feature Extractor (<a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/cv_pipeline.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">cv_pipeline.py &nearr;</a>)</strong>
+                                <strong style="font-size:0.88rem; color:var(--text-primary);">Classical CV Micro-Feature Extractor (<a href="https://github.com/karthik1647/follica/blob/main/backend/app/services/cv_pipeline.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">cv_pipeline.py &nearr;</a>)</strong>
                                 <div style="font-size:0.81rem; color:var(--text-secondary); margin-top:2px;">Gray-World white balance, CLAHE, YCrCb/HSV skin-hair segmentation, focal patch erythema contrast, and 6x6 bare-tile alopecia detection.</div>
                             </div>
                         </div>
                         <div class="stage-row">
                             <span class="stage-tag">STAGE 03</span>
                             <div>
-                                <strong style="font-size:0.88rem; color:var(--text-primary);">Confidence Safety Gate &amp; Escalation Matrix (<a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/triage_engine.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">triage_engine.py &nearr;</a>)</strong>
+                                <strong style="font-size:0.88rem; color:var(--text-primary);">Confidence Safety Gate &amp; Escalation Matrix (<a href="https://github.com/karthik1647/follica/blob/main/backend/app/services/triage_engine.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">triage_engine.py &nearr;</a>)</strong>
                                 <div style="font-size:0.81rem; color:var(--text-secondary); margin-top:2px;">Predictions below <span class="mono">0.65</span> confidence are intercepted server-side to Level 2 Indeterminate; scarring, fungal, and pustular patterns escalate to Level 3.</div>
                             </div>
                         </div>
                         <div class="stage-row">
                             <span class="stage-tag">STAGE 04</span>
                             <div>
-                                <strong style="font-size:0.88rem; color:var(--text-primary);">Post-Identification Trigger Engine &amp; Clinical PDF (<a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/survey_risk_engine.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">survey_risk_engine.py &nearr;</a> · <a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/report_generator.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">report_generator.py &nearr;</a>)</strong>
+                                <strong style="font-size:0.88rem; color:var(--text-primary);">Post-Identification Trigger Engine &amp; Clinical PDF (<a href="https://github.com/karthik1647/follica/blob/main/backend/app/services/survey_risk_engine.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">survey_risk_engine.py &nearr;</a> · <a href="https://github.com/karthik1647/follica/blob/main/backend/app/services/pdf_service.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">pdf_service.py &nearr;</a>)</strong>
                                 <div style="font-size:0.81rem; color:var(--text-secondary); margin-top:2px;">Ranks modifiable environmental/systemic drivers conditioned on the identified pattern and exports a 1-page generic ReportLab physician handoff pass.</div>
                             </div>
                         </div>
@@ -2341,8 +2341,8 @@
                     </div>
 
                     <div class="ext-links-row" style="margin-top:12px;">
-                        <a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/docs/privacy.md" target="_blank" rel="noopener noreferrer" class="ext-pill">Privacy Governance (privacy.md) &nearr;</a>
-                        <a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/docs/thresholds.md" target="_blank" rel="noopener noreferrer" class="ext-pill">CV Thresholds Spec (thresholds.md) &nearr;</a>
+                        <a href="https://github.com/karthik1647/follica/blob/main/backend/docs/privacy.md" target="_blank" rel="noopener noreferrer" class="ext-pill">Privacy Governance (privacy.md) &nearr;</a>
+                        <a href="https://github.com/karthik1647/follica/blob/main/backend/docs/thresholds.md" target="_blank" rel="noopener noreferrer" class="ext-pill">CV Thresholds Spec (thresholds.md) &nearr;</a>
                         <a href="/api/v1/system/status" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">System Status JSON &nearr;</a>
                         <a href="https://github.com/karthik1647/follica" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">GitHub Repository &nearr;</a>
                     </div>
@@ -2353,7 +2353,7 @@
             <div id="arch-mode-progress" style="display:none; flex:1; min-height:0;">
                 <div class="info-grid-2">
                     <div class="surface-card">
-                        <div class="section-title">Longitudinal Scan Registration (<a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/progress_tracker.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">progress_tracker.py &nearr;</a>)</div>
+                        <div class="section-title">Longitudinal Scan Registration (<a href="https://github.com/karthik1647/follica/blob/main/backend/app/services/registration.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">registration.py &nearr;</a>)</div>
                         <div class="section-subtitle">Aligns Day-0 baseline and follow-up scalp frames via ORB feature matching + RANSAC perspective homography (<a href="/docs" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">/api/v1/progress/compare &nearr;</a>) to compute objective sub-score deltas.</div>
 
                         <div class="form-grid-2" style="margin-top:16px;">
@@ -2410,7 +2410,7 @@
                         <div class="ext-links-row">
                             <a href="https://doi.org/10.3389/fmed.2022.965423" target="_blank" rel="noopener noreferrer" class="ext-pill">DOI: 10.3389/fmed.2022.965423 &nearr;</a>
                             <a href="https://www.frontiersin.org/articles/10.3389/fmed.2022.965423/full" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">Frontiers Full Text &nearr;</a>
-                            <a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/triage_engine.py" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">triage_engine.py &nearr;</a>
+                            <a href="https://github.com/karthik1647/follica/blob/main/backend/app/services/triage_engine.py" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">triage_engine.py &nearr;</a>
                         </div>
                     </div>
                     <div class="paper-map"><strong>Follica Implementation:</strong> Motivates pairing neural class probabilities with explicit plaque/flake and focal erythema sub-scores to separate Psoriasis (Level 3 escalation) from Seborrheic Dermatitis (Level 2 monitored).</div>
@@ -2426,7 +2426,7 @@
                         <div class="ext-links-row">
                             <a href="https://doi.org/10.1111/srt.13660" target="_blank" rel="noopener noreferrer" class="ext-pill">DOI: 10.1111/srt.13660 &nearr;</a>
                             <a href="https://arxiv.org/abs/2404.10518" target="_blank" rel="noopener noreferrer" class="ext-pill">MobileNetV4 (arXiv:2404.10518) &nearr;</a>
-                            <a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/classifier_service.py" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">classifier_service.py &nearr;</a>
+                            <a href="https://github.com/karthik1647/follica/blob/main/backend/app/services/classifier_service.py" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">classifier_service.py &nearr;</a>
                         </div>
                     </div>
                     <div class="paper-map"><strong>Follica Implementation:</strong> Grounds our selection of <span class="mono">timm</span> MobileNetV4-Conv-Small two-stage transfer learning exported to standalone ONNX Runtime for sub-50 ms CPU execution.</div>
@@ -2442,7 +2442,7 @@
                         <div class="ext-links-row">
                             <a href="https://doi.org/10.1111/ddg.15847" target="_blank" rel="noopener noreferrer" class="ext-pill">AA Study DOI: 10.1111/ddg.15847 &nearr;</a>
                             <a href="https://doi.org/10.2340/actadv.v101.564" target="_blank" rel="noopener noreferrer" class="ext-pill">AGA Model DOI: 10.2340/actadv.v101.564 &nearr;</a>
-                            <a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/cv_pipeline.py" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">cv_pipeline.py &nearr;</a>
+                            <a href="https://github.com/karthik1647/follica/blob/main/backend/app/services/cv_pipeline.py" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">cv_pipeline.py &nearr;</a>
                         </div>
                     </div>
                     <div class="paper-map"><strong>Follica Implementation:</strong> Directly informs our <span class="mono">compute_density_score</span> morphological Black-Hat fiber mask and 6x6 interior bare-skin tile detector for focal scarring/patchy alopecia voids.</div>
@@ -2458,7 +2458,7 @@
                         <div class="ext-links-row">
                             <a href="https://doi.org/10.1111/srt.13508" target="_blank" rel="noopener noreferrer" class="ext-pill">Color Constancy DOI: 10.1111/srt.13508 &nearr;</a>
                             <a href="https://doi.org/10.1016/0016-0032(80)90058-7" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">Gray-World (1980) &nearr;</a>
-                            <a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/quality_gate.py" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">quality_gate.py &nearr;</a>
+                            <a href="https://github.com/karthik1647/follica/blob/main/backend/app/services/quality_gate.py" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">quality_gate.py &nearr;</a>
                         </div>
                     </div>
                     <div class="paper-map"><strong>Follica Implementation:</strong> Drives our Gray-World channel gain clamping ([0.75, 1.35]), HSV specular hotspot masking, and SDASI/SALT-inspired severity range anchoring.</div>
@@ -2569,8 +2569,8 @@
                                 <strong style="font-size:0.88rem; color:var(--text-primary);">MobileNetV4-Conv-Small (<span class="mono">224x224</span> RGB, ImageNet Normalized)</strong>
                                 <div style="font-size:0.81rem; color:var(--text-secondary); margin-top:2px;">Two-stage fine-tuning in PyTorch: classifier head warmup followed by full-backbone cosine-annealed AdamW with <span class="mono">label_smoothing=0.1</span>.</div>
                                 <div class="ext-links-row">
-                                    <a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/training/train.py" target="_blank" rel="noopener noreferrer" class="ext-pill">training/train.py &nearr;</a>
-                                    <a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/training/follica_training_colab.ipynb" target="_blank" rel="noopener noreferrer" class="ext-pill">Colab Notebook (.ipynb) &nearr;</a>
+                                    <a href="https://github.com/karthik1647/follica/blob/main/training/train.py" target="_blank" rel="noopener noreferrer" class="ext-pill">training/train.py &nearr;</a>
+                                    <a href="https://github.com/karthik1647/follica/blob/main/training/follica_training_colab.ipynb" target="_blank" rel="noopener noreferrer" class="ext-pill">Colab Notebook (.ipynb) &nearr;</a>
                                     <a href="https://github.com/huggingface/pytorch-image-models" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">HuggingFace timm &nearr;</a>
                                     <a href="https://onnxruntime.ai/" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">ONNX Runtime &nearr;</a>
                                 </div>
@@ -2584,7 +2584,7 @@
                                 <div class="ext-links-row">
                                     <a href="https://albumentations.ai/" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">Albumentations Pipeline &nearr;</a>
                                     <a href="https://opencv.org/" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">OpenCV 4.x &nearr;</a>
-                                    <a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/training/README.md" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">Training Docs &nearr;</a>
+                                    <a href="https://github.com/karthik1647/follica/blob/main/training/README.md" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">Training Docs &nearr;</a>
                                 </div>
                             </div>
                         </div>
@@ -2616,22 +2616,22 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td><a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/training/README.md" target="_blank" rel="noopener noreferrer" class="inline-ext-link">Held-Out Test Split (1,200 images) &nearr;</a></td>
+                                <td><a href="https://github.com/karthik1647/follica/blob/main/training/README.md" target="_blank" rel="noopener noreferrer" class="inline-ext-link">Held-Out Test Split (1,200 images) &nearr;</a></td>
                                 <td class="mono" style="color:var(--status-opt); font-weight:600;">100.0% (1200/1200)</td>
                                 <td>Macro F1 = 1.00 across 10 classes</td>
                             </tr>
                             <tr>
-                                <td><a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/classifier_service.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link">Perturbation Stress Benchmark &nearr;</a></td>
+                                <td><a href="https://github.com/karthik1647/follica/blob/main/backend/app/services/classifier_service.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link">Perturbation Stress Benchmark &nearr;</a></td>
                                 <td class="mono" style="color:var(--accent-strong); font-weight:600;">97.0% Top-1</td>
                                 <td>15 deg rotate + 85% crop + 0.75x dark + JPEG Q75</td>
                             </tr>
                             <tr>
-                                <td><a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/quality_gate.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link">Optical Quality Gate Pass Rate &nearr;</a></td>
+                                <td><a href="https://github.com/karthik1647/follica/blob/main/backend/app/services/quality_gate.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link">Optical Quality Gate Pass Rate &nearr;</a></td>
                                 <td class="mono">95.9% (1151/1200)</td>
                                 <td>Rejects 49 severely blurred/washed frames</td>
                             </tr>
                             <tr>
-                                <td><a href="https://github.com/karthik1647/follica/tree/feat/mobilenetv4-onnx-clinical-triage/backend/tests" target="_blank" rel="noopener noreferrer" class="inline-ext-link">Automated Pytest</a> + <a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/scripts/test_real_life_expectations.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link">20 Personas &nearr;</a></td>
+                                <td><a href="https://github.com/karthik1647/follica/tree/main/backend/tests" target="_blank" rel="noopener noreferrer" class="inline-ext-link">Automated Pytest</a> + <a href="https://github.com/karthik1647/follica/blob/main/scripts/test_real_life_expectations.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link">20 Personas &nearr;</a></td>
                                 <td class="mono">114 pytest + 20/20</td>
                                 <td>Zero prescription or diagnostic leakage</td>
                             </tr>
@@ -2641,8 +2641,8 @@
                     <div class="rationale-box" style="margin-top:14px; border-left-color:var(--status-mod);">
                         <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">Academic Transparency &amp; Known Limitations</strong>
                         1. <strong>Dataset Cross-Split Caveat:</strong> Near-100% clean test accuracy partially reflects pre-augmented image similarity in the <a href="https://www.kaggle.com/datasets/sundarannamalai/hair-diseases" target="_blank" rel="noopener noreferrer" class="inline-ext-link">public Kaggle Hair Diseases benchmark &nearr;</a>; real-world smartphone captures exhibit lower confidence, which is why our <span class="mono">0.65</span> server-side Confidence Gate is strictly enforced.<br>
-                        2. <strong>Provisional CV Thresholds:</strong> Classical CV sub-score formulas and SDASI/SALT severity brackets (<a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/docs/thresholds.md" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">backend/docs/thresholds.md &nearr;</a>) are engineering heuristics awaiting dermatologist-annotated clinical calibration.<br>
-                        3. <strong>Non-Diagnostic Scope:</strong> Follica surfaces pattern similarities and triage urgency (<a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/docs/privacy.md" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">privacy.md &nearr;</a>); definitive diagnosis requires polarized dermoscopy or biopsy by a certified dermatologist.
+                        2. <strong>Provisional CV Thresholds:</strong> Classical CV sub-score formulas and SDASI/SALT severity brackets (<a href="https://github.com/karthik1647/follica/blob/main/backend/docs/thresholds.md" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">backend/docs/thresholds.md &nearr;</a>) are engineering heuristics awaiting dermatologist-annotated clinical calibration.<br>
+                        3. <strong>Non-Diagnostic Scope:</strong> Follica surfaces pattern similarities and triage urgency (<a href="https://github.com/karthik1647/follica/blob/main/backend/docs/privacy.md" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">privacy.md &nearr;</a>); definitive diagnosis requires polarized dermoscopy or biopsy by a certified dermatologist.
                     </div>
                 </div>
             </div>
@@ -2780,27 +2780,27 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td><a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/quality_gate.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">Laplacian Focus &nearr;</a></td>
+                                <td><a href="https://github.com/karthik1647/follica/blob/main/backend/app/services/quality_gate.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">Laplacian Focus &nearr;</a></td>
                                 <td class="mono">8x8 patch-max Var &ge; 60.0</td>
                                 <td>Rejects motion &amp; out-of-focus blur</td>
                             </tr>
                             <tr>
-                                <td><a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/quality_gate.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">Rec.601 Luminance &nearr;</a></td>
+                                <td><a href="https://github.com/karthik1647/follica/blob/main/backend/app/services/quality_gate.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">Rec.601 Luminance &nearr;</a></td>
                                 <td class="mono">35.0 &le; Y_mean &le; 225.0</td>
                                 <td>Rejects underexposure &amp; blowout</td>
                             </tr>
                             <tr>
-                                <td><a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/quality_gate.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">HSV Flash Glare &nearr;</a></td>
+                                <td><a href="https://github.com/karthik1647/follica/blob/main/backend/app/services/quality_gate.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">HSV Flash Glare &nearr;</a></td>
                                 <td class="mono">Specular Area &le; 15.0%</td>
                                 <td>Rejects flash-hotspot false dandruff</td>
                             </tr>
                             <tr>
-                                <td><a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/quality_gate.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">Spatial Envelope &nearr;</a></td>
+                                <td><a href="https://github.com/karthik1647/follica/blob/main/backend/app/services/quality_gate.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">Spatial Envelope &nearr;</a></td>
                                 <td class="mono">&ge; 200 x 200 pixels</td>
                                 <td>Rejects low-res thumbnails</td>
                             </tr>
                             <tr>
-                                <td><a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/docs/privacy.md" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">Ephemeral RAM &nearr;</a></td>
+                                <td><a href="https://github.com/karthik1647/follica/blob/main/backend/docs/privacy.md" target="_blank" rel="noopener noreferrer" class="inline-ext-link mono">Ephemeral RAM &nearr;</a></td>
                                 <td class="mono">Zero disk / cloud persistence</td>
                                 <td>Protects patient biometric privacy</td>
                             </tr>
@@ -2814,8 +2814,8 @@
 
                     <div class="ext-links-row" style="margin-top:12px;">
                         <button type="button" class="btn-primary" style="padding:7px 14px; font-size:0.8rem;" onclick="switchPrimaryView('triage'); showCaptureStudio();">Test Optical Gateway Live &rarr;</button>
-                        <a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/quality_gate.py" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">quality_gate.py &nearr;</a>
-                        <a href="https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/docs/thresholds.md" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">thresholds.md &nearr;</a>
+                        <a href="https://github.com/karthik1647/follica/blob/main/backend/app/services/quality_gate.py" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">quality_gate.py &nearr;</a>
+                        <a href="https://github.com/karthik1647/follica/blob/main/backend/docs/thresholds.md" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">thresholds.md &nearr;</a>
                     </div>
                 </div>
             </div>
@@ -2930,7 +2930,8 @@
                                     4. Launch Follica — only <span class="mono">CAMERA</span> permission is requested (storage, location, mic, and contacts are blocked at manifest level). Works offline immediately with built-in clinical specimens!
                                 </div>
                                 <div class="ext-links-row" style="margin-top:9px;">
-                                    <a href="https://github.com/karthik1647/follica/releases/download/v1.0.0-apk/Follica-Clinical-Triage-v1.0.0.apk" target="_blank" rel="noopener noreferrer" class="ext-pill">Download Signed APK (v1.0.0) &darr;</a>
+                                    <a href="/static/Follica-Clinical-Triage-v1.0.0.apk" download="Follica-Clinical-Triage-v1.0.0.apk" class="ext-pill" style="border-color:var(--accent-strong); color:var(--accent-strong); font-weight:700;">Direct LAN Download (.apk) &darr;</a>
+                <a href="https://github.com/karthik1647/follica/releases/download/v1.0.0-apk/Follica-Clinical-Triage-v1.0.0.apk" target="_blank" rel="noopener noreferrer" class="ext-pill">GitHub Release APK (v1.0.0) &darr;</a>
                                     <a href="https://github.com/karthik1647/follica/releases/tag/v1.0.0-apk" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">GitHub Release Page &nearr;</a>
                                     <a href="https://github.com/karthik1647/follica/actions/workflows/build-apk.yml" target="_blank" rel="noopener noreferrer" class="ext-pill secondary-link">CI Build Pipeline &nearr;</a>
                                 </div>
@@ -3597,7 +3598,7 @@
 
             const qm = lastQualityMetrics || {};
             const srpScore = data.survey_risk_profile ? (data.survey_risk_profile.risk_score.toFixed(1) + ' / 100 (' + data.survey_risk_profile.risk_band + ')') : 'N/A';
-            const ghBase = 'https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/backend/app/services/';
+            const ghBase = 'https://github.com/karthik1647/follica/blob/main/backend/app/services/';
             document.getElementById('inspector-tbody').innerHTML = `
                 <tr><td class="mono">Stage 00 · Optical Gate</td><td><a href="${ghBase}quality_gate.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link">quality_gate.py &nearr;</a> (2D Laplacian &ge; 60.0)</td><td class="mono">${qm.blur_score ?? 'Passed'}</td></tr>
                 <tr><td class="mono">Stage 00 · Luminance</td><td><a href="${ghBase}quality_gate.py" target="_blank" rel="noopener noreferrer" class="inline-ext-link">quality_gate.py &nearr;</a> (Rec.601 35 - 225)</td><td class="mono">${qm.brightness_score ?? '--'} (Glare: ${qm.flash_glare_ratio ?? 0}%)</td></tr>

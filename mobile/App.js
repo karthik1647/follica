@@ -25,7 +25,7 @@ const UNIVERSAL_DISCLAIMER =
   "This assessment is for informational and educational purposes only and suggests potential scalp care routines. It does not constitute medical diagnosis, formal medical advice, or treatment. If symptoms persist, cause discomfort, or worsen, please consult a certified dermatologist.";
 
 const GH_BLOB =
-  "https://github.com/karthik1647/follica/blob/feat/mobilenetv4-onnx-clinical-triage/";
+  "https://github.com/karthik1647/follica/blob/main/";
 
 const PAPERS_DATA = [
   {
