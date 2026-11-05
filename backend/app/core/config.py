@@ -47,7 +47,14 @@ class Settings(BaseModel):
     # Model Architecture Selection:
     # Supported: "mobilenetv4" (default) or "efficientnet_b0" (fallback)
     MODEL_ARCHITECTURE: str = "mobilenetv4"
-    MODEL_WEIGHTS_PATH: str = os.getenv("FOLLICA_MODEL_PATH", "models/follica_mobilenetv4.onnx")
+    MODEL_WEIGHTS_PATH: str = os.getenv(
+        "FOLLICA_MODEL_PATH",
+        os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+            "models",
+            "follica_mobilenetv4.onnx",
+        ),
+    )
 
     # Image Quality Pre-Inference Gate Configuration:
     # Note: These optical gating thresholds are provisional / uncalibrated baseline thresholds

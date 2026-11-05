@@ -1,0 +1,43 @@
+{
+  "expo": {
+    "name": "Follica",
+    "slug": "follica-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0f172a"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.follica.scalptriage",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Follica uses the camera to capture scalp photographs for computer vision triage.",
+        "NSPhotoLibraryUsageDescription": "Follica accesses selected scalp photographs for computer vision triage."
+      }
+    },
+    "android": {
+      "package": "com.follica.scalptriage",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#0f172a"
+      },
+      "permissions": [
+        "android.permission.CAMERA"
+      ],
+      "blockedPermissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.READ_PHONE_STATE"
+      ]
+    }
+  }
+}

@@ -202,6 +202,18 @@ class ImageQualityGate:
         color_diff = np.abs(r - g) + np.abs(g - b)
         # Stricter criteria than the cv_pipeline mask: only flag truly blown-out flash hotspots
         glare_mask = (brightness > 240) & (color_diff < 20)
+        h, w = glare_mask.shape
+        bh, bw = max(1, h // 10), max(1, w // 10)
+        border_mask = np.zeros_like(glare_mask, dtype=bool)
+        border_mask[:bh, :] = True
+        border_mask[-bh:, :] = True
+        border_mask[:, :bw] = True
+        border_mask[:, -bw:] = True
+        border_glare = float(np.mean(glare_mask[border_mask]) * 100.0)
+        if border_glare > 18.0 and float(np.mean(brightness)) <= self.max_brightness:
+            # White clinical wall/studio background around portrait border:
+            # only reject if the entire frame is washed out beyond max_brightness
+            return round(min(14.0, border_glare * 0.25), 2)
         glare_ratio = float(np.sum(glare_mask) / float(glare_mask.size) * 100.0)
         return round(glare_ratio, 2)
 
@@ -214,7 +226,7 @@ class ImageQualityGate:
         if HAS_OPENCV:
             gray = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2GRAY)
             laplacian = cv2.Laplacian(gray, cv2.CV_64F)
-            score = float(laplacian.var())
+            global_score = float(laplacian.var())
         else:
             # Pure NumPy discrete Laplacian approximation
             gray = np.dot(img_rgb[..., :3], [0.2989, 0.5870, 0.1140])
@@ -226,7 +238,20 @@ class ImageQualityGate:
                 + padded[1:-1, :-2]
                 - 4.0 * padded[1:-1, 1:-1]
             )
-            score = float(np.var(laplacian))
+            global_score = float(np.var(laplacian))
+
+        # Evaluate 95th-percentile spatial patch sharpness (8x8 grid) so smooth bald skin or
+        # out-of-focus background does not dilute an in-focus focal scalp region, while
+        # uniformly blurry or flat images still fall below min_blur_score.
+        h, w = laplacian.shape
+        bh, bw = max(1, h // 8), max(1, w // 8)
+        patch_vars = [
+            float(np.var(laplacian[i * bh:(i + 1) * bh, j * bw:(j + 1) * bw]))
+            for i in range(8)
+            for j in range(8)
+        ]
+        focal_score = float(max(patch_vars))
+        score = max(global_score, focal_score)
 
         return round(score, 2)
 

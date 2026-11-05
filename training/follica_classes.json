@@ -1,0 +1,17 @@
+{
+  "classes": [
+    "Alopecia Areata",
+    "Contact Dermatitis",
+    "Folliculitis",
+    "Head Lice",
+    "Lichen Planus",
+    "Male Pattern Baldness",
+    "Psoriasis",
+    "Seborrheic Dermatitis",
+    "Telogen Effluvium",
+    "Tinea Capitis"
+  ],
+  "architecture": "mobilenetv4_conv_small",
+  "test_accuracy": 100.0,
+  "val_accuracy": 100.0
+}

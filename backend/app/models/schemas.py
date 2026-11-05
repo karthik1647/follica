@@ -325,6 +325,68 @@ class RiskIndicators(BaseModel):
     )
 
 
+class TriggerFactor(BaseModel):
+    """Single condition-specific risk or trigger factor identified from survey intake."""
+    name: str = Field(..., description="Short display name of the trigger factor")
+    category: Literal[
+        "environmental", "lifestyle", "metabolic", "hormonal",
+        "mechanical", "nutritional", "genetic", "microbial"
+    ] = Field(..., description="Physiological domain")
+    modifiable: bool = Field(..., description="True if directly addressable via lifestyle/environment")
+    severity_contribution: Literal["high", "moderate", "low"] = Field(default="moderate")
+    rationale: str = Field(..., description="Mechanism linking this factor to the identified pattern")
+    action: str = Field(..., description="Concrete non-diagnostic action step")
+
+
+class InterventionStep(BaseModel):
+    """Ordered action item in the post-identification survey priority queue."""
+    priority: int = Field(..., ge=1)
+    title: str
+    detail: str
+    expected_timeline: str
+
+
+class SurveyRiskProfile(BaseModel):
+    """Post-identification survey pipeline output (Layer 2)."""
+    condition: str
+    risk_score: float = Field(..., ge=0.0, le=100.0)
+    risk_band: Literal["low", "moderate", "elevated", "high"]
+    modifiable_count: int = Field(default=0, ge=0)
+    non_modifiable_count: int = Field(default=0, ge=0)
+    top_triggers: List[TriggerFactor] = Field(default_factory=list)
+    intervention_queue: List[InterventionStep] = Field(default_factory=list)
+    non_modifiable_factors: List[str] = Field(default_factory=list)
+    summary: str = ""
+    disclaimer: str = Field(default=UNIVERSAL_DISCLAIMER)
+
+
+class SurveySingleRequest(BaseModel):
+    """Standalone post-diagnosis survey pipeline request."""
+    condition: str = Field(..., description="Confirmed or suspected condition pattern string")
+    context: SymptomContext = Field(default_factory=SymptomContext)
+
+
+class SurveyCohortItem(BaseModel):
+    """Single record in a collected survey dataset."""
+    condition: Optional[str] = Field(default=None)
+    context: SymptomContext = Field(default_factory=SymptomContext)
+
+
+class SurveyCohortRequest(BaseModel):
+    """Batch survey cohort analytics request."""
+    records: List[SurveyCohortItem] = Field(default_factory=list)
+
+
+class SurveyCohortSummary(BaseModel):
+    """Population-level summary of collected survey records."""
+    total_records: int
+    mean_risk_score: float
+    risk_band_distribution: Dict[str, int]
+    top_population_triggers: List[Dict[str, Any]]
+    condition_breakdown: Dict[str, Dict[str, Any]]
+    disclaimer: str = Field(default=UNIVERSAL_DISCLAIMER)
+
+
 class ConsultationReferral(BaseModel):
     """Generic clinical escalation data model."""
     required: bool = Field(default=False, description="Whether consultation with a dermatologist is recommended")
@@ -406,6 +468,10 @@ class AnalysisResponse(BaseModel):
     risk_indicators: Optional[RiskIndicators] = Field(
         default=None,
         description="Questionnaire-derived self-reported risk indicators (not clinically validated; separate from image-derived SHS)"
+    )
+    survey_risk_profile: Optional[SurveyRiskProfile] = Field(
+        default=None,
+        description="Post-identification survey trigger ranking and priority intervention queue (separate from image-derived SHS)"
     )
     analysis_timestamp: str = Field(..., description="ISO 8601 UTC timestamp of analysis")
 

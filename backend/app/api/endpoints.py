@@ -23,11 +23,16 @@ from app.models.schemas import (
     ConsentRequest,
     ConsentResponse,
     SystemStatusResponse,
-    ProgressComparisonResponse
+    ProgressComparisonResponse,
+    SurveyRiskProfile,
+    SurveySingleRequest,
+    SurveyCohortRequest,
+    SurveyCohortSummary,
 )
 from app.services.classifier_service import classifier_service
 from app.services.cv_pipeline import cv_pipeline, ImageDecodeError
 from app.services.triage_engine import triage_engine
+from app.services.survey_risk_engine import survey_risk_engine
 from app.services.pdf_service import pdf_service
 from app.services.quality_gate import quality_gate
 from app.services.registration import registration_service
@@ -292,6 +297,37 @@ async def analyze_scalp(
     if not sens_items:
         sens_items = ["painless"]
 
+    # Normalize common form and mobile aliases
+    zone_norm = primary_concern_zone.lower()
+    if "diffuse" in zone_norm:
+        primary_concern_zone = "diffuse_all_over"
+    elif "patchy" in zone_norm or "spots" in zone_norm:
+        primary_concern_zone = "patchy_spots"
+    elif "hairline" in zone_norm or "temple" in zone_norm:
+        primary_concern_zone = "hairline_temples"
+    elif "parting" in zone_norm:
+        primary_concern_zone = "central_parting"
+
+    pull_norm = hair_pull_test.lower()
+    if any(x in pull_norm for x in ["over_5", "positive", "acute_shed", ">5"]):
+        hair_pull_test = "positive_over_5"
+    elif any(x in pull_norm for x in ["3_5", "3-5", "borderline"]):
+        hair_pull_test = "borderline_3_5"
+
+    flake_norm = flake_type.lower()
+    if any(x in flake_norm for x in ["plaque", "crust"]):
+        flake_type = "plaque_crusty"
+    elif any(x in flake_norm for x in ["greasy", "yellow"]):
+        flake_type = "greasy_yellow_thick"
+    elif any(x in flake_norm for x in ["dry", "white", "fine"]):
+        flake_type = "dry_white_fine"
+
+    water_norm = water_environment.lower()
+    if any(x in water_norm for x in ["hard", "borewell"]):
+        water_environment = "hard_borewell"
+    elif any(x in water_norm for x in ["treated", "soft", "tap"]):
+        water_environment = "treated_tap"
+
     # Assemble comprehensive symptom context
     valid_zones = ["routine_healthy_check", "crown_vertex", "hairline_temples", "central_parting", "diffuse_all_over", "patchy_spots"]
     
@@ -306,6 +342,9 @@ async def analyze_scalp(
         dur_m_final = 1
         dur_w_final = 4
 
+    # Ignore 'painless' when searching for inflammatory descriptors
+    active_pain_symptoms = [s.lower() for s in sens_items if s.lower() != "painless"]
+
     context = SymptomContext(
         age_group=age_group if age_group in ["under_18", "18_25", "26_35", "36_50", "over_50"] else "18_25",
         biological_sex=biological_sex if biological_sex in ["male", "female", "other"] else "male",
@@ -313,8 +352,8 @@ async def analyze_scalp(
         sensation=",".join(sens_items),
         sensations=sens_items,
         itching=itching or ("itching" in sens_items or "pruritus" in sens_items),
-        burning_or_pain=burning_or_pain or any(s in sens_items for s in ["burning", "burning_or_tender", "painful", "painful_bumps", "tenderness"]),
-        scalp_pain_trichodynia=scalp_pain_trichodynia or ("burning_or_tender" in sens_items or "tenderness" in sens_items),
+        burning_or_pain=burning_or_pain or any(any(w in s for w in ["burning", "tender", "painful", "bump", "pustule"]) for s in active_pain_symptoms),
+        scalp_pain_trichodynia=scalp_pain_trichodynia or any(any(w in s for w in ["tender", "trichodynia", "burning"]) for s in active_pain_symptoms),
         water_environment=water_environment if water_environment in ["hard_borewell", "treated_tap", "recent_relocation", "normal"] else "normal",
         hard_water_exposure=hard_water_exposure or (water_environment == "hard_borewell"),
         pollution_exposure=pollution_exposure if pollution_exposure in ["low_rural", "moderate_suburban", "high_metro_industrial", "high_campus_dust"] else "high_campus_dust",
@@ -429,3 +468,21 @@ async def export_clinical_pdf(
             "Content-Disposition": f"attachment; filename=follica_clinical_summary_{patient_ref_id}.pdf"
         }
     )
+@router.post("/survey/analyze", response_model=SurveyRiskProfile, tags=["Post-Diagnosis Survey Pipeline"])
+async def evaluate_post_diagnosis_survey(payload: SurveySingleRequest):
+    """
+    Standalone Layer-2 Survey Pipeline endpoint.
+    Given a confirmed or suspected scalp condition and intake survey answers,
+    computes condition-conditioned trigger rankings and a prioritised action queue.
+    """
+    return survey_risk_engine.analyze(condition=payload.condition, context=payload.context)
+
+
+@router.post("/survey/cohort-summary", response_model=SurveyCohortSummary, tags=["Post-Diagnosis Survey Pipeline"])
+async def evaluate_survey_cohort(payload: SurveyCohortRequest):
+    """
+    Batch analytics endpoint for collected survey datasets.
+    Aggregates modifiable trigger prevalence, risk band distributions, and mean
+    lifestyle risk load grouped by scalp condition.
+    """
+    return survey_risk_engine.analyze_cohort(payload)

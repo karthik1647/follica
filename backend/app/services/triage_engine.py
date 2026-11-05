@@ -31,11 +31,17 @@ from app.core.constants import (
     CONDITION_SCALP_PSORIASIS,
     CONDITION_ANDROGENETIC_ALOPECIA,
     CONDITION_UNVERIFIED_MONITORED,
+    CONDITION_CONTACT_DERMATITIS,
+    CONDITION_HEAD_LICE,
+    CONDITION_LICHEN_PLANUS,
+    CONDITION_TELOGEN_EFFLUVIUM,
+    CONDITION_TINEA_CAPITIS,
     TRIAGE_LEVEL_1_MINOR,
     TRIAGE_LEVEL_2_MONITORED,
     TRIAGE_LEVEL_3_ESCALATION,
     INGREDIENT_GUIDES
 )
+from app.services.survey_risk_engine import survey_risk_engine
 from app.models.schemas import (
     SymptomContext,
     SubScores,
@@ -320,6 +326,69 @@ class TriageEngine:
             note="Self-reported, not clinically validated. Kept separate from image-derived Scalp Health Score."
         )
 
+    # Clinical Severity Benchmark Brackets: (flake_range, redness_range, sebum_range, density_range)
+    # Derived from SDASI (Seborrheic Dermatitis Area & Severity Index, 0-3 ordinal grading per sign:
+    #   Grade 0 Absent=21-25, Grade 1 Mild=16-21, Grade 2 Moderate=10-16, Grade 3 Severe=4-11)
+    # and SALT / Sinclair Hair Density Scale (S0 Normal=20-25, S1 Mild=14-20, S2-S3 Patchy/Thin=5-14).
+    # Affine mapping preserves continuous per-photo CV variance instead of flat-clipping to constants.
+    # PROVISIONAL / UNCALIBRATED engineering benchmarks.
+    CONDITION_BENCHMARK_BRACKETS = {
+        CONDITION_LICHEN_PLANUS: ((9.0, 15.5), (6.0, 12.5), (13.0, 19.0), (6.5, 14.0)),
+        CONDITION_SCALP_PSORIASIS: ((4.5, 11.5), (6.5, 13.0), (12.0, 18.0), (14.5, 21.5)),
+        CONDITION_FOLLICULITIS: ((12.0, 18.0), (6.5, 13.0), (9.5, 15.5), (15.0, 21.5)),
+        CONDITION_TINEA_CAPITIS: ((7.0, 13.5), (8.5, 14.5), (12.5, 18.5), (7.5, 15.0)),
+        CONDITION_SEBORRHEIC_DERMATITIS: ((8.0, 14.5), (10.5, 16.5), (7.5, 14.0), (15.5, 22.0)),
+        CONDITION_CONTACT_DERMATITIS: ((12.5, 18.5), (7.0, 13.5), (11.5, 18.0), (17.0, 23.0)),
+        CONDITION_ALOPECIA_AREATA: ((18.5, 23.5), (17.5, 22.5), (18.0, 23.5), (5.0, 12.5)),
+        CONDITION_ANDROGENETIC_ALOPECIA: ((18.5, 24.0), (18.5, 24.0), (13.0, 19.0), (7.0, 14.5)),
+        CONDITION_TELOGEN_EFFLUVIUM: ((19.0, 24.0), (18.0, 23.5), (16.0, 22.0), (10.0, 16.5)),
+        CONDITION_HEAD_LICE: ((11.0, 16.5), (11.5, 17.5), (16.0, 21.5), (18.0, 23.5)),
+        CONDITION_DRY_SCALP: ((13.0, 19.0), (17.5, 22.5), (15.0, 20.5), (19.0, 24.0)),
+    }
+
+    @classmethod
+    def _apply_condition_score_anchors(
+        cls,
+        condition: str,
+        sub_scores: SubScores,
+        confidence: float
+    ) -> SubScores:
+        """
+        Maps raw [0, 25] optical CV sub-scores into SDASI / SALT clinical severity
+        brackets via confidence-weighted affine compression when a specific condition
+        is identified above the clinical confidence gate (>= 0.65).
+
+        Properties:
+        1. CONDITION_NORMAL and gated (< 0.65) predictions pass through untouched.
+        2. Preserves strict monotonicity and photo-to-photo variation: two different
+           photos of the same condition with different raw micro-features yield
+           distinct calibrated scores rather than collapsing onto an identical cap.
+        3. Never inflates an already-low raw CV score above its raw measurement.
+        """
+        if confidence < settings.CONFIDENCE_GATE_THRESHOLD:
+            return sub_scores
+        brackets = cls.CONDITION_BENCHMARK_BRACKETS.get(condition)
+        if brackets is None:
+            return sub_scores
+
+        import copy
+        s = copy.copy(sub_scores)
+        # Smooth confidence weight in [0.65, 1.0] -> [0.70, 1.0]
+        weight = min(1.0, 0.70 + ((confidence - settings.CONFIDENCE_GATE_THRESHOLD) / 0.35) * 0.30)
+
+        def _map_axis(raw_val: float, bounds: tuple[float, float]) -> float:
+            lo, hi = bounds
+            mapped = lo + (raw_val / 25.0) * (hi - lo)
+            blended = raw_val * (1.0 - weight) + mapped * weight
+            return round(float(max(0.0, min(raw_val, blended))), 2)
+
+        f_b, r_b, s_b, d_b = brackets
+        s.flake_score = _map_axis(s.flake_score, f_b)
+        s.redness_score = _map_axis(s.redness_score, r_b)
+        s.sebum_score = _map_axis(s.sebum_score, s_b)
+        s.density_score = _map_axis(s.density_score, d_b)
+        return s
+
     @classmethod
     def evaluate(
         cls,
@@ -332,6 +401,16 @@ class TriageEngine:
         Main triage evaluation method with multi-factor correlation synthesis.
         Supports healthy routine baseline checkups as well as active clinical triage.
         """
+        # -------------------------------------------------------------------
+        # 0. Condition-Aware Score Calibration
+        #    CV scores are optical proxies; a detected condition anchors them
+        #    to clinically plausible ranges so that diseased scalps cannot
+        #    display 100/100.  Anchors derive from SDASI severity brackets:
+        #      Mild SD=1-9, Moderate=10-26, Severe>=27 (SDASI 0-48 scale).
+        #    All adjustments are provisional / uncalibrated heuristics.
+        # -------------------------------------------------------------------
+        sub_scores = cls._apply_condition_score_anchors(raw_condition, sub_scores, confidence)
+
         total_shs = round(
             sub_scores.flake_score +
             sub_scores.redness_score +
@@ -385,12 +464,20 @@ class TriageEngine:
         # 2. Confident Prediction Triage Evaluation (Confidence >= 0.65)
         # -------------------------------------------------------------------
         else:
+            notes_lower = (context.symptom_notes or "").lower()
+            has_red_flag_lesion = any(
+                kw in notes_lower
+                for kw in ["bleed", "sore", "ulcer", "oozing", "open wound", "not heal", "won't heal"]
+            )
             is_level_3_condition = raw_condition in [
                 CONDITION_ALOPECIA_AREATA,
                 CONDITION_FOLLICULITIS,
-                CONDITION_SCALP_PSORIASIS
+                CONDITION_SCALP_PSORIASIS,
+                CONDITION_HEAD_LICE,
+                CONDITION_LICHEN_PLANUS,
+                CONDITION_TINEA_CAPITIS,
             ]
-            has_severe_pain = context.burning_or_pain or context.scalp_pain_trichodynia
+            has_severe_pain = context.burning_or_pain or context.scalp_pain_trichodynia or has_red_flag_lesion
             has_severe_erythema = sub_scores.redness_score < 8.0
 
             if is_level_3_condition or has_severe_pain or has_severe_erythema:
@@ -440,6 +527,25 @@ class TriageEngine:
                     )
                 )
 
+            elif raw_condition in [CONDITION_CONTACT_DERMATITIS, CONDITION_TELOGEN_EFFLUVIUM]:
+                triage_level = TRIAGE_LEVEL_2_MONITORED
+                triage_reason = (
+                    "Visual patterns suggest a condition that is often self-limiting once the trigger is "
+                    "identified. Follow the guidance, track progress, and seek evaluation if it persists."
+                )
+                guide = INGREDIENT_GUIDES[raw_condition]
+                ingredients = [
+                    IngredientRecommendation(**item) for item in guide.get("ingredients", [])
+                ]
+                lifestyle = guide.get("lifestyle", [])
+                referral = ConsultationReferral(
+                    required=False,
+                    urgency="routine",
+                    addressed_to="For your treating physician / dermatologist",
+                    search_url=GENERIC_DERMATOLOGIST_SEARCH_URL,
+                    clinical_hand_off_notes=f"Visual analysis suggests {raw_condition}. Review if unresolved after 2-4 weeks."
+                )
+
             elif raw_condition == CONDITION_SEBORRHEIC_DERMATITIS or context.flake_type == "greasy_yellow_thick" or (context.itching and (context.duration_months >= 1 or context.duration_weeks > 4)):
                 triage_level = TRIAGE_LEVEL_2_MONITORED
 
@@ -460,7 +566,7 @@ class TriageEngine:
                     clinical_hand_off_notes="Monitored active ingredient regimen in progress. Review if unresolved after 4 weeks."
                 )
 
-            elif raw_condition == CONDITION_NORMAL or (total_shs >= 75.0 and not context.itching and not context.burning_or_pain and context.flake_type == "none"):
+            elif raw_condition == CONDITION_NORMAL or (raw_condition == CONDITION_DRY_SCALP and total_shs >= 75.0 and not context.itching and not context.burning_or_pain and context.flake_type == "none"):
                 triage_level = TRIAGE_LEVEL_1_MINOR
                 final_condition = CONDITION_NORMAL
                 triage_reason = (
@@ -505,9 +611,14 @@ class TriageEngine:
             lifestyle_enriched.append(
                 "Support the gut-skin-hair axis: prioritize dietary fiber, fermented foods, and hydration to optimize micronutrient (iron, zinc, amino acid) bioavailability."
             )
-        if context.hormonal_profile in ["thyroid_dysfunction", "pcos_irregular_cycles", "insulin_resistance"] or context.metabolic_energy in ["chronic_sluggish_fatigue", "sudden_weight_shift"]:
+        if (
+            context.hormonal_profile in ["thyroid_dysfunction", "pcos_irregular_cycles", "insulin_resistance"]
+            or context.metabolic_energy in ["chronic_sluggish_fatigue", "sudden_weight_shift"]
+            or context.hair_pull_test in ["borderline_3_5", "positive_over_5"]
+            or context.shedding_pattern == "sudden_acute"
+        ):
             lifestyle_enriched.append(
-                "Discuss targeted blood work (TSH, Free T3/T4, Serum Ferritin, Vitamin D3, Fasting Glucose) with your physician to evaluate systemic metabolic drivers."
+                "Discuss targeted blood work (Serum Ferritin, Vitamin D3, TSH, Fasting Glucose) with your physician to evaluate systemic metabolic or acute effluvium drivers."
             )
 
         # Age group guardian advisory
@@ -563,6 +674,7 @@ class TriageEngine:
             consultation_referral=referral,
             disclaimer=UNIVERSAL_DISCLAIMER,
             risk_indicators=risk_indicators,
+            survey_risk_profile=survey_risk_engine.analyze(final_condition, context),
             analysis_timestamp=datetime.now(timezone.utc).isoformat()
         )
 

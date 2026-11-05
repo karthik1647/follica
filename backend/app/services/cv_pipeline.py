@@ -406,6 +406,17 @@ class ScalpCVPipeline:
             excess_erythema = red_excess - 34.0
             score = 25.0 - (excess_erythema * 0.60)
 
+        # Focal patch erythema contrast (provisional / uncalibrated):
+        # Uniform skin/warm-lamp frames have p90-p40 <= 6.0, whereas localized
+        # erythematous lesions (papules, plaques, lichenoid patches) create spatial
+        # red-excess contrast > 12.0 against surrounding uninvolved scalp skin.
+        pixel_excess = r_skin.astype(float) - ((g_skin.astype(float) + b_skin.astype(float)) / 2.0)
+        if pixel_excess.size >= 100:
+            focal_erythema_delta = float(np.percentile(pixel_excess, 90) - np.percentile(pixel_excess, 40))
+            if focal_erythema_delta > 12.0:
+                focal_penalty = min(10.0, (focal_erythema_delta - 12.0) * 0.45)
+                score -= focal_penalty
+
         final_score = float(np.clip(round(score, 2), 0.0, 25.0))
 
         # Check for global red cast ambiguity (warm lamp vs widespread inflammation)
@@ -539,7 +550,24 @@ class ScalpCVPipeline:
                 return score
 
             # Linear mapping: 50% fiber coverage in frame -> full score 25.0
-            score = (coverage_ratio / 0.50) * 25.0
+            score = min(25.0, (coverage_ratio / 0.50) * 25.0)
+
+            # Focal bare-patch void penalty (provisional / uncalibrated):
+            # Detects localized bald patches (e.g. patchy/scarring alopecia) surrounded by
+            # dense border hair that would otherwise push global coverage >= 50% (25/25).
+            if coverage_ratio >= 0.22:
+                skin_mask_full = ScalpCVPipeline._create_scalp_skin_mask(img_rgb)
+                bare_tiles = 0
+                for gy in range(64, 448, 64):
+                    for gx in range(64, 448, 64):
+                        tile_h = float(np.mean(hair_clean[gy:gy+64, gx:gx+64] > 0))
+                        tile_s = float(np.mean(skin_mask_full[gy:gy+64, gx:gx+64]))
+                        if tile_h < 0.04 and tile_s > 0.60:
+                            bare_tiles += 1
+                if bare_tiles >= 2:
+                    void_penalty = min(14.0, bare_tiles * 1.6)
+                    score = max(4.0, score - void_penalty)
+
             final_score = float(np.clip(round(score, 2), 0.0, 25.0))
             note = (
                 f"Hair coverage (indicative): {coverage_ratio * 100:.1f}% estimated fiber area. "
