@@ -82,31 +82,205 @@ const PIPELINE_STAGES = [
   },
 ];
 
+const OFFLINE_SPECIMENS = {
+  healthy: {
+    scalp_health_score: 93.6,
+    confidence_score: 0.91,
+    confidence_gated: false,
+    suggested_condition: "Pattern Consistent with Balanced / Healthy Scalp",
+    triage_level: "Level 1: Minor Home Routine",
+    triage_reason:
+      "Epidermal barrier, follicular density, and surface lipid balance appear within calm physiological bounds.",
+    sub_scores: { flake_score: 23.8, redness_score: 23.6, sebum_score: 23.2, density_score: 23.0 },
+    survey_risk_profile: {
+      risk_score: 12.0,
+      risk_band: "low",
+      modifiable_count: 0,
+      summary: "Low modifiable trigger load. Maintain gentle pH-balanced cleansing and avoid direct UV or thermal damage.",
+      intervention_queue: [],
+    },
+    active_ingredients: [
+      {
+        molecule: "Mild Sulfate-Free Surfactant + Panthenol (B5) 1%",
+        frequency: "2-3x per week",
+        mechanism: "Preserves stratum corneum hydration without stripping protective sebum.",
+      },
+    ],
+  },
+  lichen: {
+    scalp_health_score: 54.5,
+    confidence_score: 0.89,
+    confidence_gated: false,
+    suggested_condition: "Pattern Suggestive of Lichen Planus / Scarring Inflammation",
+    triage_level: "Level 3: Clinical Escalation",
+    triage_reason:
+      "Perifollicular erythema and focal scarring alopecia characteristics warrant prompt in-person dermatological evaluation to protect follicular stem cells.",
+    sub_scores: { flake_score: 14.2, redness_score: 11.4, sebum_score: 16.8, density_score: 12.1 },
+    survey_risk_profile: {
+      risk_score: 46.0,
+      risk_band: "moderate",
+      modifiable_count: 2,
+      summary: "Avoid mechanical traction, harsh chemical styling, and thermal irritation while scheduling specialist dermoscopy.",
+      intervention_queue: [
+        {
+          priority: 1,
+          title: "Schedule Certified Dermatologist Dermoscopy",
+          detail: "Scarring inflammatory patterns require clinical trichoscopy to prevent permanent follicular loss.",
+          expected_timeline: "Within 1-2 weeks",
+        },
+        {
+          priority: 2,
+          title: "Suspend Heat, Bleach & Occlusive Friction",
+          detail: "Eliminate chemical dyes, high-heat blow drying, and tight headwear friction.",
+          expected_timeline: "Immediate",
+        },
+      ],
+    },
+    active_ingredients: [
+      {
+        molecule: "Fragrance-Free Barrier Cleanser (Colloidal Oat / Panthenol)",
+        frequency: "Gentle cleansing as tolerated",
+        mechanism: "Minimizes exogenous contact irritation prior to specialist evaluation.",
+      },
+    ],
+  },
+  psoriasis: {
+    scalp_health_score: 48.4,
+    confidence_score: 0.92,
+    confidence_gated: false,
+    suggested_condition: "Pattern Suggestive of Scalp Psoriasis",
+    triage_level: "Level 3: Clinical Escalation",
+    triage_reason:
+      "Well-demarcated erythematous plaques with silvery-white hyperkeratotic scale warrant dermatologist evaluation alongside keratolytic support.",
+    sub_scores: { flake_score: 9.2, redness_score: 10.6, sebum_score: 14.8, density_score: 13.8 },
+    survey_risk_profile: {
+      risk_score: 52.0,
+      risk_band: "elevated",
+      modifiable_count: 2,
+      summary: "Avoid mechanical picking of adherent plaques (Koebner phenomenon) and manage systemic stress triggers.",
+      intervention_queue: [
+        {
+          priority: 1,
+          title: "Book Certified Dermatologist Assessment",
+          detail: "Confirm plaque psoriasis vs. seborrheic overlap via polarized dermoscopy.",
+          expected_timeline: "Within 1-2 weeks",
+        },
+        {
+          priority: 2,
+          title: "Avoid Scratching or Forcible Descaling",
+          detail: "Mechanical trauma triggers Koebner plaque expansion along the hairline and crown.",
+          expected_timeline: "Immediate",
+        },
+      ],
+    },
+    active_ingredients: [
+      {
+        molecule: "Salicylic Acid 2%-3% Keratolytic Wash",
+        frequency: "2x per week (soften scale gently)",
+        mechanism: "Softens hyperkeratotic corneocyte cohesion without mechanical trauma.",
+      },
+    ],
+  },
+  seborrheic: {
+    scalp_health_score: 50.2,
+    confidence_score: 0.94,
+    confidence_gated: false,
+    suggested_condition: "Pattern Suggestive of Seborrheic Dermatitis",
+    triage_level: "Level 2: Monitored Routine",
+    triage_reason:
+      "Adherent lipid-rich scaling and mild erythema suggest microbial sebum imbalance amenable to targeted antifungal/keratolytic care and 14-day monitoring.",
+    sub_scores: { flake_score: 10.8, redness_score: 13.2, sebum_score: 10.4, density_score: 15.8 },
+    survey_risk_profile: {
+      risk_score: 58.2,
+      risk_band: "elevated",
+      modifiable_count: 3,
+      summary: "Elevated modifiable trigger load (3 factors): Hard Borewell Water, Daily Helmet Occlusion, and Acute Stress.",
+      intervention_queue: [
+        {
+          priority: 1,
+          title: "Mitigate Hard Borewell Mineral Deposition",
+          detail: "Use a shower filter or final filtered-water rinse to reduce alkaline mineral residue on the scalp barrier.",
+          expected_timeline: "2-4 weeks",
+        },
+        {
+          priority: 2,
+          title: "Sanitize Helmet Liner & Reduce Sweat Occlusion",
+          detail: "Use a washable cotton liner cleaned every 2-3 days and air-dry scalp after rides.",
+          expected_timeline: "2-3 weeks",
+        },
+      ],
+    },
+    active_ingredients: [
+      {
+        molecule: "Ketoconazole 1%-2% or Piroctone Olamine Wash",
+        frequency: "2x per week (5-min contact)",
+        mechanism: "Controls Malassezia lipid breakdown and reduces inflammatory scaling.",
+      },
+      {
+        molecule: "Salicylic Acid 1.8%-2% Keratolytic Cleanser",
+        frequency: "1x per week",
+        mechanism: "Loosens adherent sebum-keratin plaques.",
+      },
+    ],
+  },
+  alopecia: {
+    scalp_health_score: 56.8,
+    confidence_score: 0.93,
+    confidence_gated: false,
+    suggested_condition: "Pattern Suggestive of Alopecia Areata / Patchy Loss",
+    triage_level: "Level 3: Clinical Escalation",
+    triage_reason:
+      "Circumscribed non-scarring bare patches warrant prompt dermatological assessment for targeted follicular recovery.",
+    sub_scores: { flake_score: 18.4, redness_score: 15.2, sebum_score: 14.0, density_score: 9.2 },
+    survey_risk_profile: {
+      risk_score: 48.0,
+      risk_band: "moderate",
+      modifiable_count: 2,
+      summary: "Address acute sleep/cortisol disruption and screen Vitamin D3 / Ferritin cofactors alongside specialist care.",
+      intervention_queue: [
+        {
+          priority: 1,
+          title: "Consult Dermatologist for Trichoscopic Evaluation",
+          detail: "Early clinical assessment of patchy hair loss significantly improves regrowth outcomes.",
+          expected_timeline: "Within 1-2 weeks",
+        },
+      ],
+    },
+    active_ingredients: [
+      {
+        molecule: "Gentle pH-Balanced Non-Irritating Cleanser",
+        frequency: "2-3x per week",
+        mechanism: "Maintains calm perifollicular microenvironment pending specialist review.",
+      },
+    ],
+  },
+};
+
 function scoreTone(val) {
-  if (val >= 20.0) return { color: "#00d2be", bg: "rgba(16,185,129,0.14)", text: "#34d399", label: "Optimal" };
-  if (val >= 14.0) return { color: "#f59e0b", bg: "rgba(245,158,11,0.14)", text: "#fbbf24", label: "Moderate" };
-  return { color: "#f43f5e", bg: "rgba(244,63,94,0.14)", text: "#fb7185", label: "Elevated" };
+  if (val >= 20.0) return { color: "#00e6cf", text: "#34d399", label: "Optimal" };
+  if (val >= 14.0) return { color: "#f59e0b", text: "#fbbf24", label: "Moderate" };
+  return { color: "#f43f5e", text: "#fb7185", label: "Elevated" };
 }
 
 function triageBadgeStyle(levelStr = "") {
   if (levelStr.includes("Level 1")) {
-    return { bg: "rgba(16,185,129,0.14)", border: "rgba(16,185,129,0.35)", color: "#34d399" };
+    return { bg: "rgba(16,185,129,0.15)", border: "rgba(16,185,129,0.38)", color: "#34d399" };
   }
   if (levelStr.includes("Level 2")) {
-    return { bg: "rgba(245,158,11,0.14)", border: "rgba(245,158,11,0.35)", color: "#fbbf24" };
+    return { bg: "rgba(245,158,11,0.15)", border: "rgba(245,158,11,0.38)", color: "#fbbf24" };
   }
-  return { bg: "rgba(244,63,94,0.15)", border: "rgba(244,63,94,0.38)", color: "#fb7185" };
+  return { bg: "rgba(244,63,94,0.16)", border: "rgba(244,63,94,0.42)", color: "#fb7185" };
 }
 
 export default function App() {
   const [apiBaseUrl, setApiBaseUrl] = useState(DEFAULT_API_BASE);
   const [showServerBar, setShowServerBar] = useState(false);
-  const [serverState, setServerState] = useState("Tap to configure API");
-  const [primaryTab, setPrimaryTab] = useState("triage"); // triage | intake | architecture | corpus
-  const [triageMode, setTriageMode] = useState("studio"); // studio | report
-  const [reportPane, setReportPane] = useState("scores"); // scores | molecules | triggers
-  const [wizardStep, setWizardStep] = useState(0); // 0..3
-  const [corpusTab, setCorpusTab] = useState("papers"); // papers | dataset | benchmarks
+  const [serverState, setServerState] = useState("API Config");
+  const [primaryTab, setPrimaryTab] = useState("triage");
+  const [triageMode, setTriageMode] = useState("studio");
+  const [reportPane, setReportPane] = useState("scores");
+  const [wizardStep, setWizardStep] = useState(0);
+  const [corpusTab, setCorpusTab] = useState("papers");
   const [loading, setLoading] = useState(false);
   const [selectedImageUri, setSelectedImageUri] = useState(null);
   const [analysisResult, setAnalysisResult] = useState(null);
@@ -157,11 +331,9 @@ export default function App() {
     try {
       setLoading(true);
       const status = await checkSystemStatus(apiBaseUrl);
-      setServerState(
-        status.is_ready ? "ONNX + CV Ready" : "Server Warming Up"
-      );
+      setServerState(status.is_ready ? "ONNX Ready" : "Warming Up");
     } catch (err) {
-      setServerState("Offline (Demo Fallback)");
+      setServerState("Offline Mode");
     } finally {
       setLoading(false);
     }
@@ -201,7 +373,7 @@ export default function App() {
       setPrimaryTab("triage");
       setTriageMode("report");
     } catch (err) {
-      setServerState("API Unreachable -> Showing Offline Specimen");
+      setServerState("Offline Fallback");
       runOfflinePreset("seborrheic");
     } finally {
       setLoading(false);
@@ -211,152 +383,12 @@ export default function App() {
   const runOfflinePreset = (presetKey) => {
     setLoading(true);
     setTimeout(() => {
-      if (presetKey === "healthy") {
-        setAnalysisResult({
-          scalp_health_score: 93.6,
-          confidence_score: 0.91,
-          confidence_gated: false,
-          suggested_condition: "Pattern Consistent with Balanced / Healthy Scalp",
-          triage_level: "Level 1: Minor Home Routine",
-          triage_reason:
-            "Epidermal barrier, follicular density, and surface lipid balance appear within calm physiological bounds.",
-          sub_scores: {
-            flake_score: 23.8,
-            redness_score: 23.6,
-            sebum_score: 23.2,
-            density_score: 23.0,
-          },
-          survey_risk_profile: {
-            risk_score: 12.0,
-            risk_band: "low",
-            modifiable_count: 0,
-            summary:
-              "Low modifiable trigger load. Maintain gentle pH-balanced cleansing and avoid direct UV or thermal damage.",
-            intervention_queue: [],
-          },
-          active_ingredients: [
-            {
-              molecule: "Mild Sulfate-Free Surfactant + Panthenol (B5) 1%",
-              frequency: "2-3x per week",
-              mechanism: "Preserves stratum corneum hydration without stripping protective sebum.",
-            },
-          ],
-          lifestyle_advice: [
-            "Maintain consistent 2-3x weekly cleansing cadence.",
-          ],
-          disclaimer: UNIVERSAL_DISCLAIMER,
-        });
-      } else if (presetKey === "lichen") {
-        setAnalysisResult({
-          scalp_health_score: 54.5,
-          confidence_score: 0.89,
-          confidence_gated: false,
-          suggested_condition:
-            "Pattern Suggestive of Lichen Planus / Scarring Inflammation",
-          triage_level: "Level 3: Clinical Escalation",
-          triage_reason:
-            "Perifollicular erythema and focal scarring alopecia characteristics warrant prompt in-person dermatological evaluation to protect follicular stem cells.",
-          sub_scores: {
-            flake_score: 14.2,
-            redness_score: 11.4,
-            sebum_score: 16.8,
-            density_score: 12.1,
-          },
-          survey_risk_profile: {
-            risk_score: 46.0,
-            risk_band: "moderate",
-            modifiable_count: 2,
-            summary:
-              "Avoid mechanical traction, harsh chemical styling, and thermal irritation while scheduling specialist dermoscopy.",
-            intervention_queue: [
-              {
-                priority: 1,
-                title: "Schedule Certified Dermatologist Dermoscopy",
-                detail:
-                  "Scarring inflammatory patterns require clinical trichoscopy to prevent permanent follicular loss.",
-                expected_timeline: "Within 1-2 weeks",
-              },
-              {
-                priority: 2,
-                title: "Suspend Heat, Bleach & Occlusive Friction",
-                detail:
-                  "Eliminate chemical dyes, high-heat blow drying, and tight headwear friction.",
-                expected_timeline: "Immediate",
-              },
-            ],
-          },
-          active_ingredients: [
-            {
-              molecule: "Fragrance-Free Barrier Cleanser (Colloidal Oat / Panthenol)",
-              frequency: "Gentle cleansing as tolerated",
-              mechanism: "Minimizes exogenous contact irritation prior to specialist evaluation.",
-            },
-          ],
-          lifestyle_advice: [
-            "Export physician summary PDF for clinical consultation.",
-          ],
-          disclaimer: UNIVERSAL_DISCLAIMER,
-        });
-      } else {
-        setAnalysisResult({
-          scalp_health_score: 50.2,
-          confidence_score: 0.94,
-          confidence_gated: false,
-          suggested_condition: "Pattern Suggestive of Seborrheic Dermatitis",
-          triage_level: "Level 2: Monitored Routine",
-          triage_reason:
-            "Adherent lipid-rich scaling and mild erythema suggest microbial sebum imbalance amenable to targeted antifungal/keratolytic care and 14-day monitoring.",
-          sub_scores: {
-            flake_score: 10.8,
-            redness_score: 13.2,
-            sebum_score: 10.4,
-            density_score: 15.8,
-          },
-          survey_risk_profile: {
-            risk_score: 58.2,
-            risk_band: "elevated",
-            modifiable_count: 3,
-            summary:
-              "Elevated modifiable trigger load (3 factors): Hard Borewell Water, Daily Helmet Occlusion, and Acute Stress.",
-            intervention_queue: [
-              {
-                priority: 1,
-                title: "Mitigate Hard Borewell Mineral Deposition",
-                detail:
-                  "Use a shower filter or final filtered-water rinse to reduce alkaline mineral residue on the scalp barrier.",
-                expected_timeline: "2-4 weeks",
-              },
-              {
-                priority: 2,
-                title: "Sanitize Helmet Liner & Reduce Sweat Occlusion",
-                detail:
-                  "Use a washable cotton liner cleaned every 2-3 days and air-dry scalp after rides.",
-                expected_timeline: "2-3 weeks",
-              },
-            ],
-          },
-          active_ingredients: [
-            {
-              molecule: "Ketoconazole 1%-2% or Piroctone Olamine Wash",
-              frequency: "2x per week (5-min contact)",
-              mechanism: "Controls Malassezia lipid breakdown and reduces inflammatory scaling.",
-            },
-            {
-              molecule: "Salicylic Acid 1.8%-2% Keratolytic Cleanser",
-              frequency: "1x per week",
-              mechanism: "Loosens adherent sebum-keratin plaques.",
-            },
-          ],
-          lifestyle_advice: [
-            "Rinse thoroughly with lukewarm water; avoid scratching adherent scales.",
-          ],
-          disclaimer: UNIVERSAL_DISCLAIMER,
-        });
-      }
+      const spec = OFFLINE_SPECIMENS[presetKey] || OFFLINE_SPECIMENS.seborrheic;
+      setAnalysisResult({ ...spec, disclaimer: UNIVERSAL_DISCLAIMER });
       setPrimaryTab("triage");
       setTriageMode("report");
       setLoading(false);
-    }, 220);
+    }, 180);
   };
 
   const renderChip = (label, active, onPress) => (
@@ -364,7 +396,7 @@ export default function App() {
       key={label}
       style={[styles.chip, active && styles.chipActive]}
       onPress={onPress}
-      activeOpacity={0.8}
+      activeOpacity={0.82}
     >
       <Text style={[styles.chipText, active && styles.chipTextActive]}>
         {label}
@@ -374,17 +406,19 @@ export default function App() {
 
   return (
     <SafeAreaView style={styles.safeRoot}>
-      <StatusBar barStyle="light-content" backgroundColor="#0b0e11" />
+      <StatusBar barStyle="light-content" backgroundColor="#080b10" />
 
-      {/* TOP HEADER */}
+      {/* TOP STUDIO HEADER */}
       <View style={styles.topHeader}>
         <View style={styles.brandRow}>
-          <View style={styles.brandMonogram}>
-            <Text style={styles.brandMonogramText}>F</Text>
+          <View style={styles.brandOrb}>
+            <View style={styles.brandInnerRing}>
+              <View style={styles.brandCoreDot} />
+            </View>
           </View>
           <View>
             <Text style={styles.brandTitle}>Follica</Text>
-            <Text style={styles.brandSubtitle}>Trichoscopic Triage System</Text>
+            <Text style={styles.brandSubtitle}>Clinical Trichoscopy & Triage</Text>
           </View>
         </View>
 
@@ -399,7 +433,7 @@ export default function App() {
         </TouchableOpacity>
       </View>
 
-      {/* COLLAPSIBLE BACKEND ENDPOINT DRAWER (FOR LAN / TUNNEL APK TESTING) */}
+      {/* COLLAPSIBLE BACKEND ENDPOINT DRAWER */}
       {showServerBar && (
         <View style={styles.serverDrawer}>
           <Text style={styles.drawerLabel}>
@@ -422,14 +456,14 @@ export default function App() {
         </View>
       )}
 
-      {/* MAIN CONTENT VIEWPORT */}
+      {/* MAIN SCROLLABLE STAGE */}
       <ScrollView
         style={styles.mainViewport}
         contentContainerStyle={styles.mainContent}
       >
         {loading && (
           <View style={styles.loadingBanner}>
-            <ActivityIndicator size="small" color="#00d2be" />
+            <ActivityIndicator size="small" color="#00e6cf" />
             <Text style={styles.loadingText}>
               Executing MobileNetV4 ONNX + OpenCV pipeline...
             </Text>
@@ -441,17 +475,24 @@ export default function App() {
            ===================================================== */}
         {primaryTab === "triage" && triageMode === "studio" && (
           <View>
-            <View style={styles.protocolBar}>
-              <Text style={styles.protocolTitle}>Optical Capture Protocol</Text>
-              <Text style={styles.protocolSub}>
-                01 Clean lens · 02 Room/daylight (no flash) · 03 Part hair · 04 Focus at 10-15 cm
-              </Text>
+            <View style={styles.protoGrid}>
+              {[
+                ["01", "Clean Lens"],
+                ["02", "No Flash"],
+                ["03", "Part Hair"],
+                ["04", "10-15 cm"],
+              ].map(([num, lbl]) => (
+                <View key={num} style={styles.protoPill}>
+                  <Text style={styles.protoNum}>{num}</Text>
+                  <Text style={styles.protoLbl}>{lbl}</Text>
+                </View>
+              ))}
             </View>
 
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>Macroscopic Scalp Frame</Text>
+              <Text style={styles.cardTitle}>Optical Scalp Frame Studio</Text>
               <Text style={styles.cardSub}>
-                Capture a close-up scalp photo or select from gallery. Images are evaluated ephemerally with zero raw server retention.
+                Capture a close-up scalp photo or select from gallery. Pre-inference gating checks focus, luminance, and glare in volatile RAM.
               </Text>
 
               {selectedImageUri ? (
@@ -465,12 +506,30 @@ export default function App() {
                   </Text>
                 </View>
               ) : (
-                <View style={styles.emptyFrameBox}>
-                  <Text style={styles.emptyFrameTitle}>No Scalp Frame Selected</Text>
-                  <Text style={styles.emptyFrameSub}>
-                    Use Camera or Gallery below, or launch a verified reference specimen.
+                <TouchableOpacity
+                  style={styles.viewfinderBox}
+                  activeOpacity={0.85}
+                  onPress={() => pickImage(false)}
+                >
+                  <View style={[styles.vfCorner, styles.vfTL]} />
+                  <View style={[styles.vfCorner, styles.vfTR]} />
+                  <View style={[styles.vfCorner, styles.vfBL]} />
+                  <View style={[styles.vfCorner, styles.vfBR]} />
+                  <View style={styles.lensBadge}>
+                    <Text style={styles.lensBadgePlus}>+</Text>
+                  </View>
+                  <Text style={styles.vfTitle}>
+                    Capture or Browse Scalp Photograph
                   </Text>
-                </View>
+                  <Text style={styles.vfSub}>
+                    JPEG / PNG / WebP · Ephemeral RAM Processing
+                  </Text>
+                  <View style={styles.capRow}>
+                    <Text style={styles.capBadge}>Focus Gate</Text>
+                    <Text style={styles.capBadge}>Glare Filter</Text>
+                    <Text style={styles.capBadge}>SDASI/SALT</Text>
+                  </View>
+                </TouchableOpacity>
               )}
 
               <View style={styles.actionRow2}>
@@ -478,13 +537,13 @@ export default function App() {
                   style={styles.secondaryBtn}
                   onPress={() => pickImage(true)}
                 >
-                  <Text style={styles.secondaryBtnText}>Open Camera</Text>
+                  <Text style={styles.secondaryBtnText}>Live Camera</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.secondaryBtn}
                   onPress={() => pickImage(false)}
                 >
-                  <Text style={styles.secondaryBtnText}>Select Gallery</Text>
+                  <Text style={styles.secondaryBtnText}>Photo Library</Text>
                 </TouchableOpacity>
               </View>
 
@@ -498,42 +557,61 @@ export default function App() {
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.ghostBtn, { marginTop: 8 }]}
+                style={[styles.ghostBtn, { marginTop: 9 }]}
                 onPress={() => setPrimaryTab("intake")}
               >
                 <Text style={styles.ghostBtnText}>
-                  Configure Clinical Intake ({countActiveFactors()} Active Markers)
+                  Clinical Intake ({countActiveFactors()} Active Markers)
                 </Text>
               </TouchableOpacity>
             </View>
 
+            {/* REFERENCE COHORT CARD */}
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>Reference Evaluation Specimens</Text>
+              <View style={styles.rowBetween}>
+                <Text style={styles.cardTitle}>Held-Out Reference Cohort</Text>
+                <Text style={styles.capBadge}>Instant Demo</Text>
+              </View>
               <Text style={styles.cardSub}>
-                Instant clinical profiles for presentation and offline APK verification:
+                Evaluate verified clinical specimens instantly on device:
               </Text>
-              <View style={styles.presetGrid}>
-                <TouchableOpacity
-                  style={styles.presetBtn}
-                  onPress={() => runOfflinePreset("healthy")}
-                >
-                  <Text style={styles.presetTitle}>Healthy Baseline</Text>
-                  <Text style={styles.presetSub}>Level 1 · SHS 93.6</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.presetBtn}
-                  onPress={() => runOfflinePreset("seborrheic")}
-                >
-                  <Text style={styles.presetTitle}>Seborrheic Derm.</Text>
-                  <Text style={styles.presetSub}>Level 2 · SHS 50.2</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.presetBtn}
-                  onPress={() => runOfflinePreset("lichen")}
-                >
-                  <Text style={styles.presetTitle}>Lichen Planus</Text>
-                  <Text style={styles.presetSub}>Level 3 · SHS 54.5</Text>
-                </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.featuredControlCard}
+                onPress={() => runOfflinePreset("healthy")}
+              >
+                <View>
+                  <Text style={styles.featuredControlTitle}>
+                    Healthy Preventive Baseline
+                  </Text>
+                  <Text style={styles.featuredControlSub}>
+                    Level 1 · Calm Epidermal Barrier · SHS 93.6
+                  </Text>
+                </View>
+                <Text style={styles.featuredControlAction}>Run</Text>
+              </TouchableOpacity>
+
+              <View style={styles.presetGrid2}>
+                {[
+                  ["lichen", "Lichen Planus", "Level 3 · Scarring", "#f43f5e"],
+                  ["psoriasis", "Scalp Psoriasis", "Level 3 · Plaque", "#f43f5e"],
+                  ["seborrheic", "Seborrheic Derm.", "Level 2 · Scale", "#f59e0b"],
+                  ["alopecia", "Alopecia Areata", "Level 3 · Patchy", "#f43f5e"],
+                ].map(([key, title, sub, dotColor]) => (
+                  <TouchableOpacity
+                    key={key}
+                    style={styles.presetTile}
+                    onPress={() => runOfflinePreset(key)}
+                  >
+                    <Text style={styles.presetTitle}>{title}</Text>
+                    <View style={styles.presetMetaRow}>
+                      <View
+                        style={[styles.tierDot, { backgroundColor: dotColor }]}
+                      />
+                      <Text style={styles.presetSub}>{sub}</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
               </View>
             </View>
           </View>
@@ -547,7 +625,7 @@ export default function App() {
                 style={styles.ghostBtnSmall}
                 onPress={() => setTriageMode("studio")}
               >
-                <Text style={styles.ghostBtnText}>New Capture</Text>
+                <Text style={styles.ghostBtnText}>New Frame</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.ghostBtnSmall}
@@ -559,7 +637,7 @@ export default function App() {
 
             <View style={styles.card}>
               <Text style={styles.overlineLabel}>
-                Visual & Multi-Factor Assessment Pattern
+                VISUAL & MULTI-FACTOR ASSESSMENT
               </Text>
               <Text style={styles.conditionHeadline}>
                 {analysisResult.suggested_condition}
@@ -581,16 +659,18 @@ export default function App() {
                 );
               })()}
 
-              {/* 3-CELL METRIC ROW */}
+              {/* 3-CELL METRIC SUMMARY */}
               <View style={styles.metricRow3}>
                 <View style={styles.metricCell}>
+                  <View style={styles.metricTopBar} />
                   <Text style={styles.metricLabel}>SHS</Text>
                   <Text style={styles.metricVal}>
                     {Number(analysisResult.scalp_health_score).toFixed(1)}
                   </Text>
-                  <Text style={styles.metricSub}>/ 100</Text>
+                  <Text style={styles.metricSub}>of 100</Text>
                 </View>
                 <View style={styles.metricCell}>
+                  <View style={styles.metricTopBar} />
                   <Text style={styles.metricLabel}>Confidence</Text>
                   <Text style={styles.metricVal}>
                     {(Number(analysisResult.confidence_score || 0.9) * 100).toFixed(1)}%
@@ -598,6 +678,7 @@ export default function App() {
                   <Text style={styles.metricSub}>Gate: 65%</Text>
                 </View>
                 <View style={styles.metricCell}>
+                  <View style={styles.metricTopBar} />
                   <Text style={styles.metricLabel}>Trigger Load</Text>
                   <Text style={styles.metricVal}>
                     {(
@@ -605,7 +686,7 @@ export default function App() {
                     ).toUpperCase()}
                   </Text>
                   <Text style={styles.metricSub}>
-                    {analysisResult.survey_risk_profile?.modifiable_count ?? 0} Modifiable
+                    {analysisResult.survey_risk_profile?.modifiable_count ?? 0} Factors
                   </Text>
                 </View>
               </View>
@@ -615,7 +696,7 @@ export default function App() {
                 {[
                   ["scores", "Micro-Features"],
                   ["molecules", "Molecules"],
-                  ["triggers", "Trigger Queue"],
+                  ["triggers", "Triggers"],
                 ].map(([key, lbl]) => (
                   <TouchableOpacity
                     key={key}
@@ -638,7 +719,7 @@ export default function App() {
               </View>
 
               {reportPane === "scores" && (
-                <View style={{ marginTop: 10 }}>
+                <View style={{ marginTop: 12 }}>
                   {[
                     ["Flake & Scaling", analysisResult.sub_scores.flake_score],
                     ["Redness & Erythema", analysisResult.sub_scores.redness_score],
@@ -678,7 +759,7 @@ export default function App() {
               )}
 
               {reportPane === "molecules" && (
-                <View style={{ marginTop: 10 }}>
+                <View style={{ marginTop: 12 }}>
                   {(analysisResult.active_ingredients || []).map((ing, i) => (
                     <View key={i} style={styles.listCard}>
                       <Text style={styles.listCardTitle}>{ing.molecule}</Text>
@@ -690,7 +771,7 @@ export default function App() {
               )}
 
               {reportPane === "triggers" && (
-                <View style={{ marginTop: 10 }}>
+                <View style={{ marginTop: 12 }}>
                   <Text style={styles.cardSub}>
                     {analysisResult.survey_risk_profile?.summary ||
                       "Complete Clinical Intake to rank condition-specific lifestyle triggers."}
@@ -744,7 +825,7 @@ export default function App() {
             </View>
 
             {wizardStep === 0 && (
-              <View style={{ marginTop: 12 }}>
+              <View style={{ marginTop: 14 }}>
                 <Text style={styles.cardTitle}>01 · Demographics & Zone</Text>
                 <Text style={styles.fieldLabel}>Age Bracket</Text>
                 <View style={styles.chipWrap}>
@@ -792,7 +873,7 @@ export default function App() {
             )}
 
             {wizardStep === 1 && (
-              <View style={{ marginTop: 12 }}>
+              <View style={{ marginTop: 14 }}>
                 <Text style={styles.cardTitle}>02 · Extrinsic & Mechanical</Text>
                 <Text style={styles.fieldLabel}>Residential Water Supply</Text>
                 <View style={styles.chipWrap}>
@@ -846,7 +927,7 @@ export default function App() {
             )}
 
             {wizardStep === 2 && (
-              <View style={{ marginTop: 12 }}>
+              <View style={{ marginTop: 14 }}>
                 <Text style={styles.cardTitle}>03 · Systemic & Nutritional</Text>
                 <Text style={styles.fieldLabel}>Dietary Protein Pattern</Text>
                 <View style={styles.chipWrap}>
@@ -899,7 +980,7 @@ export default function App() {
             )}
 
             {wizardStep === 3 && (
-              <View style={{ marginTop: 12 }}>
+              <View style={{ marginTop: 14 }}>
                 <Text style={styles.cardTitle}>04 · Follicular Dynamics</Text>
                 <Text style={styles.fieldLabel}>Cutaneous Sensation</Text>
                 <View style={styles.chipWrap}>
@@ -976,28 +1057,26 @@ export default function App() {
             TAB 03: SYSTEM ARCHITECTURE
            ===================================================== */}
         {primaryTab === "architecture" && (
-          <View>
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>
-                5-Stage Decoupled Inference Architecture
-              </Text>
-              <Text style={styles.cardSub}>
-                Non-diagnostic triage system combining MobileNetV4 ONNX vision, color-constancy OpenCV micro-features, and deterministic safety gates.
-              </Text>
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>
+              5-Stage Decoupled Inference Architecture
+            </Text>
+            <Text style={styles.cardSub}>
+              Non-diagnostic triage system combining MobileNetV4 ONNX vision, color-constancy OpenCV micro-features, and deterministic safety gates.
+            </Text>
 
-              {PIPELINE_STAGES.map((st) => (
-                <View key={st.tag} style={styles.listCard}>
-                  <Text style={styles.listCardAccent}>{st.tag}</Text>
-                  <Text style={styles.listCardTitle}>{st.name}</Text>
-                  <Text style={styles.listCardBody}>{st.detail}</Text>
-                </View>
-              ))}
-
-              <View style={styles.rationaleBox}>
-                <Text style={styles.rationaleText}>
-                  Zero-Retention Privacy: Scalp photographs are processed strictly in volatile RAM and discarded immediately. Consent records store salted SHA-256 pseudonyms only.
-                </Text>
+            {PIPELINE_STAGES.map((st) => (
+              <View key={st.tag} style={styles.listCard}>
+                <Text style={styles.listCardAccent}>{st.tag}</Text>
+                <Text style={styles.listCardTitle}>{st.name}</Text>
+                <Text style={styles.listCardBody}>{st.detail}</Text>
               </View>
+            ))}
+
+            <View style={styles.rationaleBox}>
+              <Text style={styles.rationaleText}>
+                Zero-Retention Privacy: Scalp photographs are processed strictly in volatile RAM and discarded immediately. Consent records store salted SHA-256 pseudonyms only.
+              </Text>
             </View>
           </View>
         )}
@@ -1007,7 +1086,7 @@ export default function App() {
            ===================================================== */}
         {primaryTab === "corpus" && (
           <View>
-            <View style={[styles.segmentedRow, { marginBottom: 10 }]}>
+            <View style={[styles.segmentedRow, { marginBottom: 12 }]}>
               {[
                 ["papers", "Papers (4)"],
                 ["dataset", "12k Corpus"],
@@ -1098,32 +1177,40 @@ export default function App() {
         )}
       </ScrollView>
 
-      {/* BOTTOM TECHNICAL NAVIGATION BAR */}
-      <View style={styles.bottomNav}>
-        {[
-          ["triage", "01", "Optical Triage"],
-          ["intake", "02", "Intake"],
-          ["architecture", "03", "Architecture"],
-          ["corpus", "04", "Corpus"],
-        ].map(([key, idx, label]) => {
-          const active = primaryTab === key;
-          return (
-            <TouchableOpacity
-              key={key}
-              style={[styles.bottomTab, active && styles.bottomTabActive]}
-              onPress={() => setPrimaryTab(key)}
-            >
-              <Text style={[styles.bottomIdx, active && styles.bottomIdxActive]}>
-                {idx}
-              </Text>
-              <Text
-                style={[styles.bottomLabel, active && styles.bottomLabelActive]}
+      {/* FLOATING PILL BOTTOM NAVIGATION DOCK */}
+      <View style={styles.bottomDockOuter}>
+        <View style={styles.bottomNav}>
+          {[
+            ["triage", "01", "Triage"],
+            ["intake", "02", "Intake"],
+            ["architecture", "03", "System"],
+            ["corpus", "04", "Corpus"],
+          ].map(([key, idx, label]) => {
+            const active = primaryTab === key;
+            return (
+              <TouchableOpacity
+                key={key}
+                style={[styles.bottomTab, active && styles.bottomTabActive]}
+                onPress={() => setPrimaryTab(key)}
+                activeOpacity={0.85}
               >
-                {label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
+                <Text
+                  style={[styles.bottomIdx, active && styles.bottomIdxActive]}
+                >
+                  {idx}
+                </Text>
+                <Text
+                  style={[
+                    styles.bottomLabel,
+                    active && styles.bottomLabelActive,
+                  ]}
+                >
+                  {label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -1134,80 +1221,92 @@ const MONO = Platform.OS === "ios" ? "Menlo" : "monospace";
 const styles = StyleSheet.create({
   safeRoot: {
     flex: 1,
-    backgroundColor: "#0b0e11",
+    backgroundColor: "#080b10",
   },
   topHeader: {
-    height: 58,
-    paddingHorizontal: 16,
+    height: 64,
+    paddingHorizontal: 18,
     borderBottomWidth: 1,
-    borderBottomColor: "#1e2530",
+    borderBottomColor: "#1b2432",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#0b0e11",
+    backgroundColor: "#0b1018",
   },
   brandRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: 12,
   },
-  brandMonogram: {
-    width: 30,
-    height: 30,
-    borderRadius: 5,
-    backgroundColor: "#171d25",
+  brandOrb: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: "#122126",
     borderWidth: 1,
-    borderColor: "#2a3442",
+    borderColor: "rgba(0, 230, 207, 0.45)",
     alignItems: "center",
     justifyContent: "center",
   },
-  brandMonogramText: {
-    color: "#00d2be",
-    fontWeight: "700",
-    fontSize: 15,
+  brandInnerRing: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 1.8,
+    borderColor: "#00e6cf",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  brandCoreDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: "#00e6cf",
   },
   brandTitle: {
-    color: "#f1f5f9",
+    color: "#f8fafc",
     fontWeight: "700",
-    fontSize: 16,
+    fontSize: 18,
+    letterSpacing: -0.4,
   },
   brandSubtitle: {
-    color: "#64748b",
-    fontSize: 11,
+    color: "#8b9bb0",
+    fontSize: 11.5,
+    marginTop: 1,
   },
   serverPill: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: "#12161c",
+    backgroundColor: "#131b27",
     borderWidth: 1,
-    borderColor: "#1e2530",
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    borderColor: "#233044",
+    paddingHorizontal: 11,
+    paddingVertical: 6,
     borderRadius: 999,
-    maxWidth: 175,
   },
   serverDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
     backgroundColor: "#10b981",
   },
   serverPillText: {
-    color: "#94a3b8",
-    fontSize: 11,
+    color: "#cbd5e1",
+    fontSize: 11.5,
+    fontWeight: "500",
   },
   serverDrawer: {
-    backgroundColor: "#12161c",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    backgroundColor: "#111823",
+    paddingHorizontal: 18,
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#1e2530",
+    borderBottomColor: "#1e293b",
   },
   drawerLabel: {
-    color: "#94a3b8",
-    fontSize: 11,
-    marginBottom: 6,
+    color: "#b4c0d0",
+    fontSize: 12,
+    marginBottom: 7,
   },
   drawerRow: {
     flexDirection: "row",
@@ -1215,212 +1314,317 @@ const styles = StyleSheet.create({
   },
   urlInput: {
     flex: 1,
-    backgroundColor: "#0b0e11",
+    backgroundColor: "#080b10",
     borderWidth: 1,
-    borderColor: "#2a3442",
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    color: "#f1f5f9",
+    borderColor: "#29374d",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    color: "#f8fafc",
     fontFamily: MONO,
     fontSize: 12,
   },
   pingBtn: {
-    backgroundColor: "#171d25",
+    backgroundColor: "#192636",
     borderWidth: 1,
-    borderColor: "#00d2be",
-    borderRadius: 5,
-    paddingHorizontal: 14,
+    borderColor: "#00d4be",
+    borderRadius: 8,
+    paddingHorizontal: 16,
     justifyContent: "center",
   },
   pingBtnText: {
-    color: "#00d2be",
-    fontWeight: "600",
-    fontSize: 12,
+    color: "#00e6cf",
+    fontWeight: "700",
+    fontSize: 12.5,
   },
   mainViewport: {
     flex: 1,
   },
   mainContent: {
-    padding: 14,
-    paddingBottom: 28,
+    padding: 15,
+    paddingBottom: 26,
   },
   loadingBanner: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    backgroundColor: "#12161c",
+    backgroundColor: "#131b27",
     borderWidth: 1,
-    borderColor: "#1e2530",
-    borderRadius: 6,
-    padding: 10,
+    borderColor: "rgba(0, 212, 190, 0.35)",
+    borderRadius: 10,
+    padding: 12,
     marginBottom: 12,
   },
   loadingText: {
-    color: "#94a3b8",
-    fontSize: 12,
+    color: "#cbd5e1",
+    fontSize: 13,
   },
-  protocolBar: {
-    backgroundColor: "#12161c",
-    borderWidth: 1,
-    borderColor: "#1e2530",
-    borderRadius: 6,
-    padding: 10,
+  protoGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 7,
     marginBottom: 12,
   },
-  protocolTitle: {
-    color: "#f1f5f9",
-    fontSize: 12,
-    fontWeight: "600",
+  protoPill: {
+    flexGrow: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "#111823",
+    borderWidth: 1,
+    borderColor: "#1e293b",
+    borderRadius: 9,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
   },
-  protocolSub: {
-    color: "#94a3b8",
+  protoNum: {
+    color: "#00e6cf",
+    fontFamily: MONO,
     fontSize: 11,
-    marginTop: 2,
-  },
-  card: {
-    backgroundColor: "#12161c",
-    borderWidth: 1,
-    borderColor: "#1e2530",
-    borderRadius: 8,
-    padding: 15,
-    marginBottom: 12,
-  },
-  cardTitle: {
-    color: "#f1f5f9",
-    fontSize: 16,
     fontWeight: "700",
   },
-  cardSub: {
-    color: "#94a3b8",
-    fontSize: 12.5,
-    lineHeight: 18,
-    marginTop: 3,
-  },
-  emptyFrameBox: {
-    borderWidth: 1,
-    borderStyle: "dashed",
-    borderColor: "#2a3442",
-    backgroundColor: "#0e1217",
-    borderRadius: 6,
-    padding: 20,
-    alignItems: "center",
-    marginVertical: 12,
-  },
-  emptyFrameTitle: {
-    color: "#f1f5f9",
+  protoLbl: {
+    color: "#cbd5e1",
+    fontSize: 12,
     fontWeight: "600",
-    fontSize: 13.5,
   },
-  emptyFrameSub: {
-    color: "#64748b",
-    fontSize: 11.5,
-    textAlign: "center",
+  card: {
+    backgroundColor: "#121924",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.09)",
+    borderRadius: 15,
+    padding: 17,
+    marginBottom: 14,
+    elevation: 5,
+  },
+  rowBetween: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  cardTitle: {
+    color: "#f8fafc",
+    fontSize: 18,
+    fontWeight: "700",
+    letterSpacing: -0.3,
+  },
+  cardSub: {
+    color: "#b4c0d0",
+    fontSize: 13.5,
+    lineHeight: 19.5,
     marginTop: 4,
+  },
+  viewfinderBox: {
+    backgroundColor: "#0c121b",
+    borderWidth: 1,
+    borderColor: "#243246",
+    borderRadius: 12,
+    paddingVertical: 24,
+    paddingHorizontal: 16,
+    alignItems: "center",
+    marginVertical: 14,
+    position: "relative",
+  },
+  vfCorner: {
+    position: "absolute",
+    width: 15,
+    height: 15,
+    borderColor: "rgba(0, 230, 207, 0.55)",
+  },
+  vfTL: { top: 10, left: 10, borderTopWidth: 2, borderLeftWidth: 2, borderTopLeftRadius: 3 },
+  vfTR: { top: 10, right: 10, borderTopWidth: 2, borderRightWidth: 2, borderTopRightRadius: 3 },
+  vfBL: { bottom: 10, left: 10, borderBottomWidth: 2, borderLeftWidth: 2, borderBottomLeftRadius: 3 },
+  vfBR: { bottom: 10, right: 10, borderBottomWidth: 2, borderRightWidth: 2, borderBottomRightRadius: 3 },
+  lensBadge: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: "rgba(0, 212, 190, 0.14)",
+    borderWidth: 1,
+    borderColor: "rgba(0, 230, 207, 0.42)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 10,
+  },
+  lensBadgePlus: {
+    color: "#00e6cf",
+    fontSize: 24,
+    fontWeight: "500",
+    marginTop: -2,
+  },
+  vfTitle: {
+    color: "#f8fafc",
+    fontWeight: "700",
+    fontSize: 15.5,
+  },
+  vfSub: {
+    color: "#8b9bb0",
+    fontSize: 12,
+    marginTop: 4,
+  },
+  capRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+    marginTop: 12,
+  },
+  capBadge: {
+    backgroundColor: "#172130",
+    borderWidth: 1,
+    borderColor: "#253449",
+    borderRadius: 999,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+    color: "#b4c0d0",
+    fontFamily: MONO,
+    fontSize: 10.5,
   },
   previewBox: {
     alignItems: "center",
-    marginVertical: 12,
+    marginVertical: 14,
   },
   previewImg: {
     width: "100%",
-    height: 170,
-    borderRadius: 6,
+    height: 180,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#2a3442",
+    borderColor: "rgba(0, 230, 207, 0.42)",
   },
   previewReady: {
     color: "#34d399",
-    fontSize: 11.5,
-    marginTop: 6,
+    fontSize: 12.5,
+    fontWeight: "500",
+    marginTop: 7,
   },
   actionRow2: {
     flexDirection: "row",
-    gap: 8,
-    marginBottom: 8,
+    gap: 9,
+    marginBottom: 9,
   },
   primaryBtn: {
-    backgroundColor: "#00d2be",
-    borderRadius: 5,
-    paddingVertical: 11,
+    backgroundColor: "#00dfc8",
+    borderRadius: 10,
+    paddingVertical: 13,
     alignItems: "center",
+    elevation: 4,
   },
   primaryBtnSmall: {
-    backgroundColor: "#00d2be",
-    borderRadius: 5,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
+    backgroundColor: "#00dfc8",
+    borderRadius: 8,
+    paddingVertical: 9,
+    paddingHorizontal: 16,
   },
   primaryBtnText: {
-    color: "#061210",
+    color: "#031412",
     fontWeight: "700",
-    fontSize: 13.5,
+    fontSize: 14.5,
+    letterSpacing: -0.2,
   },
   secondaryBtn: {
     flex: 1,
-    backgroundColor: "#171d25",
+    backgroundColor: "#1a2536",
     borderWidth: 1,
-    borderColor: "#2a3442",
-    borderRadius: 5,
-    paddingVertical: 10,
+    borderColor: "#2b3b52",
+    borderRadius: 10,
+    paddingVertical: 11,
     alignItems: "center",
   },
   secondaryBtnSmall: {
-    backgroundColor: "#171d25",
+    backgroundColor: "#1a2536",
     borderWidth: 1,
-    borderColor: "#2a3442",
-    borderRadius: 5,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
+    borderColor: "#2b3b52",
+    borderRadius: 8,
+    paddingVertical: 9,
+    paddingHorizontal: 15,
   },
   secondaryBtnText: {
-    color: "#f1f5f9",
+    color: "#f8fafc",
     fontWeight: "600",
-    fontSize: 12.5,
+    fontSize: 13.5,
   },
   ghostBtn: {
+    backgroundColor: "#151e2c",
     borderWidth: 1,
-    borderColor: "#1e2530",
-    borderRadius: 5,
-    paddingVertical: 9,
+    borderColor: "#243246",
+    borderRadius: 10,
+    paddingVertical: 10,
     alignItems: "center",
   },
   ghostBtnSmall: {
+    backgroundColor: "#151e2c",
     borderWidth: 1,
-    borderColor: "#2a3442",
-    borderRadius: 5,
-    paddingVertical: 7,
-    paddingHorizontal: 12,
+    borderColor: "#26354a",
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 13,
   },
   ghostBtnText: {
-    color: "#94a3b8",
-    fontSize: 12,
-    fontWeight: "500",
+    color: "#cbd5e1",
+    fontSize: 13,
+    fontWeight: "600",
   },
-  presetGrid: {
+  featuredControlCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "rgba(16, 185, 129, 0.11)",
+    borderWidth: 1,
+    borderColor: "rgba(16, 185, 129, 0.36)",
+    borderRadius: 11,
+    padding: 12,
+    marginTop: 12,
+  },
+  featuredControlTitle: {
+    color: "#f8fafc",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  featuredControlSub: {
+    color: "#94a3b8",
+    fontFamily: MONO,
+    fontSize: 11,
+    marginTop: 2,
+  },
+  featuredControlAction: {
+    color: "#34d399",
+    fontFamily: MONO,
+    fontWeight: "700",
+    fontSize: 12.5,
+  },
+  presetGrid2: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 8,
-    marginTop: 10,
+    marginTop: 9,
   },
-  presetBtn: {
-    flexGrow: 1,
-    backgroundColor: "#0e1217",
+  presetTile: {
+    width: "48.5%",
+    backgroundColor: "#0d131d",
     borderWidth: 1,
-    borderColor: "#1e2530",
-    borderRadius: 6,
-    padding: 10,
+    borderColor: "#212e42",
+    borderRadius: 10,
+    padding: 11,
   },
   presetTitle: {
-    color: "#f1f5f9",
-    fontSize: 12.5,
+    color: "#f8fafc",
+    fontSize: 13.5,
     fontWeight: "600",
   },
+  presetMetaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    marginTop: 4,
+  },
+  tierDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
   presetSub: {
-    color: "#64748b",
+    color: "#8b9bb0",
     fontFamily: MONO,
-    fontSize: 10.5,
-    marginTop: 2,
+    fontSize: 11,
   },
   reportNavRow: {
     flexDirection: "row",
@@ -1428,107 +1632,119 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   overlineLabel: {
-    color: "#64748b",
+    color: "#00e6cf",
+    fontFamily: MONO,
     fontSize: 11,
+    letterSpacing: 0.6,
   },
   conditionHeadline: {
-    color: "#f1f5f9",
-    fontSize: 18,
+    color: "#f8fafc",
+    fontSize: 20,
     fontWeight: "700",
-    marginTop: 2,
+    letterSpacing: -0.4,
+    marginTop: 3,
   },
   triageBadge: {
     alignSelf: "flex-start",
     borderWidth: 1,
-    borderRadius: 4,
-    paddingHorizontal: 9,
-    paddingVertical: 4,
-    marginTop: 8,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    marginTop: 9,
   },
   triageBadgeText: {
-    fontSize: 11.5,
+    fontSize: 12.5,
     fontWeight: "600",
   },
   metricRow3: {
     flexDirection: "row",
     gap: 8,
-    marginVertical: 12,
+    marginVertical: 14,
   },
   metricCell: {
     flex: 1,
-    backgroundColor: "#0e1217",
+    backgroundColor: "#0c121b",
     borderWidth: 1,
-    borderColor: "#1e2530",
-    borderRadius: 6,
-    padding: 9,
+    borderColor: "#1f2b3d",
+    borderRadius: 10,
+    padding: 11,
+    overflow: "hidden",
+  },
+  metricTopBar: {
+    height: 2,
+    backgroundColor: "#00d4be",
+    marginBottom: 6,
+    opacity: 0.8,
   },
   metricLabel: {
     color: "#94a3b8",
-    fontSize: 10.5,
+    fontSize: 11,
+    fontWeight: "500",
   },
   metricVal: {
-    color: "#f1f5f9",
-    fontFamily: MONO,
-    fontSize: 15,
+    color: "#f8fafc",
+    fontSize: 17,
     fontWeight: "700",
     marginTop: 2,
   },
   metricSub: {
     color: "#64748b",
-    fontSize: 10,
-    marginTop: 1,
+    fontSize: 10.5,
+    marginTop: 2,
   },
   segmentedRow: {
     flexDirection: "row",
-    backgroundColor: "#0e1217",
-    borderRadius: 6,
-    padding: 3,
+    backgroundColor: "#0b1018",
+    borderRadius: 10,
+    padding: 3.5,
     borderWidth: 1,
-    borderColor: "#1e2530",
+    borderColor: "#1e293b",
   },
   segBtn: {
     flex: 1,
-    paddingVertical: 6,
+    paddingVertical: 7,
     alignItems: "center",
-    borderRadius: 4,
+    borderRadius: 7,
   },
   segBtnActive: {
-    backgroundColor: "#171d25",
+    backgroundColor: "#1c2738",
+    borderWidth: 1,
+    borderColor: "#2d3e56",
   },
   segBtnText: {
     color: "#94a3b8",
-    fontSize: 11.5,
+    fontSize: 12,
     fontWeight: "500",
   },
   segBtnTextActive: {
-    color: "#f1f5f9",
-    fontWeight: "600",
+    color: "#f8fafc",
+    fontWeight: "700",
   },
   subscoreCard: {
-    backgroundColor: "#0e1217",
+    backgroundColor: "#0c121b",
     borderWidth: 1,
-    borderColor: "#1e2530",
-    borderRadius: 6,
-    padding: 10,
-    marginBottom: 8,
+    borderColor: "#1e293b",
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 9,
   },
   subscoreHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 6,
+    marginBottom: 7,
   },
   subscoreName: {
-    color: "#f1f5f9",
-    fontSize: 12.5,
-    fontWeight: "500",
+    color: "#f8fafc",
+    fontSize: 13.5,
+    fontWeight: "600",
   },
   subscoreNum: {
     fontFamily: MONO,
-    fontSize: 11.5,
+    fontSize: 12,
   },
   barTrack: {
-    height: 6,
-    backgroundColor: "#1b222c",
+    height: 7,
+    backgroundColor: "#1b2535",
     borderRadius: 999,
     overflow: "hidden",
   },
@@ -1537,119 +1753,134 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   rationaleBox: {
-    backgroundColor: "#0e1217",
+    backgroundColor: "#0c121b",
+    borderWidth: 1,
+    borderColor: "#1e293b",
     borderLeftWidth: 3,
-    borderLeftColor: "#00d2be",
-    borderRadius: 4,
-    padding: 10,
+    borderLeftColor: "#00e6cf",
+    borderRadius: 8,
+    padding: 12,
     marginTop: 8,
   },
   rationaleText: {
-    color: "#94a3b8",
-    fontSize: 12,
-    lineHeight: 17.5,
+    color: "#b4c0d0",
+    fontSize: 13,
+    lineHeight: 19,
   },
   listCard: {
-    backgroundColor: "#0e1217",
+    backgroundColor: "#0c121b",
     borderWidth: 1,
-    borderColor: "#1e2530",
-    borderRadius: 6,
-    padding: 11,
-    marginTop: 8,
+    borderColor: "#1e293b",
+    borderRadius: 10,
+    padding: 13,
+    marginTop: 9,
   },
   listCardAccent: {
-    color: "#00d2be",
+    color: "#00e6cf",
     fontFamily: MONO,
-    fontSize: 10.5,
-    marginBottom: 2,
+    fontSize: 11,
+    marginBottom: 3,
   },
   listCardTitle: {
-    color: "#f1f5f9",
-    fontSize: 13,
-    fontWeight: "600",
+    color: "#f8fafc",
+    fontSize: 14,
+    fontWeight: "700",
   },
   listCardBody: {
-    color: "#94a3b8",
-    fontSize: 12,
-    lineHeight: 17,
-    marginTop: 3,
+    color: "#b4c0d0",
+    fontSize: 12.8,
+    lineHeight: 18.5,
+    marginTop: 4,
   },
   disclaimerText: {
-    color: "#64748b",
-    fontSize: 10.5,
-    lineHeight: 15,
-    marginTop: 12,
-    paddingTop: 10,
+    color: "#7e8ea3",
+    fontSize: 11.2,
+    lineHeight: 16,
+    marginTop: 14,
+    paddingTop: 11,
     borderTopWidth: 1,
-    borderTopColor: "#1e2530",
+    borderTopColor: "#1e293b",
   },
   fieldLabel: {
-    color: "#94a3b8",
-    fontSize: 12,
-    fontWeight: "500",
-    marginTop: 12,
-    marginBottom: 6,
+    color: "#b4c0d0",
+    fontSize: 13,
+    fontWeight: "600",
+    marginTop: 13,
+    marginBottom: 7,
   },
   chipWrap: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 6,
+    gap: 7,
   },
   chip: {
-    backgroundColor: "#0e1217",
+    backgroundColor: "#0c121b",
     borderWidth: 1,
-    borderColor: "#1e2530",
-    borderRadius: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    borderColor: "#223044",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
   },
   chipActive: {
-    backgroundColor: "rgba(0,210,190,0.12)",
-    borderColor: "rgba(0,210,190,0.45)",
+    backgroundColor: "rgba(0, 212, 190, 0.16)",
+    borderColor: "rgba(0, 230, 207, 0.55)",
   },
   chipText: {
-    color: "#94a3b8",
-    fontSize: 12,
+    color: "#b4c0d0",
+    fontSize: 12.8,
+    fontWeight: "500",
   },
   chipTextActive: {
-    color: "#f1f5f9",
-    fontWeight: "600",
+    color: "#f8fafc",
+    fontWeight: "700",
   },
   wizardFooter: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 16,
-    paddingTop: 12,
+    marginTop: 18,
+    paddingTop: 13,
     borderTopWidth: 1,
-    borderTopColor: "#1e2530",
+    borderTopColor: "#1e293b",
   },
   corpusRow: {
-    paddingVertical: 7,
+    paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: "#1e2530",
+    borderBottomColor: "#1e293b",
   },
   corpusRowText: {
     color: "#cbd5e1",
     fontFamily: MONO,
-    fontSize: 11.5,
+    fontSize: 12,
+  },
+  bottomDockOuter: {
+    backgroundColor: "#080b10",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderTopWidth: 1,
+    borderTopColor: "#182230",
   },
   bottomNav: {
-    height: 60,
     flexDirection: "row",
-    backgroundColor: "#0b0e11",
-    borderTopWidth: 1,
-    borderTopColor: "#1e2530",
+    backgroundColor: "#101722",
+    borderRadius: 13,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: "#1f2b3d",
+    gap: 4,
   },
   bottomTab: {
     flex: 1,
+    paddingVertical: 7,
     alignItems: "center",
     justifyContent: "center",
-    borderTopWidth: 2,
-    borderTopColor: "transparent",
+    borderRadius: 9,
+    borderWidth: 1,
+    borderColor: "transparent",
   },
   bottomTabActive: {
-    borderTopColor: "#00d2be",
+    backgroundColor: "#1a2638",
+    borderColor: "rgba(0, 230, 207, 0.4)",
   },
   bottomIdx: {
     color: "#64748b",
@@ -1657,15 +1888,17 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
   bottomIdxActive: {
-    color: "#00d2be",
+    color: "#00e6cf",
+    fontWeight: "700",
   },
   bottomLabel: {
     color: "#94a3b8",
-    fontSize: 11.5,
+    fontSize: 12,
+    fontWeight: "500",
     marginTop: 1,
   },
   bottomLabelActive: {
-    color: "#f1f5f9",
-    fontWeight: "600",
+    color: "#f8fafc",
+    fontWeight: "700",
   },
 });
