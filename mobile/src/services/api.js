@@ -4,7 +4,7 @@
  */
 
 // Configured for local Wi-Fi pairing; update if laptop IPv4 changes
-export const DEFAULT_API_BASE = "http://10.145.153.231:8000/api/v1";
+export const DEFAULT_API_BASE = "http://10.146.13.169:8000/api/v1";
 
 export async function checkSystemStatus(baseUrl = DEFAULT_API_BASE) {
   try {
