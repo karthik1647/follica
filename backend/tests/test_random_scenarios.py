@@ -83,10 +83,10 @@ def test_randomized_dual_pipeline_invariants(scenario_idx):
     fam_history = random.choice(["true", "false"])
     duration = random.randint(0, 52)  # 0 to 1 year
 
-    # 2. Randomized Image Generation
-    r_tone = random.randint(140, 210)
-    g_tone = random.randint(100, 160)
-    b_tone = random.randint(80, 140)
+    # 2. Randomized Image Generation (physiologic skin chrominance r > g > b)
+    r_tone = random.randint(160, 220)
+    g_tone = random.randint(110, r_tone - 25)
+    b_tone = random.randint(70, g_tone - 15)
     img_bytes = generate_random_synthetic_scalp_image(
         width=random.randint(200, 350),
         height=random.randint(200, 350),
