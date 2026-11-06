@@ -90,6 +90,8 @@ The current scalp care and trichology market is bifurcated into three distinct c
 
 The dual-pipeline architecture and photo-based classification heads of Follica are grounded in four key peer-reviewed clinical studies:
 
+> **Detailed Literature Audit Trail**: See [Scientific Research Foundations & Methodological Lineage](docs/research_foundations.md) for the complete derivation connecting peer-reviewed papers to specific source code modules and mathematical formulas.
+
 1. **A Deep Learning-Based Approach Toward Differentiating Scalp Psoriasis and Seborrheic Dermatitis From Dermoscopic Images**  
    *Frontiers in Medicine (2022)* — Zhang, Shen, Han, Yu & Wang — DOI: [10.3389/fmed.2022.965423](https://doi.org/10.3389/fmed.2022.965423).  
    - Demonstrated that convolutional neural networks fine-tuned on dermoscopic photographs achieve an Area Under the Curve (AUC) of 0.922, with 96.1% sensitivity and 88.2% specificity.  
@@ -163,6 +165,34 @@ In clinical computer vision, achieving >= 95% accuracy on raw smartphone capture
 - Prediction Confidence < 0.65: Intercepted server-side and safely routed to Level 2 (Monitored Routine).
   No low-confidence guesses are ever shown to the user.
 ```
+
+---
+
+### C. Algorithmic Inventory & Training Tooling
+
+For full mathematical definitions, hyperparameter tables, and framework specifications, see the dedicated documentation: [ML Training Methodology, Algorithms, and Tooling](docs/training_and_tools.md).
+
+#### 1. Machine Learning & Deep Learning Algorithms
+- **MobileNetV4 Universal Inverted Bottleneck (UIB)**: Pre-trained on ImageNet-1K, fine-tuned across 10 scalp conditions (mobilenetv4_conv_small.e1200_r224_in1k, ~14.2 MB ONNX footprint, sub-50ms CPU latency).
+- **Categorical Cross-Entropy Loss**: Multi-class loss penalizing prediction divergence across 10 classes.
+- **AdamW Optimizer**: Initial learning rate 0.0001, decoupled weight decay 0.01 for weight regularization.
+- **Cosine Annealing Learning Rate Schedule**: Smooth cosine decay across 20-25 epochs avoiding sharp local minima.
+- **Data Augmentation**: Bilateral horizontal flips (=0.5$), random affine rotations ($\pm 15^\circ$), and photometric color jittering ($\pm 15\%$ brightness, contrast, saturation).
+- **ONNX Model Tracing & Quantization**: Constant folding optimization (opset_version=14) with dynamic batch dimension.
+
+#### 2. Classical Computer Vision & Signal Processing Algorithms
+- **Shafer Dichromatic Reflection Separation**: Distinguishes specular flash reflection ( > 240, |R-G|+|G-B|<25$) from keratin squames and routes luster to the sebum score.
+- **Patch-Wise Discrete Laplacian Variance**: Computes the 95th-percentile sharpness on an 8x8 grid ($\sigma^2 \ge 60.0$) to reject motion blur without penalizing out-of-focus background hair.
+- **Constrained Gray-World White Balance**: Constrains color channel scaling factors to $[0.85, 1.15]$ to neutralize ambient 2700K incandescent casts while preserving true vascular erythema.
+- **Top-Hat Morphological Filtering**: Isolates high-contrast bright particulate contours on scalp backgrounds for flake severity scoring.
+- **YCrCb Biological Tissue Segmentation**: Enforces human skin ( \in [128, 180], Cb \in [75, 142]$) and hair melanin boundaries, rejecting non-scalp photos with HTTP 400.
+
+#### 3. Exact Software Tools & Libraries
+- **Deep Learning**: PyTorch 2.x, timm (>=0.9.16), Torchvision (>=0.16), ONNX Runtime (>=1.16).
+- **Computer Vision & Math**: OpenCV (4.8+), NumPy (1.24+), Pillow (10.x), SciPy.
+- **Backend & Delivery**: FastAPI (0.104+), Uvicorn (0.24+), ReportLab (4.0+), SQLite3.
+- **Mobile & Packaging**: React Native / Expo (SDK 51), Android SDK (API 34), Gradle (AGP 8.x).
+- **Testing & Verification**: Pytest (114 automated test specifications), GitHub Actions CI.
 
 ---
 
