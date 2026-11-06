@@ -67,6 +67,7 @@ class Settings(BaseModel):
     QUALITY_MIN_BRIGHTNESS: float = 35.0
     QUALITY_MAX_BRIGHTNESS: float = 225.0
     QUALITY_MIN_DIMENSION: int = 150
+    QUALITY_MIN_BIO_RATIO: float = 10.0
 
     # Consent DB - SQLite file path (override with FOLLICA_CONSENT_DB env var).
     # The DB is auto-created on first start; no manual migration required.

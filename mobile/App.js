@@ -417,7 +417,7 @@ export default function App() {
   const [intake, setIntake] = useState({
     biological_sex: "male",
     age_group: "18_25",
-    primary_concern_zone: "crown_vertex",
+    primary_concern_zone: "routine_healthy_check",
     water_environment: "normal",
     daily_helmet_wearer: false,
     chemical_heat_styling: false,
@@ -433,8 +433,8 @@ export default function App() {
     hair_pull_test: "negative_under_3",
     flake_type: "none",
     sensation: "painless",
-    duration_months: 1,
-    duration_weeks: 4,
+    duration_months: 0,
+    duration_weeks: 0,
   });
 
   const updateField = (key, val) => {
@@ -503,7 +503,10 @@ export default function App() {
 
   const runLiveAnalysis = async () => {
     if (!selectedImageUri) {
-      runOfflinePreset("seborrheic");
+      Alert.alert(
+        "Select Image First",
+        "Please take a live macro scalp photo with the Camera or select one from your Photo Library before running triage."
+      );
       return;
     }
     try {
@@ -522,15 +525,26 @@ export default function App() {
       setPrimaryTab("triage");
       setTriageMode("report");
     } catch (err) {
-      const msg = String(err?.message || "");
-      if (msg.includes("(400)") || msg.includes("(422)")) {
+      if (err.isNetworkError) {
         Alert.alert(
-          "Optical Quality Gate",
-          "Captured frame did not pass focus, exposure, or flash-glare checks. Please wipe lens, use diffuse room light without flash, and retake at 10-15 cm."
+          "Backend Connection Failed",
+          `${err.message}\n\nTip: You can tap \"API Config\" in the header to change the laptop IP, or test the verified offline specimens below without Wi-Fi.`
+        );
+      } else if (err.errorCode === "NON_SCALP_IMAGE_DETECTED") {
+        Alert.alert(
+          "Not a Scalp Photo",
+          `${err.rejectionReason}\n\n${err.userGuidance || "Please take a close-up macro photo of your hair parting or scalp."}`
+        );
+      } else if (err.errorCode === "IMAGE_TOO_BLURRY" || err.errorCode === "IMAGE_UNDEREXPOSED" || err.errorCode === "IMAGE_OVEREXPOSED" || err.errorCode === "FLASH_GLARE_DETECTED") {
+        Alert.alert(
+          "Optical Quality Check Failed",
+          `${err.rejectionReason}\n\n${err.userGuidance || "Please hold steady and retake in diffuse room light."}`
         );
       } else {
-        setServerState("Offline Fallback");
-        runOfflinePreset("seborrheic");
+        Alert.alert(
+          "Analysis Notice",
+          err.rejectionReason || err.message || "An unexpected error occurred during analysis."
+        );
       }
     } finally {
       setLoading(false);
@@ -843,15 +857,45 @@ export default function App() {
                 </View>
               )}
 
+                            {(analysisResult.scoring_status === "withheld_indeterminate" || analysisResult.confidence_gated) && (
+                <View style={[styles.referralBanner, { backgroundColor: "rgba(245,158,11,0.12)", borderColor: "rgba(245,158,11,0.35)" }]}>
+                  <Text style={[styles.referralOverline, { color: "#fbbf24" }]}>
+                    COMPOSITE HEALTH SCORE WITHHELD
+                  </Text>
+                  <Text style={styles.referralBody}>
+                    {"Visual pattern confidence (" + ((analysisResult.confidence_score || 0) * 100).toFixed(1) + "%) is below the 65.0% clinical threshold. To avoid false precision, scoring is suspended. Proceed to Step 02 Clinical Intake to compute your full survey risk profile."}
+                  </Text>
+                  <TouchableOpacity
+                    style={[styles.referralBtn, { backgroundColor: "#f59e0b" }]}
+                    onPress={() => setPrimaryTab("intake")}
+                  >
+                    <Text style={[styles.referralBtnText, { color: "#000" }]}>
+                      {"Complete Clinical Intake Survey ->"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
               {/* 3-CELL METRIC SUMMARY */}
               <View style={styles.metricRow3}>
                 <View style={styles.metricCell}>
                   <View style={styles.metricTopBar} />
                   <Text style={styles.metricLabel}>SHS</Text>
-                  <Text style={styles.metricVal}>
-                    {Number(analysisResult.scalp_health_score).toFixed(1)}
-                  </Text>
-                  <Text style={styles.metricSub}>of 100</Text>
+                  {(analysisResult.scoring_status === "withheld_indeterminate" || analysisResult.confidence_gated) ? (
+                    <>
+                      <Text style={[styles.metricVal, { fontSize: 13, color: "#fbbf24", fontWeight: "700" }]}>
+                        WITHHELD
+                      </Text>
+                      <Text style={styles.metricSub}>Indeterminate</Text>
+                    </>
+                  ) : (
+                    <>
+                      <Text style={styles.metricVal}>
+                        {Number(analysisResult.scalp_health_score).toFixed(1)}
+                      </Text>
+                      <Text style={styles.metricSub}>of 100</Text>
+                    </>
+                  )}
                 </View>
                 <View style={styles.metricCell}>
                   <View style={styles.metricTopBar} />

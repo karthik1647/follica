@@ -209,7 +209,7 @@ async def analyze_scalp(
     # Demographics & Concern Zone
     age_group: str = Form(default="18_25"),
     biological_sex: str = Form(default="male"),
-    primary_concern_zone: str = Form(default="crown_vertex"),
+    primary_concern_zone: str = Form(default="routine_healthy_check"),
     # Sensation & Trichodynia
     sensation: str = Form(default="painless"),
     itching: bool = Form(default=False),
@@ -235,7 +235,7 @@ async def analyze_scalp(
     # Follicular Dynamics & Duration
     hair_pull_test: str = Form(default="negative_under_3"),
     flake_type: str = Form(default="none"),
-    shedding_pattern: str = Form(default="gradual_chronic"),
+    shedding_pattern: str = Form(default="stable_no_shedding"),
     duration_months: Optional[int] = Form(default=None, description="Duration in months (0-72 months)"),
     duration_weeks: Optional[int] = Form(default=None, description="Optional legacy duration in weeks"),
     symptom_notes: Optional[str] = Form(default=None)

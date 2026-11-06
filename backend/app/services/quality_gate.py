@@ -73,11 +73,13 @@ class ImageQualityGate:
         min_brightness: Optional[float] = None,
         max_brightness: Optional[float] = None,
         min_dimension: Optional[int] = None,
+        min_bio_ratio: Optional[float] = None,
     ):
         self._min_blur_score = min_blur_score
         self._min_brightness = min_brightness
         self._max_brightness = max_brightness
         self._min_dimension = min_dimension
+        self._min_bio_ratio = min_bio_ratio
 
     @property
     def min_blur_score(self) -> float:
@@ -94,6 +96,10 @@ class ImageQualityGate:
     @property
     def min_dimension(self) -> int:
         return self._min_dimension if self._min_dimension is not None else settings.QUALITY_MIN_DIMENSION
+
+    @property
+    def min_bio_ratio(self) -> float:
+        return self._min_bio_ratio if self._min_bio_ratio is not None else getattr(settings, "QUALITY_MIN_BIO_RATIO", 10.0)
 
     def _decode_image(self, image_bytes: bytes) -> Tuple[np.ndarray, Optional[Image.Image]]:
         """
@@ -255,6 +261,39 @@ class ImageQualityGate:
 
         return round(score, 2)
 
+    def calculate_biological_tissue_ratio(self, img_rgb: np.ndarray) -> Tuple[float, float, bool]:
+        """
+        Evaluates presence of human cutaneous scalp tissue and follicular hair shafts.
+        Enforces Out-of-Distribution (OOD) rejection for non-scalp photos (objects, clothing, pets, landscapes).
+        
+        Chrominance criteria:
+        - Scalp epidermis: Y in [25, 240], Cr in [128, 180], Cb in [75, 142], R >= B - 5, chromatic diff >= 8.
+        - Hair shafts: Melanin fibers with low luminance (Y < 85) and organic tones.
+        - Non-biological synthetic colors: High-saturation cyan/blue, vivid neon green, or pure purple.
+        """
+        r = img_rgb[:, :, 0].astype(int)
+        g = img_rgb[:, :, 1].astype(int)
+        b = img_rgb[:, :, 2].astype(int)
+
+        y = 0.299 * r + 0.587 * g + 0.114 * b
+        cr = (r - y) * 0.713 + 128
+        cb = (b - y) * 0.564 + 128
+
+        chroma_diff = np.abs(r - g) + np.abs(r - b)
+        skin = (cr >= 128) & (cr <= 180) & (cb >= 75) & (cb <= 142) & (y >= 25) & (y <= 240) & (r >= b - 5) & (chroma_diff >= 8)
+        dark_hair = (y < 85) & (np.abs(r - g) < 40) & (np.abs(g - b) < 40)
+
+        cyan_blue = (b > r + 35) & (b > g + 15) & (b > 60)
+        vivid_green = (g > r + 30) & (g > b + 25) & (g > 60)
+        vivid_purple = (r > g + 30) & (b > g + 30) & (b > 60)
+        non_bio = cyan_blue | vivid_green | vivid_purple
+
+        bio_ratio = float(np.mean(skin | dark_hair) * 100.0)
+        non_bio_ratio = float(np.mean(non_bio) * 100.0)
+
+        is_valid = (bio_ratio >= self.min_bio_ratio) and not (non_bio_ratio > 40.0 and bio_ratio < 20.0)
+        return round(bio_ratio, 2), round(non_bio_ratio, 2), is_valid
+
     def calculate_brightness(self, img_rgb: np.ndarray) -> float:
         """
         Calculates the mean perceptual luminance across the entire photograph.
@@ -363,6 +402,22 @@ class ImageQualityGate:
                 "error_code": "IMAGE_TOO_BLURRY",
                 "rejection_reason": f"Image focus sharpness score ({blur_score}) is below the minimum threshold ({self.min_blur_score}).",
                 "user_guidance": "The photo is too blurry for trichoscopy analysis. Please hold the phone steady, tap the screen to focus on the scalp parting, and retake the photo.",
+                "metrics": metrics
+            }
+
+        # 5. Anatomical Scalp / Hair Domain Verification (Out-of-Distribution Rejection):
+        bio_ratio, non_bio_ratio, bio_passed = self.calculate_biological_tissue_ratio(img_rgb)
+        metrics["biological_tissue_ratio"] = bio_ratio
+        metrics["non_biological_ratio"] = non_bio_ratio
+        metrics["biological_tissue_passed"] = bio_passed
+        metrics["min_bio_threshold"] = self.min_bio_ratio
+
+        if not bio_passed:
+            return False, {
+                "is_valid": False,
+                "error_code": "NON_SCALP_IMAGE_DETECTED",
+                "rejection_reason": f"Input photograph does not contain sufficient human scalp or hair tissue ({bio_ratio}% biological tissue detected, minimum {self.min_bio_ratio}% required).",
+                "user_guidance": "Please capture a clear, close-up photograph of your scalp, hair parting, or affected hair loss area. Non-scalp photos (objects, clothing, pets, landscapes) cannot be triaged.",
                 "metrics": metrics
             }
 

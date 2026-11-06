@@ -427,6 +427,10 @@ class AnalysisResponse(BaseModel):
         default=False,
         description="True if low classifier confidence (<0.65) forced rerouting to Level 2"
     )
+    scoring_status: Literal["active", "withheld_indeterminate"] = Field(
+        default="active",
+        description="Whether composite numerical score is active or withheld pending clinical confirmation"
+    )
     sub_scores: SubScores = Field(
         ...,
         description="Discrete classical-CV derived sub-scores in range [0, 25]"

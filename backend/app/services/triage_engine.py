@@ -429,8 +429,10 @@ class TriageEngine:
         confidence_gated = False
         final_condition = raw_condition
 
+        scoring_status = "active"
         if confidence < settings.CONFIDENCE_GATE_THRESHOLD:
             confidence_gated = True
+            scoring_status = "withheld_indeterminate"
             final_condition = CONDITION_UNVERIFIED_MONITORED
             triage_level = TRIAGE_LEVEL_2_MONITORED
             triage_reason = (
@@ -663,7 +665,7 @@ class TriageEngine:
             suggested_condition=final_condition,
             confidence_score=confidence,
             confidence_gated=confidence_gated,
-
+            scoring_status=scoring_status,
             sub_scores=sub_scores,
             scalp_health_score=total_shs,
             triage_level=triage_level,

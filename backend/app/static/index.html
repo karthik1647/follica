@@ -2014,8 +2014,8 @@
                             <div class="form-row" style="margin-top:8px;">
                                 <span class="field-label">Primary Anatomical Zone / Assessment Goal</span>
                                 <div class="chip-group">
-                                    <div class="chip-item"><input type="radio" id="zone-0" name="primary_concern_zone" value="routine_healthy_check"><label for="zone-0" class="chip-label">Routine Preventive Check</label></div>
-                                    <div class="chip-item"><input type="radio" id="zone-1" name="primary_concern_zone" value="crown_vertex" checked><label for="zone-1" class="chip-label">Crown / Vertex</label></div>
+                                    <div class="chip-item"><input type="radio" id="zone-0" name="primary_concern_zone" value="routine_healthy_check" checked><label for="zone-0" class="chip-label">Routine Preventive Check</label></div>
+                                    <div class="chip-item"><input type="radio" id="zone-1" name="primary_concern_zone" value="crown_vertex"><label for="zone-1" class="chip-label">Crown / Vertex</label></div>
                                     <div class="chip-item"><input type="radio" id="zone-2" name="primary_concern_zone" value="hairline_temples"><label for="zone-2" class="chip-label">Hairline / Temples</label></div>
                                     <div class="chip-item"><input type="radio" id="zone-3" name="primary_concern_zone" value="central_parting"><label for="zone-3" class="chip-label">Central Parting Line</label></div>
                                     <div class="chip-item"><input type="radio" id="zone-4" name="primary_concern_zone" value="diffuse_all_over"><label for="zone-4" class="chip-label">Diffuse Global Thinning</label></div>
@@ -3486,7 +3486,15 @@
             document.getElementById('results-panel').style.display = 'flex';
 
             document.getElementById('res-condition-title').innerText = data.suggested_condition;
-            document.getElementById('res-shs-val').innerText = data.scalp_health_score.toFixed(1) + ' / 100';
+            const isWithheld = data.scoring_status === 'withheld_indeterminate' || data.confidence_gated;
+            const wBanner = document.getElementById('res-score-withheld-banner');
+            if (wBanner) wBanner.style.display = isWithheld ? 'block' : 'none';
+
+            if (isWithheld) {
+                document.getElementById('res-shs-val').innerHTML = '<span style="color:#fbbf24; font-size:1.6rem; font-weight:800;">WITHHELD</span> <span style="font-size:0.78rem; color:var(--text-secondary); font-weight:400; display:block; margin-top:2px;">(Indeterminate Pattern)</span>';
+            } else {
+                document.getElementById('res-shs-val').innerText = data.scalp_health_score.toFixed(1) + ' / 100';
+            }
             document.getElementById('res-confidence-tag').innerText = (data.confidence_score * 100).toFixed(1) + '%';
             document.getElementById('res-confidence-sub').innerText = data.confidence_gated
                 ? 'Below 65% gate -> routed to Level 2'

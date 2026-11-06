@@ -3,12 +3,15 @@
  * Connects the mobile frontend to the FastAPI dual-pipeline inference engine.
  */
 
-// Default to local development host; replace with tunnel or cloud URL for remote testing
-export const DEFAULT_API_BASE = "http://10.0.2.2:8000/api/v1"; // 10.0.2.2 maps to host localhost in Android Emulator
+// Configured for local Wi-Fi pairing; update if laptop IPv4 changes
+export const DEFAULT_API_BASE = "http://10.145.153.231:8000/api/v1";
 
 export async function checkSystemStatus(baseUrl = DEFAULT_API_BASE) {
   try {
-    const res = await fetch(`${baseUrl}/system/status`);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
+    const res = await fetch(`${baseUrl}/system/status`, { signal: controller.signal });
+    clearTimeout(timeoutId);
     if (!res.ok) throw new Error(`HTTP error ${res.status}`);
     return await res.json();
   } catch (error) {
@@ -34,37 +37,50 @@ export async function submitScalpAnalysis(imageUri, questionnaireData, baseUrl =
     }
   });
 
-  const res = await fetch(`${baseUrl}/analyze`, {
-    method: "POST",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "multipart/form-data",
-    },
-    body: formData,
-  });
-
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Analysis failed (${res.status}): ${errText}`);
+  let res;
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    res = await fetch(`${baseUrl}/analyze`, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+      },
+      body: formData,
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+  } catch (netErr) {
+    const isTimeout = netErr?.name === "AbortError";
+    const err = new Error(
+      isTimeout
+        ? `Request timed out after 15s. Ensure phone and laptop are on the same Wi-Fi (${baseUrl}).`
+        : `Cannot connect to clinical backend (${baseUrl}). Make sure your phone and laptop are connected to the same Wi-Fi and verify the IP in API Config.`
+    );
+    err.isNetworkError = true;
+    throw err;
   }
 
-  return await res.json();
-}
+  if (!res.ok) {
+    let errData = {};
+    try {
+      errData = await res.json();
+    } catch (_) {
+      const errText = await res.text().catch(() => "");
+      errData = { detail: errText };
+    }
+    const detail = errData.detail || {};
+    const errorCode = typeof detail === "object" ? detail.error_code : "";
+    const rejectionReason = typeof detail === "object" ? (detail.rejection_reason || detail.error) : (typeof detail === "string" ? detail : "");
+    const userGuidance = typeof detail === "object" ? detail.user_guidance : "";
 
-export async function recordConsent(userId, retentionDays = 30, baseUrl = DEFAULT_API_BASE) {
-  const res = await fetch(`${baseUrl}/consent`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      user_id: userId,
-      biometric_image_consent: true,
-      research_opt_in: false,
-      data_retention_days: retentionDays,
-    }),
-  });
+    const err = new Error(rejectionReason || `Analysis failed (${res.status})`);
+    err.status = res.status;
+    err.errorCode = errorCode;
+    err.rejectionReason = rejectionReason;
+    err.userGuidance = userGuidance;
+    throw err;
+  }
 
-  if (!res.ok) throw new Error("Consent recording failed");
   return await res.json();
 }
