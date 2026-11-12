@@ -1,156 +1,209 @@
-# Follica: Multimodal Optical Signal Processing and On-Device Deep Learning for Scalp Health Triage
+# Course Project Report: Follica — Multimodal Optical Signal Processing and On-Device Deep Learning for Scalp Health Triage
 
-**Author:** Karthik Sativada  
-**Repository:** [https://github.com/karthik1647/follica](https://github.com/karthik1647/follica)  
-**Android Release APK (100% Offline On-Device AI):** [https://github.com/karthik1647/follica/releases/tag/v1.0.0-apk](https://github.com/karthik1647/follica/releases/tag/v1.0.0-apk)
+**Submitted By:** Karthik Sativada  
+**Project Category:** Biomedical Signal Processing, Computer Vision & Edge AI Systems  
+**Source Code Repository:** [https://github.com/karthik1647/follica](https://github.com/karthik1647/follica)  
+**GitHub Release Page (Signed Android APK):** [https://github.com/karthik1647/follica/releases/tag/v1.0.0-apk](https://github.com/karthik1647/follica/releases/tag/v1.0.0-apk)  
+**Direct Android APK Download (100% Offline On-Device AI, ~137 MB):** [https://github.com/karthik1647/follica/releases/download/v1.0.0-apk/Follica-Clinical-Triage-v1.0.0.apk](https://github.com/karthik1647/follica/releases/download/v1.0.0-apk/Follica-Clinical-Triage-v1.0.0.apk)
 
-## 1. Abstract
+---
 
-Inflammatory, infectious, and scarring scalp conditions frequently go unrecognized in early stages due to overlapping visual presentations (erythema, follicular scaling, diffuse vs. focal alopecia) and limited access to dermatological trichoscopy. Existing consumer applications rely either on subjective questionnaires or unconstrained cloud neural networks that fail under smartphone camera blur, flash glare, and out-of-distribution non-scalp photographs.
+## 1. Executive Summary & Abstract
 
-**Follica** presents an end-to-end clinical decision-support and scalp triage system that combines deterministic optical signal processing (>80% of pipeline logic) with lightweight deep learning (<20% of pipeline logic). The system enforces a 2-step clinical workflow:
-1. **Step 01 (Clinical Intake & Anamnesis):** A 4-stage structured questionnaire capturing demographics, anatomical concern zones, extrinsic mechanical/environmental triggers (such as borewell hard water combined with daily helmet occlusion), systemic/nutritional indicators, and follicular pull-test dynamics to compute a standalone **Survey Risk Score (0 to 100)**.
-2. **Step 02 (Optical Triage & Synthesis):** A 5-stage pre-inference optical quality gate (resolution, Rec. 601 luminance, specular flash glare separation, 2D Laplacian + 8x8 focal patch sharpness, and YCrCb biological chrominance validation), classical computer vision micro-feature extraction yielding an objective **Scalp Health Score (SHS: 0 to 100)** across four 0-to-25 sub-scores, and a 10-class **MobileNetV4-Conv-Small** ONNX classifier gated at a 0.65 confidence threshold.
+Inflammatory, infectious, and scarring scalp disorders frequently go unrecognized in early stages due to overlapping visual morphology (erythema, perifollicular scaling, pustules, and diffuse vs. focal alopecia) and limited access to clinical trichoscopy. Existing consumer applications suffer from three fundamental engineering flaws: (1) they accept blurry, flash-washed, or non-scalp photographs without pre-inference validation, (2) they rely on black-box cloud neural networks that fail without internet connectivity, and (3) they conflate subjective questionnaire answers with physical image measurements.
 
-To eliminate network dependency and privacy concerns, the complete 10.19 MB ONNX model and pixel-level quality gates are embedded directly inside a signed Android release APK using `onnxruntime-react-native`, executing 100% offline in Airplane Mode. Across validation benchmarks, Follica achieves **100.0% accuracy (1,200 / 1,200)** on the held-out 10-class test split, **97.0% accuracy (97 / 100)** under simultaneous optical perturbations, a **95.9% quality-gate pass rate (1,151 / 1,200)** on clinical photographs while rejecting 100% of synthetic corrupt/non-scalp inputs, **10 / 10 cross-runtime prediction parity** between mobile and backend, and **114 / 114 automated pytest verification tests** passing.
+**Follica** is an end-to-end clinical decision-support and scalp triage system engineered to solve these limitations. Rather than relying solely on a black-box neural network, **over 80% of Follica's codebase consists of deterministic digital signal processing (DSP), classical computer vision micro-feature extractors, and rule-based clinical safety state machines**, while **under 20% comprises a fine-tuned MobileNetV4-Conv-Small neural classifier**.
 
-## 2. Clinical Need Statement & Market Gap
+The system enforces a strict two-stage clinical workflow:
+1. **Step 01 — Clinical Intake & Anamnesis (`survey_risk_engine.py`):** A 4-stage structured questionnaire capturing demographics, anatomical concern zones, extrinsic mechanical/environmental triggers (such as borewell hard water combined with daily helmet occlusion), systemic/nutritional indicators, and follicular pull-test dynamics to compute a standalone **Survey Risk Score (0 to 100)**.
+2. **Step 02 — Optical Triage & Synthesis (`quality_gate.py`, `cv_pipeline.py`, `classifier_service.py`, `triage_engine.py`):**
+   - **5-Stage Pre-Inference Quality Gate:** Rejects low-resolution (`<150x150`), underexposed (`Y < 35`), overexposed (`Y > 225`), flash-glare corrupted (`>15%` specular area), out-of-focus (2D Laplacian variance `< 60.0`), and out-of-distribution non-scalp photographs (`<10%` YCrCb cutaneous/melanin tissue) *before* inference.
+   - **Classical CV Micro-Feature Pipeline:** Computes an objective **Scalp Health Score (SHS: 0 to 100)** strictly from image pixels across four 0-to-25 sub-scores: Flake/Scaling, Erythema Redness, Sebum/Shine, and Follicular Density.
+   - **10-Class MobileNetV4 ONNX Classifier & Safety Gate:** Fine-tuned on a 12,000-image 10-class dataset, exported to a standalone `10.19 MB` ONNX graph, and governed by a `0.65` confidence threshold and Level 1 / Level 2 / Level 3 clinical escalation matrix.
 
-### 2.1 Formal Need Statement
-A way to provide early, non-diagnostic scalp health triage and active-ingredient education for individuals experiencing hair shedding, flaking, or scalp irritation using standard smartphone photographs and structured lifestyle history, while preventing misguidance from poor-quality images or high-risk scarring/infectious conditions requiring urgent dermatologist care.
+To enable field deployment without Wi-Fi or cloud servers, the complete `10.19 MB` ONNX model and pixel-level quality gates are embedded directly inside a signed Android release APK via `onnxruntime-react-native`, executing **100% offline in Airplane Mode**.
 
-### 2.2 Comparative Analysis Against Existing Solutions
+---
 
-| Capability / Safety Dimension | Cosmetic Brand Apps | Hardware Salon Scopes | Tele-Dermatology Portals | Follica (Ours) |
-| :--- | :--- | :--- | :--- | :--- |
-| **Hardware Required** | Smartphone | Proprietary USB Scope | Smartphone | Standard Smartphone |
-| **Offline On-Device Execution** | No (Cloud Lock-in) | Tied to Kiosk PC | No (Async Upload) | **Yes (100% Offline Android APK + FastAPI)** |
-| **Pre-Inference Quality Gate** | None (Accepts Blur/Glare) | Manual Operator | Human Reviewer | **5-Stage Automated Gate (Blur, Exposure, Glare, YCrCb Tissue)** |
-| **Specular Flash Glare Removal** | No | Polarized LED Hardware | No | **Algorithmic Dichromatic Masking** |
-| **Quantitative Sub-Scores** | Black-Box Single Score | Vendor-Specific | Qualitative Notes | **4 Transparent Sub-Scores (0-25 each) -> 0-100 SHS** |
-| **Commercial Bias** | Pushes Own Product Catalog | Pushes Salon Treatments | Prescription Only | **100% Brand-Neutral Active Chemical Molecules** |
-| **Clinical Safety Escalation** | Rarely Escalates | Cosmetic Focus | Physician Dependent | **0.65 Confidence Gate + Level 3 Red-Flag Escalation** |
+## 2. Problem Formulation, Objectives & Engineering Contribution
 
-## 3. Scientific Literature & Methodological Lineage
+### 2.1 Specific Project Objectives
+1. **Objective 1 (Pre-Inference Signal Integrity):** Design a deterministic optical quality gate capable of rejecting motion blur, defocus, extreme illumination, specular camera flash hotspots, and non-scalp objects prior to neural network execution.
+2. **Objective 2 (Explainable Classical CV Biomarkers):** Formulate white-balanced pixel segmentation algorithms to decompose scalp condition into four interpretable sub-scores (Flakes, Erythema, Sebum, Density) independent of neural network logits.
+3. **Objective 3 (Multimodal Clinical Correlation without Bias):** Decouple subjective lifestyle/symptom history (Survey Risk Score) from pixel measurements (Scalp Health Score) while reconciling high-risk clinical red flags (such as bleeding ulcers or painful pustules) in the final triage routing.
+4. **Objective 4 (100% Offline Edge Deployment):** Package the trained 10-class neural network and pixel quality gate into a standalone Android APK that operates with zero network dependency and 100% prediction parity with the Python backend.
 
-Every signal-processing filter, color-space transformation, and clinical decision rule in Follica is grounded in peer-reviewed literature:
+### 2.2 Division of Engineering Effort: Deterministic DSP/CV (>80%) vs. Deep Learning (<20%)
+A common critique of AI course projects is over-reliance on pre-built deep learning APIs. The table below documents the exact architectural division in Follica, demonstrating that the core contributions are custom signal processing, mathematical computer vision, and safety engineering:
 
-| Module / Engineering Stage | Scientific Paper / Standard | Mathematical / Algorithmic Implementation in Codebase |
-| :--- | :--- | :--- |
-| **Specular Glare Separation** | Shafer (1985), *Using Color to Separate Reflection Components*, Color Res. Appl. | `cv_pipeline.py` & `quality_gate.py`: Separates achromatic high-intensity surface reflection (`V > 240`, chroma diff `< 20`) from diffuse epidermal scatter so flash hotspots are never miscounted as dandruff flakes. |
-| **Macro Focus & Blur Gate** | Pech-Pacheco et al. (2000), *Diatom Autofocusing in Brightfield Microscopy*, ICPR | `quality_gate.py` & `offlineEngine.js`: Computes discrete 2D Laplacian variance across the global frame and peak 8x8 spatial sub-blocks (threshold `>= 60.0`) so smooth skin does not dilute focal follicular sharpness. |
-| **Illuminant Color Constancy** | Buchsbaum (1980), *A Spatial Processor Model for Object Color Perception*, J. Franklin Inst. | `cv_pipeline.py`: Constrained Gray-World normalization clamping RGB channel gains to `[0.7, 1.4]` so warm indoor lighting is corrected without erasing pathological erythema redness. |
-| **Alopecia & Coverage Staging** | Olsen et al. (2004) *SALT* & Norwood (1975) *Male Pattern Baldness* | `cv_pipeline.py`: CIELAB `L*` luminance segmentation combined with morphological closing and 64x64 spatial tile uniformity to quantify visible follicular density (0 to 25). |
-| **Seborrheic & Scaling Index** | Gupta & Bluhm (2004), *Seborrheic Dermatitis*, J. Eur. Acad. Dermatol. Venereol. | `cv_pipeline.py`: Glare-free local adaptive thresholding (`local_mean + 55` and `gray > 185`) + red-excess chrominance (`R - (G+B)/2`) on segmented non-hair skin pixels. |
-| **Edge Neural Architecture** | Qin et al. (2024), *MobileNetV4: Universal Models for the Mobile Ecosystem*, ECCV | `classifier_service.py` & `offlineEngine.js`: `mobilenetv4_conv_small` Universal Inverted Bottleneck (UIB) backbone exported to Opset 14 ONNX (`10.19 MB`) for sub-second CPU/mobile inference. |
-| **Clinical Governance** | US FDA (2022), *Clinical Decision Support Software Guidance* | `triage_engine.py`: Enforces non-diagnostic terminology ("Pattern Suggestive of..."), 0.65 confidence gate, and mandatory Level 3 dermatologist referral for scarring/infectious patterns. |
-
-## 4. System Architecture & Multimodal Pipeline
-
-Follica deliberately separates **subjective patient history** from **objective pixel measurements** so that questionnaire inputs never corrupt physical optical sub-scores:
-
-### 4.1 Step 01: Clinical Intake & Survey Risk Engine (`backend/app/services/survey_risk_engine.py`)
-Because public dermatology image datasets contain photographs without patient lifestyle history, Follica processes the 4-step clinical intake through a dedicated **Survey Risk Engine**:
-- **Step 1 (Demographics & Zone):** Biological sex (Norwood vs. Ludwig reference), age bracket, and primary concern zone (Crown/Vertex, Hairline/Temples, Central Parting, Diffuse Thinning, Focal Patchy Spots, or Routine Check).
-- **Step 2 (Extrinsic & Mechanical):** Water supply (Hard Borewell >300 ppm vs. Filtered), daily helmet occlusion, chemical/heat styling, and wash cadence. Detects compound mechanical traps such as *Hard Borewell Water + Daily Helmet Occlusion*.
-- **Step 3 (Systemic & Nutritional):** Dietary protein/iron intake, gut absorption, metabolic/thyroid energy profile, endocrine indicators (PCOS/postpartum), stress, and sleep quality.
-- **Step 4 (Follicular Dynamics):** Hair pull test (`<3` negative, `3-5` borderline, `>5` positive), flake morphology (fine dry white, greasy yellow, crusty plaque), scalp sensations (itching, burning, trichodynia pain, pustular bumps), and duration.
-- **Output:** Produces a standalone **Survey Risk Score (0 to 100)**, risk band (`low`, `moderate`, `high`, `critical`), and a prioritized queue of modifiable lifestyle interventions.
-
-### 4.2 Step 02: 5-Stage Pre-Inference Optical Quality Gate (`backend/app/services/quality_gate.py`)
-Before any computer vision scoring or neural network inference occurs, every photograph must pass five deterministic checks (implemented in both Python and mobile JavaScript):
-
-| Gate Stage | Metric & Formula | Rejection Threshold | Error Code |
+| Subsystem | Codebase Module | Algorithmic Nature | Engineering Role & Contribution |
 | :--- | :--- | :--- | :--- |
-| **1. Dimensional Resolution** | Pixel width and height `W, H` | `W < 150` or `H < 150` px | `IMAGE_RESOLUTION_TOO_LOW` |
-| **2. Perceptual Exposure** | Rec. 601 Luminance `Y = 0.299R + 0.587G + 0.114B` | `mean(Y) < 35.0` or `> 225.0` | `IMAGE_UNDEREXPOSED` / `IMAGE_OVEREXPOSED` |
-| **3. Flash Glare Filter** | Achromatic saturated pixels (`max(R,G,B) > 240` and `|R-G|+|G-B| < 20`) | Glare area `> 15.0%` of frame | `FLASH_GLARE_DETECTED` |
-| **4. Focus Sharpness** | `max(Var(Laplacian_global), max_8x8(Var(Laplacian_patch)))` | Sharpness `< 60.0` | `IMAGE_TOO_BLURRY` |
-| **5. Biological Tissue (OOD)** | YCrCb cutaneous skin (`Cr in [128,180], Cb in [75,142]`) + melanin hair (`Y < 85`) | Bio tissue `< 10.0%` | `NON_SCALP_IMAGE_DETECTED` |
+| **1. Optical Quality & OOD Gate** | `backend/app/services/quality_gate.py` & `mobile/src/services/offlineEngine.js` | **100% Deterministic DSP & Color-Space Math** | Rec. 601 luminance, dichromatic specular glare mask, 4-neighbor 2D Laplacian + 8x8 focal block sharpness, YCrCb cutaneous/hair chrominance gate, EXIF ISO/shutter evaluator. |
+| **2. Classical CV Biomarkers** | `backend/app/services/cv_pipeline.py` | **100% Classical Computer Vision** | Constrained Gray-World white balance, adaptive glare-free flake thresholding, epidermal red-excess index, diffuse sebum shine, CIELAB `L*` hair density & 64x64 spatial tile uniformity. |
+| **3. Longitudinal Registration** | `backend/app/services/registration.py` | **100% Geometric Computer Vision** | ORB keypoint detection (500 features), Brute-Force Hamming matcher, and RANSAC homography warping (`cv2.findHomography`) for baseline vs. follow-up alignment. |
+| **4. Anamnesis Risk Engine** | `backend/app/services/survey_risk_engine.py` | **100% Rule-Based Clinical Modeling** | 4-step weighted risk matrix, compound trigger detection (hard water x helmet wear), and ranked modifiable intervention queue. |
+| **5. Clinical Triage & Safety Gate** | `backend/app/services/triage_engine.py` | **100% Deterministic State Machine** | Enforces 0.65 confidence gate, reconciles photo-vs-symptom contradictions, routes Level 1/2/3 urgency, and maps brand-neutral active molecules. |
+| **6. Privacy & Consent Store** | `backend/app/services/consent_store.py` | **100% Cryptographic / DB Engineering** | Salted SHA-256 pseudonymization, UUID v4 consent receipts, and DPDP/GDPR-compliant SQLite revocation. |
+| **7. 10-Class Visual Classifier** | `training/train.py` & `classifier_service.py` | **Fine-Tuned Deep Learning (<20% of system)** | `mobilenetv4_conv_small` trained with AdamW, Cosine Annealing, label smoothing (`0.10`), and Albumentations; exported to Opset 14 ONNX (`10.19 MB`). |
 
-### 4.3 Classical Computer Vision Micro-Feature Pipeline (`backend/app/services/cv_pipeline.py`)
-Valid scalp images undergo constrained Gray-World white balancing and pixel segmentation to compute the **Scalp Health Score (SHS: 0 to 100)** as the sum of four independent **0-to-25 sub-scores** (higher = healthier):
-1. **Flake & Scaling Score (0-25):** Quantifies bright hyperkeratotic particles on glare-masked non-hair epidermis using local contrast thresholding.
-2. **Erythema / Redness Score (0-25):** Measures vascular inflammation via raw and white-balanced red-excess chrominance (`R - 0.5*(G + B)`) strictly over exposed scalp skin pixels.
-3. **Sebum / Surface Shine Score (0-25):** Evaluates diffuse lipid sheen on non-glare skin regions after removing specular flash artifacts.
-4. **Follicular Density / Coverage Score (0-25):** Combines CIELAB `L*` melanin shaft segmentation, morphological dilation, and 64x64 tile spatial uniformity.
+---
 
-### 4.4 Deep Learning Classification & Clinical Triage Engine (`classifier_service.py`, `triage_engine.py`)
-1. **Preprocessing:** Resizes the RGB image to `224 x 224`, scales to `[0, 1]`, normalizes by ImageNet mean `[0.485, 0.456, 0.406]` and std `[0.229, 0.224, 0.225]`, and transposes to `NCHW` `(1, 3, 224, 224)`.
-2. **Probability Calibration:** Applies numerically stable softmax with dominance recovery (`1.35x` logit scaling when top-1 probability is in `[0.50, 0.65)` with `>= 4.5x` dominance over runner-up, compensating for `0.10` label smoothing during training).
-3. **0.65 Confidence Gate:** Any prediction with confidence `< 0.65` is intercepted and routed to `Indeterminate Pattern / Requires Verification` (`Level 2: Monitored Routine`), preventing low-confidence guessing.
-4. **Clinical Contradiction Reconciliation & Escalation:**
-   - **Level 1 (Minor Home Routine):** Healthy/Balanced Scalp, Mild Dry Scalp.
-   - **Level 2 (Monitored Routine):** Seborrheic Dermatitis, Contact Dermatitis, Androgenetic Alopecia, Telogen Effluvium, or confidence-gated indeterminate scans.
-   - **Level 3 (Consult a Dermatologist Urgently):** Alopecia Areata, Folliculitis, Scalp Psoriasis, Lichen Planus, Tinea Capitis, Head Lice, or any intake reporting bleeding/non-healing ulcers or acute painful pustules.
+## 3. Literature Review & Methodological Lineage
 
-## 5. Dataset, Model Training & Toolchain Specification
+Every mathematical operator and clinical rule in Follica is derived from peer-reviewed literature and regulatory standards:
 
-### 5.1 Standardized 10-Class Dataset & Integrity Audit
-The classifier was trained on the 12,000-image, 10-class *Hair Diseases* dataset (`9,600` train / `1,200` validation / `1,200` test; `1,200` images per class):
-- **Classes (Alphabetical Index 0-9):** `Alopecia Areata`, `Contact Dermatitis`, `Folliculitis`, `Head Lice`, `Lichen Planus`, `Male Pattern Baldness`, `Psoriasis`, `Seborrheic Dermatitis`, `Telogen Effluvium`, `Tinea Capitis`.
-- **Audit Results:** `0` corrupt files and `0` exact MD5 cross-split duplicates.
-
-### 5.2 Training Hyperparameters & Software Toolchain
-
-| Category | Tool / Parameter | Exact Configuration Used |
+| Engineering Stage | Primary Literature Reference | How It Was Adapted & Implemented in Follica |
 | :--- | :--- | :--- |
-| **Backbone Architecture** | `timm` (`1.0+`) | `mobilenetv4_conv_small.e1200_r224_in1k` (Universal Inverted Bottleneck) |
-| **Training Framework** | PyTorch (`2.4+` CUDA AMP) | Mixed-precision (`torch.cuda.amp.autocast`), 15 epochs on NVIDIA T4 GPU |
-| **Optimizer** | `torch.optim.AdamW` | Learning rate `3e-4`, weight decay `1e-2` |
-| **LR Scheduler** | `CosineAnnealingLR` | Cosine decay from `3e-4` to `1e-6` across 15 epochs |
-| **Loss Function** | `nn.CrossEntropyLoss` | `label_smoothing = 0.10` to prevent overconfident logit saturation |
-| **Optical Augmentations** | `Albumentations` | `CLAHE`, `ColorJitter`, `RandomResizedCrop(224,224)`, `HorizontalFlip`, `ShiftScaleRotate` |
-| **Model Export** | `torch.onnx` & `onnx` | Opset 14, constant folding enabled, merged single-file `10.19 MB` artifact |
-| **Backend & CV Stack** | FastAPI, OpenCV, NumPy, ReportLab | REST API, ORB homography registration, 1-page PDF Clinical Pass generator |
-| **On-Device Mobile Stack** | React Native `0.74`, Expo `51`, `onnxruntime-react-native` `1.18.0` | Bundled `asset:///follica_mobilenetv4.onnx` + `expo-image-manipulator` + `jpeg-js` |
+| **Specular Glare Separation** | Shafer, S. A. (1985). *Using Color to Separate Reflection Components*. Color Research & Application, 10(4), 210-218. | Implemented in `build_specular_glare_mask()` (`cv_pipeline.py`) and `calculate_flash_glare_ratio()` (`quality_gate.py`). Identifies achromatic high-intensity pixels (`max(R,G,B) > 240` and `|R-G| + |G-B| < 20`) caused by direct smartphone flash on curved scalp skin, masking them out before flake segmentation so flash reflections are never misclassified as dandruff. |
+| **Macro Focus Validation** | Pech-Pacheco, J. L., et al. (2000). *Diatom Autofocusing in Brightfield Microscopy: A Comparative Study*. ICPR, Vol. 3, 314-317. | Implemented in `calculate_laplacian_variance()` (`quality_gate.py` & `offlineEngine.js`). Computes the variance of the discrete 2D Laplacian operator. Extended with an **8x8 spatial grid peak variance** check so that smooth bald skin or background bokeh does not artificially depress the sharpness score of an in-focus focal lesion (raising clinical pass rate from 70.8% to 95.9%). |
+| **Illuminant Color Constancy** | Buchsbaum, G. (1980). *A Spatial Processor Model for Object Color Perception*. Journal of the Franklin Institute, 310(1), 1-26. | Implemented in `apply_gray_world_white_balance()` (`cv_pipeline.py`). Standard unconstrained Gray-World scaling pulls red inflamed scalps toward neutral gray, hiding disease. We implemented **Constrained Gray-World** by clamping per-channel scaling gains to `[0.70, 1.40]` and cross-checking against raw unscaled red-excess. |
+| **Alopecia Coverage Staging** | Olsen, E. A., et al. (2004). *SALT Investigational Assessment Guidelines*. JAAD, 51(3), 440-447; Norwood, O. T. (1975). | Implemented in `extract_hair_density()` (`cv_pipeline.py`). Converts RGB to CIELAB and segments dark keratin hair shafts (`L* < 85`), applies morphological closing, and evaluates 64x64 spatial tile distribution to distinguish diffuse thinning from focal patchy loss. |
+| **Seborrheic & Scaling Index** | Gupta, A. K., & Bluhm, R. (2004). *Seborrheic Dermatitis*. JEADV, 18(1), 13-26. | Implemented in `extract_flakes()` and `extract_erythema()` (`cv_pipeline.py`). Combines glare-free local adaptive contrast (`gray > local_mean + 55` and `gray > 185`) with exposed-skin red-excess chrominance (`R - 0.5*(G+B)`). |
+| **Mobile Neural Backbone** | Qin, D., et al. (2024). *MobileNetV4: Universal Models for the Mobile Ecosystem*. ECCV 2024. | Implemented in `training/train.py`, `classifier_service.py`, and `offlineEngine.js`. Uses Universal Inverted Bottleneck (UIB) blocks to achieve a `10.19 MB` single-file ONNX footprint suitable for offline execution on budget Android smartphones. |
+| **Clinical Safety Governance** | US FDA (2022). *Clinical Decision Support Software — Guidance for Industry and FDA Staff*. | Implemented in `triage_engine.py` and `constants.py`. Enforces non-diagnostic output phrasing ("Pattern Suggestive of..."), transparent basis disclosure, a 0.65 confidence gate, and mandatory Level 3 dermatologist escalation for scarring/infectious conditions. |
 
-## 6. On-Device Offline Android Architecture
+---
 
-A key engineering requirement was enabling the mobile app to classify scalp diseases and enforce image quality checks **100% offline on an Android phone with no Wi-Fi or laptop server**.
+## 4. Mathematical Formulations & System Architecture
 
-1. **Single-File ONNX Consolidation (`mobile/scripts/export_offline_assets.py`):** Merged the PyTorch external tensor data file (`.onnx` + `.onnx.data`) into a single self-contained `10.19 MB` binary (`mobile/assets/model/follica_mobilenetv4.onnx`).
-2. **Android Native Asset Packaging (`.github/workflows/build-apk.yml`):** Configured Gradle (`minSdkVersion 24`, `targetSdkVersion 34`, `onnxruntime-android:1.18.0`) to bundle `follica_mobilenetv4.onnx` inside `android/app/src/main/assets/`.
-3. **On-Device Execution Pipeline (`mobile/src/services/offlineEngine.js`):**
-   - Decodes the captured photo via `expo-image-manipulator` and `jpeg-js` into raw RGBA pixel buffers.
-   - Runs `qualityMetrics()` and `evaluateQuality()` locally on the phone, rejecting blurry, dark, overexposed, glare-corrupted, or non-scalp photos before inference.
-   - Resizes valid photos to `224 x 224`, applies ImageNet normalization into a `Float32Array(150528)`, and executes `InferenceSession.run()` on the phone's CPU/NPU via `onnxruntime-react-native`.
-   - Computes pixel-level sub-scores, reconciles clinical intake flags, and renders the full triage report offline.
+### 4.1 Stage 1: 5-Stage Pre-Inference Optical Quality Gate (`quality_gate.py` & `offlineEngine.js`)
+Given an input RGB image tensor `I(x, y)` of dimensions `H x W x 3`:
 
-## 7. Experimental Results & Verification Benchmarks
+1. **Dimensional Integrity Gate:**
+   - Formula: `min(W, H) >= 150 px`
+   - Rejects low-resolution thumbnails lacking spatial detail for follicular segmentation.
+2. **Perceptual Luminance (Rec. 601) Exposure Gate:**
+   - Formula: `Y(x, y) = 0.299 * R(x, y) + 0.587 * G(x, y) + 0.114 * B(x, y)`
+   - Criterion: `35.0 <= mean(Y) <= 225.0` (rejects severe underexposure or washed-out overexposure).
+3. **Dichromatic Specular Flash Glare Gate:**
+   - Formula: `M_glare(x, y) = 1 if (max(R, G, B) > 240 AND (|R - G| + |G - B|) < 20) else 0`
+   - Criterion: `(sum(M_glare) / (H * W)) * 100 <= 15.0%` (rejects frames obliterated by direct camera flash).
+4. **Global + 8x8 Focal Patch Laplacian Sharpness Gate:**
+   - Discrete 2D Laplacian: `L(x, y) = Y(x+1, y) + Y(x-1, y) + Y(x, y+1) + Y(x, y-1) - 4 * Y(x, y)`
+   - Criterion: `S_sharp = max(Var(L_global), max_{i,j in 0..7} Var(L_patch[i,j])) >= 60.0`
+5. **YCrCb Biological Cutaneous & Hair Chrominance Gate (Out-of-Distribution Rejection):**
+   - Chrominance Transform: `Cr = (R - Y) * 0.713 + 128`, `Cb = (B - Y) * 0.564 + 128`
+   - Epidermal Mask: `M_skin = (128 <= Cr <= 180) AND (75 <= Cb <= 142) AND (25 <= Y <= 240) AND (R >= B - 5) AND (|R - G| + |R - B| >= 8)`
+   - Melanin Hair Mask: `M_hair = (Y < 85) AND (|R - G| < 40) AND (|G - B| < 40)`
+   - Criterion: `BioRatio = mean(M_skin OR M_hair) * 100 >= 10.0%` (rejects non-scalp objects, pets, furniture, and landscapes).
 
-### 7.1 Model Classification & Robustness Benchmarks
+### 4.2 Stage 2: Classical CV Sub-Scores & Composite Scalp Health Score (`cv_pipeline.py`)
+Each valid photograph is decomposed into four sub-scores bounded in `[0, 25]` (where `25.0` represents optimal health):
+- **Flake Score (`S_flake` in `[0, 25]`):** Computed from the area fraction of bright hyperkeratotic particles (`gray > local_mean + 55` and `gray > 185`) on glare-free non-hair epidermis (`NOT M_glare AND NOT M_hair`).
+- **Redness Score (`S_red` in `[0, 25]`):** Computed from mean epidermal red-excess `E_r = mean_{M_skin}(R - 0.5 * (G + B))` across both constrained Gray-World white-balanced and raw channels.
+- **Sebum Score (`S_sebum` in `[0, 25]`):** Computed from diffuse high-luminance sheen (`185 < Y <= 240`) on exposed skin after excluding specular flash hotspots.
+- **Follicular Density Score (`S_density` in `[0, 25]`):** Computed from segmented hair shaft ratio (`L* < 85`) and `64 x 64` spatial tile coverage uniformity.
+- **Composite Scalp Health Score (`SHS` in `[0, 100]`):**
+  - Formula: `SHS = round(S_flake + S_red + S_sebum + S_density, 1)`
 
-| Evaluation Benchmark | Sample Size | Measured Result | Notes |
+### 4.3 Stage 3: Neural Classification, Softmax Calibration & Triage Routing (`classifier_service.py`, `triage_engine.py`)
+1. **ImageNet Normalization:** Input resized to `224 x 224`, normalized via `mean = [0.485, 0.456, 0.406]`, `std = [0.229, 0.224, 0.225]`.
+2. **Dominance-Calibrated Softmax:** Because the model is trained with label smoothing `0.10`, maximum raw softmax probability on compressed real-world photos can compress slightly below `0.65`. When top-1 probability `p_1` is in `[0.50, 0.65)` and dominance ratio `p_1 / p_2 >= 4.5`, temperature-scaled logits (`1.35 * z`) recover true confidence.
+3. **Confidence Gate & Clinical Reconciliation:**
+   - If `p_1 < 0.65`: Output `Indeterminate Pattern / Requires Verification` (`Level 2: Monitored Routine`).
+   - If the visual prediction is non-inflammatory thinning (*Androgenetic Alopecia* or *Telogen Effluvium*) but the patient reports acute painful pustules or thick crusty plaques in Step 01, the engine reconciles the contradiction in favor of the higher-acuity inflammatory condition (*Folliculitis* or *Scalp Psoriasis*).
+
+---
+
+## 5. Dataset, Training Pipeline & Toolchain Specification
+
+### 5.1 Dataset Composition & Cross-Split Audit
+- **Source:** 10-Class Kaggle *Hair Diseases* Dataset (`12,000` total images: `9,600` train / `1,200` validation / `1,200` test; `1,200` balanced images per class).
+- **10 Condition Classes:** `Alopecia Areata`, `Contact Dermatitis`, `Folliculitis`, `Head Lice`, `Lichen Planus`, `Male Pattern Baldness`, `Psoriasis`, `Seborrheic Dermatitis`, `Telogen Effluvium`, `Tinea Capitis`.
+- **Integrity Audit:** Verified `0` unreadable/corrupt files and `0` exact MD5 byte duplicates across train/val/test splits.
+
+### 5.2 Training Hyperparameters & Complete Toolchain
+
+| Component | Library / Tool | Exact Specification in Repository |
+| :--- | :--- | :--- |
+| **Backbone Network** | `timm` (`1.0+`) | `mobilenetv4_conv_small.e1200_r224_in1k` (Universal Inverted Bottleneck) |
+| **Deep Learning Framework** | PyTorch (`2.4+` CUDA AMP) | Mixed-precision FP16 (`torch.cuda.amp.autocast`), 15 epochs on NVIDIA T4 GPU |
+| **Optimizer & Regularization** | `torch.optim.AdamW` | Learning rate `3e-4`, weight decay `1e-2`, Cross-Entropy `label_smoothing = 0.10` |
+| **Learning Rate Schedule** | `CosineAnnealingLR` | Cosine decay from `3e-4` down to `1e-6` over 15 epochs |
+| **Photometric & Geometric Augmentation** | `Albumentations` | `CLAHE`, `ColorJitter`, `RandomResizedCrop(224,224)`, `HorizontalFlip`, `ShiftScaleRotate` |
+| **ONNX Graph Export** | `torch.onnx` & `onnx` | Opset 14, constant folding enabled, merged single-file `10.19 MB` binary |
+| **Backend & PDF Engine** | FastAPI, OpenCV, NumPy, ReportLab | REST API (`/api/v1/analyze`), ORB homography, 1-page Clinical Pass PDF generator |
+| **Offline Mobile Runtime** | React Native `0.74`, Expo `51`, `onnxruntime-react-native` `1.18.0` | Bundled `asset:///follica_mobilenetv4.onnx` + `expo-image-manipulator` + `jpeg-js` |
+| **CI/CD & Cloud APK Builder** | GitHub Actions | `.github/workflows/ci.yml` (114 pytest tests) & `build-apk.yml` (API 34 RSA-2048 signed APK) |
+
+---
+
+## 6. On-Device Offline Android Engineering
+
+To make the mobile app work completely offline without a laptop server or Wi-Fi connection:
+1. **Single-File ONNX Consolidation (`mobile/scripts/export_offline_assets.py`):** Merged PyTorch's external weight file (`follica_mobilenetv4.onnx` + `.onnx.data`) into a single self-contained `10.19 MB` model (`mobile/assets/model/follica_mobilenetv4.onnx`).
+2. **Native Android Asset Packaging (`.github/workflows/build-apk.yml`):** Configured Gradle (`minSdkVersion 24`, `targetSdkVersion 34`, `com.microsoft.onnxruntime:onnxruntime-android:1.18.0`) to package `follica_mobilenetv4.onnx` inside `android/app/src/main/assets/` and copy it to the app document directory on first launch.
+3. **On-Device Inference & Quality Gate (`mobile/src/services/offlineEngine.js`):**
+   - Uses `expo-image-manipulator` and pure-JS `jpeg-js` to decode camera/gallery photos into RGBA pixel arrays on the phone.
+   - Runs `qualityMetrics()` and `evaluateQuality()` locally, enforcing the exact same 5-stage quality gate (resolution, brightness, glare, Laplacian sharpness, YCrCb skin/hair ratio) as the Python server.
+   - Normalizes valid `224 x 224` pixel buffers into a `Float32Array(150528)` and executes `InferenceSession.run()` directly on the phone via `onnxruntime-react-native`.
+
+---
+
+## 7. Experimental Results, Critical Analysis & Verification
+
+### 7.1 Quantitative Benchmark Summary
+
+| Evaluation Benchmark | Dataset / Cohort Size | Measured Result | Engineering Interpretation |
 | :--- | :--- | :--- | :--- |
-| **Held-Out Test Split Accuracy** | `1,200` images (10 classes) | **100.00% (`1,200 / 1,200`)** | Macro F1 = `1.000` across all 10 classes |
-| **Adversarial Camera Perturbation** | `100` perturbed test images | **97.00% (`97 / 100`)** | Simultaneous 15-deg rotation + 15% crop + 15% darkening + JPEG Q75 |
-| **Quality Gate Clinical Pass Rate** | `1,200` clinical test images | **95.92% (`1,151 / 1,200`)** | Improved from `70.8%` after 8x8 focal patch sharpness upgrade |
-| **On-Device Mobile vs. Python Parity** | `10` held-out demo specimens | **100.00% (`10 / 10` match)** | Verified via `node mobile/scripts/verify_offline_engine.js` |
-| **Real-Life Clinical Persona Suite** | `20` multimodal patient scenarios | **100.00% (`20 / 20` pass)** | Verified via `python scripts/test_real_life_expectations.py` |
-| **Automated Pytest Verification Suite** | `114` unit/integration/fuzz tests | **100.00% (`114 / 114` pass)** | Verified via `python verify_accuracy.py` |
+| **Held-Out Test Split Accuracy** | `1,200` test images (10 classes) | **100.00% (`1,200 / 1,200`)** | Macro F1 = `1.000` on dataset test split (see Section 8.2 for critical analysis of dataset homogeneity). |
+| **Adversarial Optical Perturbation** | `100` perturbed test images | **97.00% (`97 / 100`)** | Simultaneous 15-deg rotation + 15% border crop + 15% darkening + JPEG Q75 compression. |
+| **Quality Gate Clinical Pass Rate** | `1,200` clinical test images | **95.92% (`1,151 / 1,200`)** | Upgraded from `70.8%` by adding 8x8 focal block sharpness and border studio-wall glare filtering. |
+| **Quality Gate Corrupt/OOD Rejection** | Synthetic dark, bright, blurry, non-scalp | **100.00% Rejected** | All corrupt and non-scalp inputs intercepted before neural network inference. |
+| **On-Device Mobile vs. Backend Parity** | `10` held-out clinical demo specimens | **100.00% (`10 / 10` match)** | Identical top-1 predicted disease class between mobile JS engine and Python backend. |
+| **Real-Life Clinical Persona Suite** | `20` multimodal patient scenarios | **100.00% (`20 / 20` pass)** | End-to-end verification of intake + photo + triage routing (`test_real_life_expectations.py`). |
+| **Automated Software Test Suite** | `114` unit, integration & fuzz tests | **100.00% (`114 / 114` pass)** | Verified in CI and locally via `python verify_accuracy.py`. |
 
-### 7.2 On-Device Offline Parity Verification Log (`verify_offline_engine.js`)
+### 7.2 On-Device Offline Parity Table (`node mobile/scripts/verify_offline_engine.js`)
 
-| Specimen File | On-Device Predicted Condition | Confidence | Quality Gate | Backend Match |
+| Specimen Image | On-Device Mobile Prediction | Confidence | Quality Gate | Python Backend Agreement |
 | :--- | :--- | :--- | :--- | :--- |
-| `alopecia_areata_0026.jpg` | Pattern Suggestive of Alopecia Areata / Patchy Loss | `0.926` | `PASS` | Exact Match |
-| `contact_dermatitis_0036.jpg` | Pattern Suggestive of Contact Dermatitis / Irritation | `0.937` | `PASS` | Exact Match |
-| `folliculitis_0062.jpg` | Pattern Suggestive of Folliculitis / Scalp Bumps | `0.960` | `PASS` | Exact Match |
-| `head_lice_0036.jpg` | Pattern Suggestive of Head Lice / Infestation | `0.901` | `PASS` | Exact Match |
-| `lichen_planus_0026.jpg` | Pattern Suggestive of Lichen Planus / Scarring Inflammation | `0.920` | `PASS` | Exact Match |
-| `male_pattern_baldness_0026.jpg` | Pattern Suggestive of Androgenetic Alopecia / Pattern Thinning | `0.966` | `PASS` | Exact Match |
-| `psoriasis_0026.jpg` | Pattern Suggestive of Scalp Plaque / Scaling | `0.969` | `PASS` | Exact Match |
-| `seborrheic_dermatitis_0026.jpg` | Pattern Suggestive of Seborrheic Dermatitis | `0.952` | `PASS` | Exact Match |
-| `telogen_effluvium_0026.jpg` | Pattern Suggestive of Telogen Effluvium / Diffuse Shedding | `0.956` | `PASS` | Exact Match |
-| `tinea_capitis_0026.jpg` | Pattern Suggestive of Tinea Capitis / Fungal Scalp Infection | `0.949` | `PASS` | Exact Match |
+| `alopecia_areata_0026.jpg` | Pattern Suggestive of Alopecia Areata / Patchy Loss | `0.926` | `PASS` | Exact Match (Class 0) |
+| `contact_dermatitis_0036.jpg` | Pattern Suggestive of Contact Dermatitis / Irritation | `0.937` | `PASS` | Exact Match (Class 1) |
+| `folliculitis_0062.jpg` | Pattern Suggestive of Folliculitis / Scalp Bumps | `0.960` | `PASS` | Exact Match (Class 2) |
+| `head_lice_0036.jpg` | Pattern Suggestive of Head Lice / Infestation | `0.901` | `PASS` | Exact Match (Class 3) |
+| `lichen_planus_0026.jpg` | Pattern Suggestive of Lichen Planus / Scarring Inflammation | `0.920` | `PASS` | Exact Match (Class 4) |
+| `male_pattern_baldness_0026.jpg` | Pattern Suggestive of Androgenetic Alopecia / Pattern Thinning | `0.966` | `PASS` | Exact Match (Class 5) |
+| `psoriasis_0026.jpg` | Pattern Suggestive of Scalp Plaque / Scaling | `0.969` | `PASS` | Exact Match (Class 6) |
+| `seborrheic_dermatitis_0026.jpg` | Pattern Suggestive of Seborrheic Dermatitis | `0.952` | `PASS` | Exact Match (Class 7) |
+| `telogen_effluvium_0026.jpg` | Pattern Suggestive of Telogen Effluvium / Diffuse Shedding | `0.956` | `PASS` | Exact Match (Class 8) |
+| `tinea_capitis_0026.jpg` | Pattern Suggestive of Tinea Capitis / Fungal Scalp Infection | `0.949` | `PASS` | Exact Match (Class 9) |
 
-## 8. Privacy, Regulatory Governance & Limitations
+---
 
-1. **DPDP Act (India 2023) & GDPR Alignment (`docs/privacy.md`):**
-   - On-device offline mode processes photographs entirely in volatile phone memory with zero cloud transmission.
-   - Server consent records use random UUID v4 identifiers and salted SHA-256 pseudonyms stored in local SQLite (`backend/app/services/consent_store.py`) with immediate user-initiated revocation (`DELETE /api/v1/consent/{id}`).
-2. **Threshold Transparency (`docs/thresholds.md`):**
-   - All classical CV and quality-gate cutoffs (Laplacian blur `60.0`, glare `15.0%`, confidence gate `0.65`) are explicitly documented as provisional engineering baselines awaiting calibration against 100 to 200 dermatologist-graded volunteer photographs across Fitzpatrick skin phototypes IV to VI.
-3. **Dataset Scope & Real-World Generalization:**
-   - While held-out test accuracy on the Kaggle dataset is 100.0%, internet images or extreme uncalibrated camera angles can exhibit domain shift. The 5-stage quality gate and 0.65 confidence gate mitigate this risk by intercepting out-of-distribution inputs rather than outputting forced predictions.
+## 8. Critical Discussion, Limitations & Academic Honesty
+
+To maintain rigorous academic transparency, three limitations are explicitly documented:
+
+1. **Critical Analysis of the 100.0% Dataset Split Accuracy:**
+   While our fine-tuned MobileNetV4 achieves `100.0%` (`1,200 / 1,200`) on the held-out test split of the public Kaggle *Hair Diseases* dataset (with zero exact MD5 file duplicates across splits), our dataset audit (`README.md` Section 13.1) noted that public dermatology datasets often contain pre-augmented variations across splits. Therefore, `100.0%` reflects convergence on that curated distribution rather than guaranteed accuracy on arbitrary internet photographs. Under simultaneous synthetic camera perturbations (rotation, crop, darkening, JPEG compression), accuracy is `97.0%`, and on unconstrained wild photographs, our **0.65 Confidence Gate** and **5-Stage Quality Gate** act as essential safety barriers against domain shift.
+2. **Provisional Nature of Classical CV Thresholds (`docs/thresholds.md`):**
+   Numeric cutoffs in the classical CV pipeline (Laplacian blur `60.0`, flash glare `15.0%`, YCrCb bio-ratio `10.0%`, confidence gate `0.65`) are engineering heuristics calibrated on our development set. Clinical deployment requires prospective calibration across 100 to 200 dermatologist-graded photographs spanning Fitzpatrick skin phototypes IV to VI (`training/calibration_loader.py`).
+3. **On-Device Sub-Score Approximation:**
+   While the Android offline engine runs the **exact same 10.19 MB MobileNetV4 ONNX neural network** and the **exact 5-stage quality gate** as the Python backend, its 4 optical sub-scores use a streamlined single-pass RGBA pixel estimator in JavaScript (`subScores()` in `offlineEngine.js`) rather than full C++ OpenCV morphological dilation.
+
+---
+
+## 9. Evaluator & Professor Verification Guide (Reproducibility)
+
+### 9.1 Install & Test the 100% Offline Android APK (Airplane Mode)
+1. **Download APK on Android Phone (Android 7.0+):**
+   - **Direct APK Download (~137 MB):** [https://github.com/karthik1647/follica/releases/download/v1.0.0-apk/Follica-Clinical-Triage-v1.0.0.apk](https://github.com/karthik1647/follica/releases/download/v1.0.0-apk/Follica-Clinical-Triage-v1.0.0.apk)
+   - **GitHub Release Page:** [https://github.com/karthik1647/follica/releases/tag/v1.0.0-apk](https://github.com/karthik1647/follica/releases/tag/v1.0.0-apk)
+2. **Verify Offline Execution:** Turn on **Airplane Mode** (disable Wi-Fi and mobile data), open **Follica**, complete **Step 01: Clinical Intake**, select a scalp photograph in **Step 02: Optical Triage**, and tap **Run On-Device Offline Triage (No Wi-Fi)**.
+3. **Verify Safety Rejection:** Select a non-scalp photo (e.g., an object or landscape) or a dark/blurry image and verify that the on-device quality gate rejects it with an actionable error dialog before inference.
+
+### 9.2 Run the Automated Verification Suite on Laptop (60 Seconds)
+```powershell
+# 1. Clone the repository
+git clone https://github.com/karthik1647/follica.git
+cd follica
+
+# 2. Run the master verification scorecard (20 clinical personas + 114 pytest tests)
+python verify_accuracy.py
+
+# 3. Verify 10/10 on-device mobile ONNX parity & quality gates in Node.js
+cd mobile
+npm install --legacy-peer-deps
+node scripts/verify_offline_engine.js
+```
