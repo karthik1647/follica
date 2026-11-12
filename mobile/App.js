@@ -15,6 +15,7 @@ import {
   Alert,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import { runOnDevice } from "./src/services/offlineEngine";
 import {
   checkSystemStatus,
   submitScalpAnalysis,
@@ -502,181 +503,33 @@ export default function App() {
   };
 
 
-  const computeOnDeviceOfflineAnalysis = (intakeData, imageUri) => {
-    // Derive deterministic photo-entropy variance from imageUri to reflect optical differences
-    let hash = 0;
-    if (imageUri) {
-      for (let i = 0; i < imageUri.length; i++) {
-        hash = (hash * 31 + imageUri.charCodeAt(i)) & 0xffffffff;
-      }
-    }
-    const varA = Math.round((((Math.abs(hash) % 25) - 12) / 10.0) * 10) / 10;
-    const varB = Math.round((((Math.abs(hash >> 3) % 25) - 12) / 10.0) * 10) / 10;
-    const varC = Math.round((((Math.abs(hash >> 6) % 25) - 12) / 10.0) * 10) / 10;
-    const varD = Math.round((((Math.abs(hash >> 9) % 25) - 12) / 10.0) * 10) / 10;
-
-    const isHealthyCheck = intakeData.primary_concern_zone === 'routine_healthy_check' &&
-                           intakeData.shedding_pattern === 'stable_no_shedding' &&
-                           !intakeData.burning_or_pain && !intakeData.itching;
-
-    const hasSeverePain = intakeData.burning_or_pain || intakeData.scalp_pain_trichodynia;
-    const isFocalPatch = intakeData.primary_concern_zone === 'focal_patchy_spots';
-    const isBumps = intakeData.primary_concern_zone === 'pustules_bumps' || intakeData.sensation === 'painful';
-    const isCrownThinning = intakeData.primary_concern_zone === 'crown_vertex' || intakeData.primary_concern_zone === 'hairline_temples';
-    const isAcuteShedding = intakeData.shedding_pattern === 'sudden_acute' || intakeData.hair_pull_test === 'positive_over_5';
-    const hasHardWaterHelmet = (intakeData.water_environment === 'hard_borewell') && intakeData.daily_helmet_wearer;
-
-    let condition, triageLevel, triageReason;
-    let baseF, baseR, baseS, baseD;
-    let ingredients = [];
-    let lifestyle = [];
-
-    if (isHealthyCheck) {
-      condition = 'Pattern Consistent with Balanced / Healthy Scalp';
-      triageLevel = 'Level 1: Minor Home Routine';
-      triageReason = 'Epidermal barrier, follicular density, and surface lipid balance appear within calm physiological bounds (On-Device Offline Scan).';
-      baseF = 23.5; baseR = 23.5; baseS = 23.0; baseD = 23.0;
-      ingredients = [
-        { molecule: 'Mild Sulfate-Free Surfactant + Panthenol (B5) 1%', frequency: '2-3x per week', mechanism: 'Preserves stratum corneum hydration without stripping protective sebum.' }
-      ];
-      lifestyle = ['Maintain gentle pH-balanced cleansing and avoid excessive high-heat blow drying.'];
-    } else if (hasSeverePain || isBumps) {
-      condition = 'Pattern Suggestive of Folliculitis / Scalp Bumps';
-      triageLevel = 'Level 3: Escalation (Consult a Dermatologist)';
-      triageReason = 'Reported scalp pain, tender trichodynia, or follicular bumps suggest localized inflammation requiring direct clinical evaluation.';
-      baseF = 16.0; baseR = 9.5; baseS = 11.5; baseD = 11.5;
-      ingredients = [
-        { molecule: 'Benzoyl Peroxide 2.5-5% Wash', frequency: 'Alternate days (leave on for 3-5 min)', mechanism: 'Reduces follicular bacterial load.' }
-      ];
-      lifestyle = ['Do not squeeze or scratch follicular bumps.', 'Wash helmet liners and pillowcases every 2-3 days.'];
-    } else if (isFocalPatch) {
-      condition = 'Pattern Suggestive of Alopecia Areata / Focal Loss';
-      triageLevel = 'Level 3: Escalation (Consult a Dermatologist)';
-      triageReason = 'Reported focal patchy loss warrants prompt dermatologist evaluation for clinical trichoscopy.';
-      baseF = 21.0; baseR = 12.0; baseS = 17.0; baseD = 7.0;
-      ingredients = [
-        { molecule: 'Clinical Dermatologist Evaluation Recommended', frequency: 'Immediate referral', mechanism: 'Prompt trichoscopic examination.' }
-      ];
-      lifestyle = ['Avoid mechanical traction or tight hairstyles.', 'Schedule in-person dermatologist consultation.'];
-    } else if (isAcuteShedding) {
-      condition = 'Pattern Suggestive of Acute Telogen Effluvium';
-      triageLevel = 'Level 2: Monitored Routine';
-      triageReason = 'Sudden shedding and positive hair pull test suggest premature follicle transition into resting phase triggered by physiological or metabolic stressors.';
-      baseF = 20.0; baseR = 18.0; baseS = 15.5; baseD = 8.0;
-      ingredients = [
-        { molecule: 'Gentle Peptide & Amino Acid Scalp Serum', frequency: 'Daily', mechanism: 'Nourishes follicular micro-environment during telogen recovery.' }
-      ];
-      lifestyle = ['Discuss serum ferritin, Vitamin D3, and thyroid panels with your doctor.', 'Ensure adequate dietary protein (0.8-1.0 g/kg).'];
-    } else if (isCrownThinning && intakeData.family_history_hair_loss) {
-      condition = 'Pattern Suggestive of Androgenetic Alopecia / Pattern Thinning';
-      triageLevel = 'Level 2: Monitored Routine';
-      triageReason = 'Gradual vertex/hairline thinning combined with positive family history indicates progressive follicular miniaturization.';
-      baseF = 21.0; baseR = 19.0; baseS = 16.0; baseD = 11.0;
-      ingredients = [
-        { molecule: 'Topical Minoxidil 5% Solution (Consult Physician)', frequency: 'Once daily under medical advice', mechanism: 'Promotes anagen phase maintenance.' }
-      ];
-      lifestyle = ['Track vertex density progression every 30 days.', 'Consult a dermatologist for clinical staging (Norwood/Ludwig scale).'];
-    } else if (intakeData.itching || intakeData.flake_type === 'greasy_yellow_thick' || hasHardWaterHelmet) {
-      condition = 'Pattern Suggestive of Seborrheic Dermatitis';
-      triageLevel = 'Level 2: Monitored Routine';
-      triageReason = 'Reported scaling, itching, and environmental exposure indicate active Malassezia yeast overgrowth and sebum occlusion.';
-      baseF = 14.5; baseR = 14.0; baseS = 11.5; baseD = 15.0;
-      ingredients = [
-        { molecule: 'Ketoconazole 2% or Selenium Sulfide Wash', frequency: '2x per week (leave on for 5 min)', mechanism: 'Inhibits Malassezia fungal proliferation.' },
-        { molecule: 'Salicylic Acid 2% Scalp Solution', frequency: '1x per week', mechanism: 'Breaks down oily follicular plaques.' }
-      ];
-      lifestyle = ['Use a clean helmet liner washed every 2 days.', 'Rinse with filtered water if using hard borewell supply.'];
-    } else {
-      condition = 'Pattern Suggestive of Dry Scalp / Mild Scaling';
-      triageLevel = 'Level 1: Minor Home Routine';
-      triageReason = 'Mild surface dryness with intact follicular density. Gentle barrier replenishment recommended.';
-      baseF = 18.5; baseR = 20.0; baseS = 21.0; baseD = 19.0;
-      ingredients = [
-        { molecule: 'Hydrating Hyaluronic Acid & Panthenol Scalp Tonic', frequency: 'Daily after shower', mechanism: 'Restores stratum corneum moisture balance.' }
-      ];
-      lifestyle = ['Avoid harsh sulfates and overly hot shower water.'];
-    }
-
-    // Apply bounded optical variance
-    const flakeScore = Math.max(0, Math.min(25, Math.round((baseF + varA) * 10) / 10));
-    const rednessScore = Math.max(0, Math.min(25, Math.round((baseR + varB) * 10) / 10));
-    const sebumScore = Math.max(0, Math.min(25, Math.round((baseS + varC) * 10) / 10));
-    const densityScore = Math.max(0, Math.min(25, Math.round((baseD + varD) * 10) / 10));
-    const totalSHS = Math.round((flakeScore + rednessScore + sebumScore + densityScore) * 10) / 10;
-
-    return {
-      suggested_condition: condition,
-      confidence_score: 0.88,
-      confidence_gated: false,
-      scoring_status: 'active',
-      scalp_health_score: totalSHS,
-      triage_level: triageLevel,
-      triage_reason: triageReason,
-      sub_scores: {
-        flake_score: flakeScore,
-        redness_score: rednessScore,
-        sebum_score: sebumScore,
-        density_score: densityScore
-      },
-      active_ingredients: ingredients,
-      lifestyle_advice: lifestyle,
-      clinical_correlations: [
-        {
-          factor: 'On-Device Optical Verification',
-          impact_level: 'low',
-          clinical_note: 'Image resolution and file structure validated locally on mobile device. Connect to FastAPI backend for full C++ OpenCV Laplacian blur and YCrCb tissue gating.'
-        }
-      ],
-      survey_risk_profile: {
-        condition: condition,
-        risk_score: 25.0,
-        risk_band: 'moderate',
-        modifiable_count: 2,
-        summary: 'Evaluated on-device. Maintain regular scalp hygiene and monitor progression.',
-        intervention_queue: []
-      },
-      disclaimer: UNIVERSAL_DISCLAIMER,
-      analysis_timestamp: new Date().toISOString(),
-      is_offline_eval: true
-    };
-  };
-
   const runOfflineCameraAnalysis = () => {
     if (!selectedImageUri) {
-      Alert.alert(
-        'Select Image First',
-        'Please take a photo with the Camera or select one from your Photo Library before running triage.'
-      );
+      Alert.alert("Select Image First", "Please take a photo or select one from your library before running triage.");
       return;
     }
     setLoading(true);
     Image.getSize(
       selectedImageUri,
-      (w, h) => {
-        if (w < 200 || h < 200) {
+      async (w, h) => {
+        try {
+          const out = await runOnDevice(selectedImageUri, w, h, intake, countActiveFactors());
+          if (out.rejected) {
+            Alert.alert("Photo Quality Check Failed", `${out.rejected.reason}\n\n${out.rejected.guidance}`);
+          } else {
+            setAnalysisResult(out.result);
+            setPrimaryTab("triage");
+            setTriageMode("report");
+          }
+        } catch (err) {
+          Alert.alert("On-Device Model Error", String((err && err.message) || err));
+        } finally {
           setLoading(false);
-          Alert.alert(
-            'Resolution Quality Check Failed',
-            `Photograph resolution (${w}x${h} px) is below minimum clinical requirement (224x224 px). Please capture a closer, higher-resolution photo.`
-          );
-          return;
         }
-        setTimeout(() => {
-          const offlineRes = computeOnDeviceOfflineAnalysis(intake, selectedImageUri);
-          setAnalysisResult(offlineRes);
-          setPrimaryTab('triage');
-          setTriageMode('report');
-          setLoading(false);
-        }, 400);
       },
-      () => {
-        setTimeout(() => {
-          const offlineRes = computeOnDeviceOfflineAnalysis(intake, selectedImageUri);
-          setAnalysisResult(offlineRes);
-          setPrimaryTab('triage');
-          setTriageMode('report');
-          setLoading(false);
-        }, 400);
+      (err) => {
+        setLoading(false);
+        Alert.alert("Cannot Read Image", String((err && err.message) || err));
       }
     );
   };

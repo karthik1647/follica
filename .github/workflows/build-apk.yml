@@ -45,6 +45,11 @@ jobs:
           npm install --legacy-peer-deps
           CI=1 npx expo prebuild --platform android --clean
 
+      - name: Bundle on-device ONNX model into Android assets
+        run: |
+          mkdir -p mobile/android/app/src/main/assets
+          cp mobile/assets/model/follica_mobilenetv4.onnx mobile/android/app/src/main/assets/follica_mobilenetv4.onnx
+          ls -l mobile/android/app/src/main/assets
       - name: Enable LAN HTTP Cleartext Support for Local FastAPI Pairing
         working-directory: ./mobile/android/app/src/main
         run: |
