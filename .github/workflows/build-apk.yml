@@ -64,6 +64,19 @@ jobs:
           print("Updated AndroidManifest.xml usesCleartextTraffic=true")
           '
 
+      - name: Raise minSdk to 24 and pin ONNX Runtime Android 1.18.0
+        working-directory: ./mobile/android
+        run: |
+          echo "android.minSdkVersion=24" >> gradle.properties
+          cat >> app/build.gradle <<'EOF'
+
+          configurations.all {
+              resolutionStrategy {
+                  force 'com.microsoft.onnxruntime:onnxruntime-android:1.18.0'
+                  force 'com.microsoft.onnxruntime:onnxruntime-extensions-android:0.12.4'
+              }
+          }
+          EOF
       - name: Generate Dedicated Release Keystore (V1 + V2 + V3)
         working-directory: ./mobile/android/app
         run: |
