@@ -393,7 +393,10 @@ To help new contributors navigate the codebase without ambiguity:
 | `backend/scripts/evaluate_cv.py` | **Fully Implemented** | Runs ScalpCVPipeline over evaluation photos, writes CSV reports, and computes optical correlation diagnostics. |
 | `Dockerfile` & `docker-compose.yml` | **Fully Implemented** | Multi-stage production container with unprivileged user, health checks, and persistent SQLite storage. |
 | `.github/workflows/ci.yml` | **Fully Implemented** | Continuous integration running pytest suite and automated zero-emoji compliance audits. |
-| `mobile/` | **Fully Scaffolded** | React Native / Expo cross-platform mobile client with standardized capture rules, 4-step intake, and health score UI. |
+| `mobile/` | **Fully Implemented** | React Native / Expo mobile client with full on-device offline MobileNetV4 ONNX execution (`onnxruntime-react-native`), 4-step clinical intake, and live API pairing. |
+| `mobile/src/services/offlineEngine.js` | **Fully Implemented** | On-device inference and pixel quality gate (Laplacian sharpness, luminance exposure, flash glare, and YCrCb biological tissue validation) running 100% offline. |
+| `mobile/assets/model/follica_mobilenetv4.onnx` | **Bundled (10.19 MB)** | Single-file merged MobileNetV4 ONNX model packaged directly inside the Android APK assets for offline execution. |
+| `verify_accuracy.py` | **Fully Implemented** | Master verification script executing all 20 real-life clinical personas, ONNX benchmarks, and 114 pytest tests in one command. |
 
 ---
 
@@ -541,4 +544,10 @@ The following engineering milestones, model training runs, neutral clinical audi
 ### 4. Play-Protect-Safe Android APK, WebAPK & Zero-Cost Deployment
 - **Google-Signed WebAPK (PWA)**: Added `/manifest.json`, `/sw.js`, 192px/512px icons, and the **Install Android App** action in `backend/app/static/index.html` so Android Chrome mints and installs a Google-signed WebAPK with zero Play Protect warnings.
 - **Standalone Signed Release APK (`.github/workflows/build-apk.yml`, `mobile/app.json`, `mobile/eas.json`)**: Stripped deprecated storage/audio/location permissions via `blockedPermissions`, configured `com.follica.scalptriage` targeting Android 14 (API 34), wired live camera/gallery uploads in `mobile/App.js`, and automated V1+V2+V3 RSA-2048 release keystore signing in GitHub Actions.
-- **Containerization & Validation Suites**: Added `Dockerfile`, `docker-compose.yml`, `render.yaml`, `.github/workflows/ci.yml`, `scripts/launch_tunnel.py`, and `scripts/test_real_life_expectations.py` (**20 / 20 real-life clinical expectations passing** and **111 / 111 pytest unit/integration/adversarial tests passing**).
+- **Containerization & Validation Suites**: Added `Dockerfile`, `docker-compose.yml`, `render.yaml`, `.github/workflows/ci.yml`, `verify_accuracy.py`, `scripts/launch_tunnel.py`, and `scripts/test_real_life_expectations.py` (**20 / 20 real-life clinical expectations passing** and **114 / 114 pytest unit/integration/adversarial tests passing**).
+
+### 5. On-Device Offline MobileNetV4 Inference & Pre-Inference Quality Gate (`mobile/`)
+- **Single-File ONNX Bundling (`mobile/scripts/export_offline_assets.py`)**: Merged external tensor data into a standalone `10.19 MB` model (`mobile/assets/model/follica_mobilenetv4.onnx`) and bundled it directly into the Android APK assets (`asset:///follica_mobilenetv4.onnx`).
+- **Native ONNX Runtime Integration (`mobile/src/services/offlineEngine.js`)**: Integrated `onnxruntime-react-native` (`1.18.0`), `expo-image-manipulator`, and `jpeg-js` to execute $224 \times 224$ ImageNet-normalized tensor preprocessing, softmax probability calibration, 0.65 confidence gating, and clinical symptom reconciliation entirely on the smartphone without any network connection.
+- **On-Device Optical Quality Gate**: Ported the 5-stage pre-inference quality gate to JavaScript (`qualityMetrics` and `evaluateQuality`), enforcing minimum resolution ($150 \times 150$ px), Rec. 601 luminance bounds ($[35, 225]$), specular flash glare hotspot rejection ($> 15\%$), 4-neighbor Laplacian + $8 \times 8$ focal patch sharpness ($\ge 60.0$), and YCrCb biological scalp/hair chrominance validation ($\ge 10\%$).
+- **Cross-Runtime Parity Verification (`mobile/scripts/verify_offline_engine.js`)**: Verified **10 / 10 (100%)** top-1 class agreement between the mobile JavaScript engine and the Python `onnxruntime` backend across all 10 clinical demo specimens, alongside automated rejection of underexposed, overexposed, blurry, and non-scalp synthetic inputs.
