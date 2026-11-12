@@ -473,11 +473,11 @@ When served over HTTPS, Android Chrome uses Google's official WebAPK minting ser
 3. Tap the **"Install Android App"** button in the top bar (or tap Chrome's three-dot menu -> **Install app**).
 4. Android installs **Follica** to your home screen and app drawer as a standalone full-screen application.
 
-#### Method 2: Standalone Signed Release `.apk` via GitHub Actions (No Local Android Studio Needed)
+#### Method 2: Standalone Signed Release `.apk` (100% Offline On-Device AI — Direct Download)
 Our repository includes `.github/workflows/build-apk.yml`, which compiles an Android 14 (API 34) release `.apk` stripped of deprecated storage permissions (`blockedPermissions` in `mobile/app.json`) and signed with a dedicated 2048-bit RSA release keystore (V1 + V2 + V3 schemes):
 1. Open the repository on GitHub and click the **Actions** tab.
 2. Select **Build Signed Android Release APK** and click **Run workflow** (or push to `feat/mobilenetv4-onnx-clinical-triage`).
-3. Once completed, download the **`follica-android-release-apk`** artifact, extract the `.apk` file, and install it on your Android device.
+3. **Direct Release Download (Airplane Mode Ready)**: [Download Follica-Clinical-Triage-v1.0.0.apk (~137 MB)](https://github.com/karthik1647/follica/releases/download/v1.0.0-apk/Follica-Clinical-Triage-v1.0.0.apk) from the [v1.0.0-apk Release Page](https://github.com/karthik1647/follica/releases/tag/v1.0.0-apk).
 
 #### Method 3: Standalone `.apk` via Expo EAS Cloud Build or Expo Go
 ```powershell
@@ -496,8 +496,14 @@ npx eas-cli build -p android --profile preview
 
 ### D. Run Automated Tests & Real-Life Expectations Validation
 ```powershell
-# 1. Run the 111 unit, integration, consent, and adversarial tests
+# 0. Run the master verification suite (20 clinical personas + 114 pytest tests + scorecard)
+python verify_accuracy.py
+
+# 1. Run the 114 unit, integration, consent, and adversarial tests
 python -m pytest backend/tests -v
+
+# 2b. Verify on-device mobile ONNX model + quality gates in Node.js (10/10 parity)
+cd mobile; node scripts/verify_offline_engine.js; cd ..
 
 # 2. Run the 20-point real-life clinical persona expectations suite (with backend running on port 8000)
 python scripts/test_real_life_expectations.py
