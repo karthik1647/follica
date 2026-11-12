@@ -14,3 +14,5 @@ data/
 Thumbs.db
 
 training/data/
+
+*.apk
